@@ -106,7 +106,7 @@
            <div class="dropdown-container">
             <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
             <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
+            <!-- <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a> -->
            </div>
         </div>
         </div>
@@ -202,7 +202,7 @@
                   
 
                   <div class="mb-3">
-                    <label for="tanggal_pembelian" class="form-label">Tanggal Pembelian</label>
+                    <label for="tanggal_pembelian" class="form-label">Tanggal Daftar</label>
                     <input type="date" name="tanggal_pembelian" id="tanggal_pembelian" class="form-control" required>
                   </div>
 
@@ -291,6 +291,12 @@
     this.parentElement.classList.toggle('aktif');
   });
 });
+
+document.getElementById('modalCustomerForm').addEventListener('shown.bs.modal', function () {
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById('tanggal_pembelian').value = today;
+});
+
   </script>
   <script src="<?= base_url('assets/js/datacustomer.js')?>"></script>
 </body>

@@ -28,21 +28,21 @@ $(document).ready(function() {
     }
     },
       { data: 'status' },
-      {
-        data: 'id',
-        render: function (data) {
-          return `
-            <button class="btn btn-sm btn-primary" onclick="editUser(${data})">
-            <i class="fas fa-edit"></i> Edit
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="hapusUser(${data})">
-            <i class="fas fa-trash"></i> Hapus
-            </button>
-          `;
-        },
-        orderable: false,
-        searchable: false
-      }
+      // {
+      //   data: 'id',
+      //   render: function (data) {
+      //     return `
+      //       <button class="btn btn-sm btn-primary" onclick="editUser(${data})">
+      //       <i class="fas fa-edit"></i> Edit
+      //       </button>
+      //       <button class="btn btn-sm btn-danger" onclick="hapusUser(${data})">
+      //       <i class="fas fa-trash"></i> Hapus
+      //       </button>
+      //     `;
+      //   },
+      //   orderable: false,
+      //   searchable: false
+      // }
     ]
   });
 });

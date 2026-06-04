@@ -20,6 +20,9 @@ $(document).ready(function() {
         case 'mandor':
             style = 'background-color: #ffc107; color: black;';
             break;
+          case 'spv':
+            style = 'background-color: #ff4d07ff; color: white;';
+            break;
         default:
             style = 'background-color: #6c757d; color: white;';
         }

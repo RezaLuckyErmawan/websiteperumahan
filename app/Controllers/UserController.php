@@ -59,6 +59,7 @@ class UserController extends BaseController
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
             'password' => $this->request->getPost('password'),
+            'role' => $this->request->getPost('role'),
             'status' => $this->request->getPost('status')
         ];
         $userModel->insert($data);
@@ -78,6 +79,7 @@ class UserController extends BaseController
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
             'password' => $this->request->getPost('password'),
+            'role' => $this->request->getPost('role'),
             'status' => $this->request->getPost('status')
         ];
 

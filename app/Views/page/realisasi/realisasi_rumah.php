@@ -105,7 +105,7 @@
            <div class="dropdown-container">
             <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
             <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
+            <!-- <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a> -->
            </div>
         </div>
         </div>
@@ -134,7 +134,7 @@
       <!-- Content -->
       <div class="content1">
         <h2>Sistem Manajemen Informasi Perumahan</h1>
-        <h2>Data Realisai Rumah</h2>
+        <h2>Data Realisasi Rumah</h2>
         <div class="table-header">
           <!-- <a class="add-btn1" onclick="openCreateForm()">+ Tambah Data</a> -->
           <button onclick="openCreateForm()" class="add-btn1">

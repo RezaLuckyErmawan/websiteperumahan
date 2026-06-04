@@ -29,7 +29,7 @@ class CreateuserTable extends Migration
             ],
             'role' => [
                 'type'       => 'ENUM',
-                'constraint' => ['admin', 'mandor', 'karyawan'],
+                'constraint' => ['admin', 'mandor', 'karyawan', 'spv'],
             ],
             'status' => [
                 'type'       => 'ENUM',

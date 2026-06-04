@@ -179,7 +179,7 @@ let idToDelete = null;
 
 function hapusData(id) {
   idToDelete = id;
-  const confirmModal = new bootstrap.modal(document.getElementById('confirmDeleteModal'));
+  const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
   confirmModal.show();
 }
 

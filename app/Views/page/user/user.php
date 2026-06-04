@@ -109,7 +109,7 @@
            <div class="dropdown-container">
             <a class="menu-link active"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
             <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
+            <a class="menu-link"href="/data-spv"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
            </div>
         </div>
         </div>
@@ -192,6 +192,7 @@
                     <option value="">-- Pilih Role --</option>
                     <option value="admin">🛡️ Admin</option>
                     <option value="mandor">👷 Mandor</option>
+                    <!-- <option value="spv">🧑‍💼 SPV</option> -->
                     <option value="karyawan">🙋 Karyawan</option>
                   </select>
                 </div>

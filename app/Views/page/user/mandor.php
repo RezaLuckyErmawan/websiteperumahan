@@ -105,7 +105,7 @@
            <div class="dropdown-container">
             <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
             <a class="menu-link active"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
+            <!-- <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a> -->
            </div>
         </div>
         </div>
@@ -137,9 +137,9 @@
         <h2>Data Mandor</h2>
         <div class="table-header">
           <!-- <a class="add-btn1" onclick="openCreateForm()">+ Tambah Data</a> -->
-          <button onclick="openCreateForm()" class="add-btn1">
+          <!-- <button onclick="openCreateForm()" class="add-btn1">
               <i class="fas fa-plus me-1"></i> Tambah Data
-          </button>
+          </button> -->
         </div>  
           <table  id="dataUserTable" class="display table table-striped table-bordered w-100">
               <thead>
@@ -148,7 +148,7 @@
                       <th>Username</th>
                       <th>role</th>
                       <th>status</th>
-                      <th>Aksi</th>
+                      <!-- <th>Aksi</th> -->
                   </tr>
               </thead>
               <tbody>
@@ -249,6 +249,12 @@
         color: #ecf0f1;
         text-align: center;
     }
+
+    #dataUserTable tbody td {
+      text-align: center;
+      vertical-align: middle;
+    }
+
     </style>
   </div>
   <script>

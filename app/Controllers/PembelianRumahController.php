@@ -98,30 +98,42 @@ class PembelianRumahController extends BaseController
         ]);
     }
 
-    public function store() {
+    public function store()
+{
     $request = service('request');
     $model = new PembelianRumahModel();
     $perumahanModel = new PerumahanModel();
 
+    // Ambil data rumah berdasarkan ID
+    $perumahan = $perumahanModel->find($request->getPost('perumahan_id'));
+
+    if (!$perumahan) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Data rumah tidak ditemukan'
+        ]);
+    }
+
     $data = [
-        'customer_id' => $request->getPost('customer_id'),
-        'perumahan_id' => $request->getPost('perumahan_id'),
+        'customer_id'       => $request->getPost('customer_id'),
+        'perumahan_id'      => $request->getPost('perumahan_id'),
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
-        'harga_beli'  => $request->getPost('harga_beli'),
-        'status_pembelian' => $request->getPost('status_pembelian'),
+        'harga_beli'        => $perumahan['harga'], // AMAN
+        'status_pembelian'  => $request->getPost('status_pembelian'),
         'metode_pembayaran' => $request->getPost('metode_pembayaran'),
-        'status_dokumen' => $request->getPost('status_dokumen'),
-        'request_khusus' => $request->getPost('request_khusus'),
-        'catatan_marketing' => $request->getPOst('catatan_marketing'),
+        'status_dokumen'    => $request->getPost('status_dokumen'),
+        'request_khusus'    => $request->getPost('request_khusus'),
+        'catatan_marketing' => $request->getPost('catatan_marketing'),
     ];
 
     $model->insert($data);
 
-    // Update status perumahan menjadi "terjual"
+    // Update status rumah
     $perumahanModel->update($data['perumahan_id'], ['status' => 'terjual']);
 
     return $this->response->setJSON(['status' => 'success']);
 }
+
 
     public function edit($id)
 {

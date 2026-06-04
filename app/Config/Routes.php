@@ -98,6 +98,9 @@ $routes->get('/mandor/edit/(:num)', 'MandorController::edit/$1');
 $routes->post('/mandor/update/(:num)', 'MandorController::update/$1');
 $routes->delete('/mandor/delete/(:num)', 'MandorController::delete/$1');
 
+$routes->get('/data-spv', 'SpvController::spv');
+$routes->get('/data-spv/json', 'SpvController::json');
+
 $routes->get('/rab-rumah', 'RabRumahController::rabrumah');
 $routes->get('/rab-rumah/json', 'RabRumahController::json');
 $routes->get('/rab-rumah/edit/(:num)', 'RabRumahController::edit/$1');
