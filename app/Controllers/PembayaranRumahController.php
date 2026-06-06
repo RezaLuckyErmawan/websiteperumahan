@@ -16,7 +16,7 @@ class PembayaranRumahController extends BaseController
             ->select('pembelian_rumah.*, customer.nama AS nama_customer, perumahan.kode_rumah')
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
-            ->where('pembelian_rumah.status_pembelian !=', 'Batal')
+            ->where('LOWER(pembelian_rumah.status_pembelian) !=', 'batal', false)
             ->orderBy('pembelian_rumah.created_at', 'DESC')
             ->findAll();
 
@@ -115,6 +115,7 @@ class PembayaranRumahController extends BaseController
 
     public function delete($id)
     {
+        $db = \Config\Database::connect();
         $model = new PembayaranRumahModel();
         $data = $model->find($id);
 
@@ -123,15 +124,24 @@ class PembayaranRumahController extends BaseController
                 ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
         }
 
+        $db->transStart();
         $model->delete($id);
-        $this->deleteBuktiBayar($data['bukti_bayar'] ?? null);
         $this->updateStatusPembelian($data['pembelian_rumah_id']);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)
+                ->setJSON(['status' => 'error', 'message' => 'Gagal menghapus pembayaran']);
+        }
+
+        $this->deleteBuktiBayar($data['bukti_bayar'] ?? null);
 
         return $this->response->setJSON(['status' => 'success', 'message' => 'Pembayaran berhasil dihapus']);
     }
 
     private function savePembayaran(?int $id = null)
     {
+        $db = \Config\Database::connect();
         $model = new PembayaranRumahModel();
 
         $pembelianId = (int) $this->request->getPost('pembelian_rumah_id');
@@ -139,16 +149,47 @@ class PembayaranRumahController extends BaseController
         $tanggalBayar = $this->request->getPost('tanggal_bayar');
         $jenis = $this->request->getPost('jenis_pembayaran');
         $metode = $this->request->getPost('metode_bayar');
+        $allowedJenis = ['booking_fee', 'dp', 'cicilan', 'pelunasan'];
+        $allowedMetode = ['Cash', 'Transfer Bank', 'KPR', 'Cicilan Internal'];
 
         if ($pembelianId <= 0 || $jumlahBayar <= 0 || empty($tanggalBayar) || empty($jenis) || empty($metode)) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Data pembayaran belum lengkap']);
         }
 
+        if (!in_array($jenis, $allowedJenis, true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Jenis pembayaran tidak valid']);
+        }
+
+        if (!in_array($metode, $allowedMetode, true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Metode bayar tidak valid']);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalBayar)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Format tanggal bayar tidak valid']);
+        }
+
+        $old = null;
+        if ($id) {
+            $old = $model->find($id);
+            if (!$old) {
+                return $this->response->setStatusCode(404)
+                    ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
+            }
+        }
+
         $summary = $this->getRingkasanPembayaran($pembelianId, $id);
         if (!$summary) {
             return $this->response->setStatusCode(404)
                 ->setJSON(['status' => 'error', 'message' => 'Data pembelian tidak ditemukan']);
+        }
+
+        if (strtolower((string) $summary['status_pembelian']) === 'batal') {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Pembelian yang sudah batal tidak bisa menerima pembayaran']);
         }
 
         if ($jumlahBayar > $summary['sisa_bayar']) {
@@ -173,29 +214,40 @@ class PembayaranRumahController extends BaseController
             return $this->response->setStatusCode(400)->setJSON($uploadedBukti);
         }
 
-        if ($id) {
-            $old = $model->find($id);
-            if (!$old) {
-                return $this->response->setStatusCode(404)
-                    ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
-            }
+        $newUploadedPath = null;
 
+        $db->transStart();
+
+        if ($id) {
             if ($uploadedBukti) {
                 $data['bukti_bayar'] = $uploadedBukti;
-                $this->deleteBuktiBayar($old['bukti_bayar'] ?? null);
+                $newUploadedPath = $uploadedBukti;
             }
 
             $model->update($id, $data);
             $this->updateStatusPembelian($old['pembelian_rumah_id']);
+
+            if ($uploadedBukti) {
+                $this->deleteBuktiBayar($old['bukti_bayar'] ?? null);
+            }
         } else {
             if ($uploadedBukti) {
                 $data['bukti_bayar'] = $uploadedBukti;
+                $newUploadedPath = $uploadedBukti;
             }
 
             $model->insert($data);
         }
 
         $this->updateStatusPembelian($pembelianId);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            $this->deleteBuktiBayar($newUploadedPath);
+
+            return $this->response->setStatusCode(500)
+                ->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan pembayaran']);
+        }
 
         return $this->response->setJSON(['status' => 'success']);
     }

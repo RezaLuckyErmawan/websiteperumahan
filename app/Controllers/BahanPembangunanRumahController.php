@@ -80,8 +80,9 @@ class BahanPembangunanRumahController extends BaseController
         return view('page/bahanpembangunanrumah/create', $data);
     }
 
-    public function store()
+public function store()
 {
+    $db = \Config\Database::connect();
     $model         = new BahanPembangunanRumahModel();
     $bahanModel    = new BahanBangunanModel();
 
@@ -99,6 +100,10 @@ class BahanPembangunanRumahController extends BaseController
         return redirect()->to('/data-bahan-pembangunan')->with('error', 'Hanya mandor yang bisa menambahkan data ini.');
     }
 
+    if (!$perumahan_id || !$bahan_bangunan_id || $jumlah_pemakaian <= 0 || empty($tanggal_penggunaan)) {
+        return redirect()->to('/data-bahan-pembangunan')->with('error', 'Data bahan pembangunan belum lengkap atau tidak valid.');
+    }
+
     $bahan = $bahanModel->find($bahan_bangunan_id);
     if (!$bahan) {
         return redirect()->to('/data-bahan-pembangunan')->with('error', 'Data bahan bangunan tidak ditemukan.');
@@ -108,6 +113,7 @@ class BahanPembangunanRumahController extends BaseController
         return redirect()->to('/data-bahan-pembangunan')->with('error', 'Stok bahan bangunan tidak mencukupi.');
     }
 
+    $db->transStart();
     $model->insert([
         'perumahan_id'       => $perumahan_id,
         'bahan_bangunan_id'  => $bahan_bangunan_id,
@@ -120,6 +126,11 @@ class BahanPembangunanRumahController extends BaseController
     $bahanModel->update($bahan_bangunan_id, [
         'stok' => $bahan['stok'] - $jumlah_pemakaian
     ]);
+    $db->transComplete();
+
+    if ($db->transStatus() === false) {
+        return redirect()->to('/data-bahan-pembangunan')->with('error', 'Gagal menyimpan data bahan pembangunan.');
+    }
 
     return redirect()->to('/data-bahan-pembangunan')->with('success', 'Data berhasil disimpan dan stok bahan dikurangi.');
 }
@@ -157,6 +168,7 @@ class BahanPembangunanRumahController extends BaseController
 
     public function update($id)
 {
+        $db = \Config\Database::connect();
         $model        = new BahanPembangunanRumahModel();
         $bahanModel   = new BahanBangunanModel();
 
@@ -171,11 +183,17 @@ class BahanPembangunanRumahController extends BaseController
         $tanggal_penggunaan = $this->request->getPost('tanggal_penggunaan');
         $keterangan         = $this->request->getPost('keterangan');
 
+        if (!$perumahan_id || !$bahan_bangunan_id || $jumlah_baru <= 0 || empty($tanggal_penggunaan)) {
+            return redirect()->back()->with('error', 'Data bahan pembangunan belum lengkap atau tidak valid.');
+        }
+
         // Data bahan lama dan baru
         $bahanBaru = $bahanModel->find($bahan_bangunan_id);
         if (!$bahanBaru) {
             return redirect()->back()->with('error', 'Bahan bangunan tidak ditemukan.');
         }
+
+        $db->transStart();
 
         // Perhitungan stok
         if ($bahan_bangunan_id == $dataLama['bahan_bangunan_id']) {
@@ -184,6 +202,7 @@ class BahanPembangunanRumahController extends BaseController
             $stok_baru = $bahanBaru['stok'] - $selisih;
 
             if ($stok_baru < 0) {
+                $db->transRollback();
                 return redirect()->back()->with('error', 'Stok bahan tidak mencukupi.');
             }
 
@@ -199,6 +218,7 @@ class BahanPembangunanRumahController extends BaseController
             }
 
             if ($bahanBaru['stok'] < $jumlah_baru) {
+                $db->transRollback();
                 return redirect()->back()->with('error', 'Stok bahan baru tidak mencukupi.');
             }
 
@@ -215,13 +235,19 @@ class BahanPembangunanRumahController extends BaseController
             'tanggal_penggunaan' => $tanggal_penggunaan,
             'keterangan'         => $keterangan,
         ]);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->to('/data-bahan-pembangunan')->with('error', 'Gagal memperbarui data bahan pembangunan.');
+        }
 
     return redirect()->to('/data-bahan-pembangunan')->with('success', 'Data berhasil diperbarui dan stok disesuaikan.');
 }
 
 
-   public function delete($id)
+public function delete($id)
 {
+    $db = \Config\Database::connect();
     $model       = new BahanPembangunanRumahModel();
     $bahanModel  = new BahanBangunanModel();
 
@@ -231,6 +257,7 @@ class BahanPembangunanRumahController extends BaseController
     }
 
     $bahan = $bahanModel->find($data['bahan_bangunan_id']);
+    $db->transStart();
     if ($bahan) {
         $stokBaru = (int)$bahan['stok'] + (int)$data['jumlah_pemakaian'];
 
@@ -241,6 +268,11 @@ class BahanPembangunanRumahController extends BaseController
     }
 
     $model->delete($id);
+    $db->transComplete();
+
+    if ($db->transStatus() === false) {
+        return redirect()->to('/data-bahan-pembangunan')->with('error', 'Gagal menghapus data bahan pembangunan.');
+    }
 
     return redirect()->to('/data-bahan-pembangunan')->with('success', 'Data berhasil dihapus dan stok dikembalikan.');
 }

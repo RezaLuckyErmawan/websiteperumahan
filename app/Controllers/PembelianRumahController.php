@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\CustomerModel;
 use App\Models\PembatalanModel;
+use App\Models\PembayaranRumahModel;
 use App\Models\PembelianRumahModel;
 use App\Models\PerumahanModel;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -36,7 +37,7 @@ class PembelianRumahController extends BaseController
             MONTH(tanggal_pembelian) AS bulan,
             COUNT(*) AS total
             FROM pembelian_rumah
-            WHERE status_pembelian != 'batal'
+            WHERE LOWER(status_pembelian) != 'batal'
             GROUP BY bulan
         ");
         $results = $query->getResultArray();
@@ -108,8 +109,28 @@ class PembelianRumahController extends BaseController
     public function store()
 {
     $request = service('request');
+    $db = \Config\Database::connect();
     $model = new PembelianRumahModel();
     $perumahanModel = new PerumahanModel();
+    $allowedStatus = ['Lunas', 'Cicil', 'DP', 'Batal'];
+    $allowedMetode = ['Cash', 'KPR', 'Cicilan Internal'];
+    $allowedDokumen = ['Lengkap', 'Pending', 'Verifikasi'];
+
+    $statusPembelian = $request->getPost('status_pembelian');
+    $metodePembayaran = $request->getPost('metode_pembayaran');
+    $statusDokumen = $request->getPost('status_dokumen');
+
+    if (
+        !$request->getPost('customer_id') ||
+        !$request->getPost('perumahan_id') ||
+        !$request->getPost('tanggal_pembelian') ||
+        !in_array($statusPembelian, $allowedStatus, true) ||
+        !in_array($metodePembayaran, $allowedMetode, true) ||
+        !in_array($statusDokumen, $allowedDokumen, true)
+    ) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Data pembelian rumah belum lengkap atau tidak valid']);
+    }
 
     // Ambil data rumah berdasarkan ID
     $perumahan = $perumahanModel->find($request->getPost('perumahan_id'));
@@ -121,22 +142,38 @@ class PembelianRumahController extends BaseController
         ]);
     }
 
+    if (strtolower((string) $perumahan['status']) === 'terjual') {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Rumah ini sudah terjual']);
+    }
+
     $data = [
         'customer_id'       => $request->getPost('customer_id'),
         'perumahan_id'      => $request->getPost('perumahan_id'),
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
         'harga_beli'        => $perumahan['harga'], // AMAN
-        'status_pembelian'  => $request->getPost('status_pembelian'),
-        'metode_pembayaran' => $request->getPost('metode_pembayaran'),
-        'status_dokumen'    => $request->getPost('status_dokumen'),
+        'status_pembelian'  => $statusPembelian,
+        'metode_pembayaran' => $metodePembayaran,
+        'status_dokumen'    => $statusDokumen,
         'request_khusus'    => $request->getPost('request_khusus'),
         'catatan_marketing' => $request->getPost('catatan_marketing'),
     ];
 
+    $db->transStart();
     $model->insert($data);
 
     // Update status rumah
-    $perumahanModel->update($data['perumahan_id'], ['status' => 'Terjual']);
+    if (strtolower($statusPembelian) === 'batal') {
+        $perumahanModel->update($data['perumahan_id'], ['status' => 'Dijual']);
+    } else {
+        $perumahanModel->update($data['perumahan_id'], ['status' => 'Terjual']);
+    }
+    $db->transComplete();
+
+    if ($db->transStatus() === false) {
+        return $this->response->setStatusCode(500)
+            ->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan pembelian rumah']);
+    }
 
     return $this->response->setJSON(['status' => 'success']);
 }
@@ -177,9 +214,13 @@ class PembelianRumahController extends BaseController
 
     public function update($id) {
     $request = service('request');
+    $db = \Config\Database::connect();
     $model = new PembelianRumahModel();
     $pembatalanModel = new PembatalanModel();
     $perumahanModel = new PerumahanModel();
+    $allowedStatus = ['Lunas', 'Cicil', 'DP', 'Batal'];
+    $allowedMetode = ['Cash', 'KPR', 'Cicilan Internal'];
+    $allowedDokumen = ['Lengkap', 'Pending', 'Verifikasi'];
 
     $dataLama = $model->find($id);
     if (!$dataLama) {
@@ -191,6 +232,21 @@ class PembelianRumahController extends BaseController
 
     // Ambil input alasan pembatalan
     $alasanPembatalan = trim($request->getPost('alasan_pembatalan'));
+    $statusPembelian = $alasanPembatalan ? 'Batal' : $request->getPost('status_pembelian');
+    $metodePembayaran = $request->getPost('metode_pembayaran');
+    $statusDokumen = $request->getPost('status_dokumen');
+
+    if (
+        !$request->getPost('customer_id') ||
+        !$request->getPost('perumahan_id') ||
+        !$request->getPost('tanggal_pembelian') ||
+        !in_array($statusPembelian, $allowedStatus, true) ||
+        !in_array($metodePembayaran, $allowedMetode, true) ||
+        !in_array($statusDokumen, $allowedDokumen, true)
+    ) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Data pembelian rumah belum lengkap atau tidak valid']);
+    }
 
     // Data baru default
     $dataBaru = [
@@ -198,16 +254,30 @@ class PembelianRumahController extends BaseController
         'perumahan_id'      => $request->getPost('perumahan_id'),
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
         'harga_beli'        => $request->getPost('harga_beli'),
-        'status_pembelian'  => $request->getPost('status_pembelian'),
-        'metode_pembayaran' => $request->getPost('metode_pembayaran'),
-        'status_dokumen'    => $request->getPost('status_dokumen'),
+        'status_pembelian'  => $statusPembelian,
+        'metode_pembayaran' => $metodePembayaran,
+        'status_dokumen'    => $statusDokumen,
         'request_khusus'    => $request->getPost('request_khusus'),
         'catatan_marketing' => $request->getPost('catatan_marketing'),
     ];
 
-    if (!empty($alasanPembatalan)) {
-        $dataBaru['status_pembelian'] = 'batal';
+    $rumahBaru = $perumahanModel->find($dataBaru['perumahan_id']);
+    if (!$rumahBaru) {
+        return $this->response->setStatusCode(404)
+            ->setJSON(['status' => 'error', 'message' => 'Data rumah tidak ditemukan']);
+    }
 
+    if (
+        (int) $dataBaru['perumahan_id'] !== (int) $dataLama['perumahan_id'] &&
+        strtolower((string) $rumahBaru['status']) === 'terjual'
+    ) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Rumah pengganti sudah terjual']);
+    }
+
+    $db->transStart();
+
+    if (!empty($alasanPembatalan)) {
         // Insert ke pembatalan_transaksi
         $pembatalanModel->insert([
             'pembelian_id'         => $id,
@@ -216,11 +286,26 @@ class PembelianRumahController extends BaseController
             'keterangan_pembatalan'=> $alasanPembatalan
         ]);
 
-        // Update status perumahan jadi tersedia lagi
-        $perumahanModel->update($dataBaru['perumahan_id'], ['status' => 'Dijual']);
     }
 
     $model->update($id, $dataBaru);
+
+    if ((int) $dataBaru['perumahan_id'] !== (int) $dataLama['perumahan_id']) {
+        $perumahanModel->update($dataLama['perumahan_id'], ['status' => 'Dijual']);
+    }
+
+    if (strtolower($dataBaru['status_pembelian']) === 'batal') {
+        $perumahanModel->update($dataBaru['perumahan_id'], ['status' => 'Dijual']);
+    } else {
+        $perumahanModel->update($dataBaru['perumahan_id'], ['status' => 'Terjual']);
+    }
+
+    $db->transComplete();
+
+    if ($db->transStatus() === false) {
+        return $this->response->setStatusCode(500)
+            ->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui pembelian rumah']);
+    }
 
     return $this->response->setJSON(['status' => 'success']);
 }
@@ -229,10 +314,47 @@ class PembelianRumahController extends BaseController
     public function delete($id)
 {
     $model = new PembelianRumahModel();
+    $perumahanModel = new PerumahanModel();
+    $pembayaranModel = new PembayaranRumahModel();
+    $db = \Config\Database::connect();
 
     try {
+        $data = $model->find($id);
+        if (!$data) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan.'
+            ]);
+        }
+
+        $db->transStart();
+        $buktiPembayaran = $pembayaranModel
+            ->where('pembelian_rumah_id', $id)
+            ->where('bukti_bayar IS NOT NULL', null, false)
+            ->findAll();
+
         $deleted = $model->delete($id);
         if ($deleted) {
+            $perumahanModel->update($data['perumahan_id'], ['status' => 'Dijual']);
+        }
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)
+                ->setJSON(['status' => 'error', 'message' => 'Data gagal dihapus.']);
+        }
+
+        if ($deleted) {
+            foreach ($buktiPembayaran as $bukti) {
+                $path = $bukti['bukti_bayar'] ?? null;
+                if ($path) {
+                    $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+                    if (is_file($fullPath)) {
+                        unlink($fullPath);
+                    }
+                }
+            }
+
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Data berhasil dihapus.'

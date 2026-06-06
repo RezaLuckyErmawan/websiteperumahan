@@ -86,6 +86,7 @@ class DetailPembelianbahanController extends BaseController
 
     public function store()
     {
+        $db = \Config\Database::connect();
         $detailModel = new DetailPembelianModel();
         $bahanModel  = new BahanBangunanModel();
 
@@ -95,6 +96,16 @@ class DetailPembelianbahanController extends BaseController
         $harga_satuan      = (float) $this->request->getPost('harga_satuan');
         $subtotal          = $jumlah * $harga_satuan;
 
+        if (!$pembelian_id || !$bahan_bangunan_id || $jumlah <= 0 || $harga_satuan < 0) {
+            return redirect()->to('/detail-pembelian-bahan')->with('error', 'Data detail pembelian belum lengkap atau tidak valid.');
+        }
+
+        $bahan = $bahanModel->find($bahan_bangunan_id);
+        if (!$bahan) {
+            return redirect()->to('/detail-pembelian-bahan')->with('error', 'Bahan bangunan tidak ditemukan.');
+        }
+
+        $db->transStart();
         $detailModel->insert([
             'pembelian_id'      => $pembelian_id,
             'bahan_bangunan_id' => $bahan_bangunan_id,
@@ -103,14 +114,15 @@ class DetailPembelianbahanController extends BaseController
             'subtotal'          => $subtotal,
         ]);
 
-        $bahan = $bahanModel->find($bahan_bangunan_id);
+        $stok_baru = $bahan['stok'] + $jumlah;
 
-        if ($bahan) {
-            $stok_baru = $bahan['stok'] + $jumlah;
+        $bahanModel->update($bahan_bangunan_id, [
+            'stok' => $stok_baru
+        ]);
+        $db->transComplete();
 
-            $bahanModel->update($bahan_bangunan_id, [
-                'stok' => $stok_baru
-            ]);
+        if ($db->transStatus() === false) {
+            return redirect()->to('/detail-pembelian-bahan')->with('error', 'Gagal menyimpan detail pembelian.');
         }
 
         return redirect()->to('/detail-pembelian-bahan')->with('success', 'Detail pembelian berhasil disimpan dan stok diperbarui.');
@@ -138,6 +150,7 @@ class DetailPembelianbahanController extends BaseController
 
     public function update($id)
     {
+        $db = \Config\Database::connect();
         $detailModel = new DetailPembelianModel();
         $bahanModel  = new BahanBangunanModel();
 
@@ -154,11 +167,17 @@ class DetailPembelianbahanController extends BaseController
         $harga_satuan      = (float) $this->request->getPost('harga_satuan');
         $subtotal          = $jumlah_baru * $harga_satuan;
 
+        if (!$pembelian_id || !$bahan_bangunan_id || $jumlah_baru <= 0 || $harga_satuan < 0) {
+            return redirect()->to('/detail-pembelian-bahan')->with('error', 'Data detail pembelian belum lengkap atau tidak valid.');
+        }
+
         // Cek bahan bangunan terkait
         $bahan = $bahanModel->find($bahan_bangunan_id);
         if (!$bahan) {
             return redirect()->to('/detail-pembelian-bahan')->with('error', 'Bahan bangunan tidak ditemukan.');
         }
+
+        $db->transStart();
 
         // Hitung perubahan stok hanya jika bahan bangunan tidak diubah
         if ($bahan_bangunan_id == $detailLama['bahan_bangunan_id']) {
@@ -181,12 +200,18 @@ class DetailPembelianbahanController extends BaseController
             'harga_satuan'      => $harga_satuan,
             'subtotal'          => $subtotal,
         ]);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->to('/detail-pembelian-bahan')->with('error', 'Gagal memperbarui detail pembelian.');
+        }
 
     return redirect()->to('/detail-pembelian-bahan')->with('success', 'Data berhasil diperbarui dan stok disesuaikan.');
     }
 
     public function delete($id)
 {
+    $db = \Config\Database::connect();
     $detailModel = new \App\Models\DetailPembelianModel();
     $bahanModel  = new \App\Models\BahanBangunanModel();
 
@@ -198,6 +223,9 @@ class DetailPembelianbahanController extends BaseController
 
     // Ambil stok sekarang dari bahan bangunan terkait
     $bahan = $bahanModel->find($detail['bahan_bangunan_id']);
+
+    $db->transStart();
+
     if ($bahan) {
         // Kurangi stok sesuai jumlah yang pernah ditambahkan
         $stokBaru = (int)$bahan['stok'] - (int)$detail['jumlah'];
@@ -215,6 +243,12 @@ class DetailPembelianbahanController extends BaseController
 
     // Hapus record detail pembelian
     $detailModel->delete($id);
+    $db->transComplete();
+
+    if ($db->transStatus() === false) {
+        return redirect()->to('/detail-pembelian-bahan')
+                         ->with('error', 'Gagal menghapus detail pembelian.');
+    }
 
     return redirect()->to('/detail-pembelian-bahan')
                      ->with('success', 'Detail pembelian dihapus dan stok bahan disesuaikan.');
