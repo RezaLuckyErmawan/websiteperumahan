@@ -14,28 +14,28 @@ class UserSeeder extends Seeder
                 'password' => password_hash('password123', PASSWORD_DEFAULT),
                 'role'     => 'karyawan',
                 'nama'     => 'RIka',
-                'status'   => 'Aktif'
+                'status'   => 'aktif'
             ],
             [
                 'username' => 'ElGato',
                 'password' => password_hash('password123', PASSWORD_DEFAULT),
                 'role'     => 'karyawan',
                 'nama'     => 'El Gato',
-                'status'   => 'Aktif'
+                'status'   => 'aktif'
             ],
             [
                 'username' => 'UjangRambo',
                 'password' => password_hash('password123', PASSWORD_DEFAULT),
                 'role'     => 'mandor',
                 'nama'     => 'UjangRambo',
-                'status'   => 'Aktif'
+                'status'   => 'aktif'
             ],
             [
                 'username' => 'admin1',
                 'password' => password_hash('admin123', PASSWORD_DEFAULT),
                 'role'     => 'admin',
                 'nama'     => 'Admin Sistem',
-                'status'   => 'Aktif'
+                'status'   => 'aktif'
             ],
         ];
 

@@ -16,7 +16,7 @@ class PekerjaanInsidentilSeeder extends Seeder
             'keterangan' => 'permintaan dari pembeli untuk pemasangan kanopi depan rumah',
             'total_biaya' => 1000000,
             'status' => 'pending',
-            'approved_by' => 'null',
+            'approved_by' => null,
             'created_at'     => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
         ];

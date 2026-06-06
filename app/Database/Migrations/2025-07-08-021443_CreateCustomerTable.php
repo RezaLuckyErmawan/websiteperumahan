@@ -10,6 +10,7 @@ class CreateCustomerTable extends Migration
     {
         $this->forge->addField([
             'id'           => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
+            'perumahan_id' => ['type' => 'INT', 'unsigned' => true, 'null' => true],
             'nama'         => ['type' => 'VARCHAR', 'constraint' => 100],
             'email'        => ['type' => 'VARCHAR', 'constraint' => 100],
             'telepon'      => ['type' => 'VARCHAR', 'constraint' => 20],
@@ -20,7 +21,7 @@ class CreateCustomerTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('perumahan_id', 'perumahan', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('perumahan_id', 'perumahan', 'id', 'SET NULL', 'CASCADE');
         $this->forge->createTable('customer');
     }
 

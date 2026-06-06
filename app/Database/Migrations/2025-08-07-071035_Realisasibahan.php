@@ -18,9 +18,13 @@ class Realisasibahan extends Migration
                 'type' => 'INT',
                 'unsigned' => true,
             ],
-            'bahan_bangunan_id' => [
+            'bahanbangunan_id' => [
                 'type' => 'INT',
                 'unsigned' => true,
+            ],
+            'jumlah' => [
+                'type' => 'INT',
+                'null' => true,
             ],
             'harga_satuan' => [
                 'type' => 'BIGINT',
@@ -47,6 +51,6 @@ class Realisasibahan extends Migration
 
     public function down()
     {
-        $this->forge->createTable('realisasi_bahan');
+        $this->forge->dropTable('realisasi_bahan');
     }
 }

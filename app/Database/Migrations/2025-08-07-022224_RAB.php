@@ -16,6 +16,7 @@ class RAB extends Migration
         ],
         'kode_rab' => [
             'type' => 'VARCHAR',
+            'constraint' => 50,
         ],
         'perumahan_id' => [
             'type' => 'INT',

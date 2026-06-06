@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Database\Migrations\Realisasipekerja;
 use App\Models\PerumahanModel;
 use App\Models\RabRumahModel;
 use App\Models\RealisasiRumahModel;
@@ -120,7 +119,7 @@ class RealisasiPekerjaController extends BaseController
         return $this->response->setJSON(['status' => 'success']);
     }
     public function edit($id) {
-        $model = new RealisasipekerjaModel();
+        $model = new RealisasiPekerjaModel();
         $data = $model->find($id);
         if($data) {
             return $this->response->setJSON($data);

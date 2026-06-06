@@ -119,7 +119,7 @@
       </div>
     </div>
     <!-- Main -->
-    <d iv class="main">
+    <div class="main">
       <!-- Navbar -->
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>

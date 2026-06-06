@@ -40,10 +40,10 @@ $routes->delete('/data-pembelian-bahan/delete/(:num)', 'PembelianbahanController
 
 
 $routes->get('/detail-pembelian-bahan', 'DetailPembelianbahanController::detailpembelian');
-$routes->get('/detail-pembelian/json', 'DetailpembelianbahanController::json');
+$routes->get('/detail-pembelian/json', 'DetailPembelianbahanController::json');
 $routes->get('/form-tambahdata-detailpembelian', 'DetailPembelianbahanController::create');
-$routes->post('/detail-pembelian/store', 'DetailpembelianbahanController::store');
-$routes->get('/detail-pembelian/edit/(:num)', 'DetailpembelianbahanController::edit/$1');
+$routes->post('/detail-pembelian/store', 'DetailPembelianbahanController::store');
+$routes->get('/detail-pembelian/edit/(:num)', 'DetailPembelianbahanController::edit/$1');
 $routes->post('/detail-pembelian/update/(:num)', 'DetailPembelianbahanController::update/$1');
 $routes->get('/detail-pembelian-bahan/delete/(:num)', 'DetailPembelianbahanController::delete/$1');
 
@@ -54,7 +54,7 @@ $routes->get('/bahan-pembangunan/rumah/(:num)', 'BahanPembangunanRumahController
 $routes->get('/form-tambahdata-bahanpembangunanrumah', 'BahanPembangunanRumahController::create');
 $routes->post('/bahan-pembangunan/store', 'BahanPembangunanRumahController::store');
 $routes->get('/bahan-pembangunan/edit/(:num)', 'BahanPembangunanRumahController::edit/$1');
-$routes->post('/bahan-pembangunan/update/(:num)', 'BahanPembangunanRumahCOntroller::update/$1');
+$routes->post('/bahan-pembangunan/update/(:num)', 'BahanPembangunanRumahController::update/$1');
 $routes->get('/bahan-pembangunan/rumah-detail/(:num)', 'BahanPembangunanRumahController::lihatBahan/$1');
 
 $routes->get('/bahan-pembangunan/rumah/delete/(:num)', 'BahanPembangunanRumahController::delete/$1');
@@ -106,7 +106,7 @@ $routes->get('/rab-rumah/json', 'RabRumahController::json');
 $routes->get('/rab-rumah/edit/(:num)', 'RabRumahController::edit/$1');
 $routes->post('/rab-rumah/store', 'RabRumahController::store');
 $routes->post('/rab-rumah/update/(:num)', 'RabRumahController::update/$1');
-$routes->delete('/rab-rumah/delete/(:num)', 'RabrumahController::delete/$1');
+$routes->delete('/rab-rumah/delete/(:num)', 'RabRumahController::delete/$1');
 $routes->get('/rab-rumah/cetak/(:num)', 'RabRumahController::cetak/$1');
 
 
@@ -122,7 +122,7 @@ $routes->get('/rab-pekerja/json', 'RabPekerjaController::json');
 $routes->post('/rab-pekerja/store', 'RabPekerjaController::store');
 $routes->get('/rab-pekerja/edit/(:num)', 'RabPekerjaController::edit/$1');
 $routes->post('/rab-pekerja/update/(:num)', 'RabPekerjaController::update/$1');
-$routes->delete('/rab-pekerja/delete/(:num)', 'RabpekerjaController::delete/$1');
+$routes->delete('/rab-pekerja/delete/(:num)', 'RabPekerjaController::delete/$1');
 $routes->get('rab-pekerja/get-kode-rumah/(:num)', 'RabPekerjaController::getKodeRumah/$1');
 
 
@@ -136,7 +136,7 @@ $routes->get('/realisasi-rumah/cetak/(:num)', 'RealisasiRumahController::cetak/$
 
 $routes->get('/realisasi-pekerja', 'RealisasiPekerjaController::realisasipekerja');
 $routes->get('/realisasi-pekerja/json', 'RealisasiPekerjaController::json');
-$routes->post('/realisasi-pekerja/store', 'RealisasipekerjaController::store');
+$routes->post('/realisasi-pekerja/store', 'RealisasiPekerjaController::store');
 $routes->get('/realisasi-pekerja/edit/(:num)', 'RealisasiPekerjaController::edit/$1');
 $routes->post('/realisasi-pekerja/update/(:num)', 'RealisasiPekerjaController::update/$1');
 $routes->delete('/realisasi-pekerja/delete/(:num)', 'RealisasiPekerjaController::delete/$1');

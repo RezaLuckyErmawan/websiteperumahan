@@ -15,7 +15,7 @@ class LoginController extends BaseController
 
     public function login() {
         $username = $this->request->getPost('username');
-        $password = $this->request->getPOst('password');
+        $password = $this->request->getPost('password');
         $userModel = new UserModel();
         $user =$userModel->where('username', $username)->first();
 
@@ -25,7 +25,7 @@ class LoginController extends BaseController
         if (!password_verify($password, $user['password'])){
             return redirect()->back()->with('error', 'Password Salah coy');
         }
-        if ($user['role'] !== 'admin' && $user['status'] !== 'aktif') {
+        if ($user['role'] !== 'admin' && strtolower($user['status']) !== 'aktif') {
             return redirect()->back()->with('error', 'Akun belum disetujui atau ditolak.');
         }
 

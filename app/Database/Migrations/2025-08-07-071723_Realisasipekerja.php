@@ -49,6 +49,6 @@ class Realisasipekerja extends Migration
 
     public function down()
     {
-        $this->forge->createTable('realisasi_pekerja');  
+        $this->forge->dropTable('realisasi_pekerja');
     }
 }

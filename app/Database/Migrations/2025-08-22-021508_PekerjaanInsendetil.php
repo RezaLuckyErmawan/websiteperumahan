@@ -27,6 +27,7 @@ class PekerjaanInsendetil extends Migration
             ],
             'nama_pekerjaan' => [
                 'type' => 'VARCHAR',
+                'constraint' => 100,
             ],
             'keterangan' => [
                 'type' => 'VARCHAR',
@@ -44,6 +45,7 @@ class PekerjaanInsendetil extends Migration
             'approved_by' => [
                 'type' => 'INT',
                 'unsigned' => true,
+                'null' => true,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -61,6 +63,6 @@ class PekerjaanInsendetil extends Migration
 
     public function down()
     {
-        $this->forge->createTable('pekerjaan_insidentil');
+        $this->forge->dropTable('pekerjaan_insidentil');
     }
 }

@@ -102,7 +102,7 @@ class PekerjaanInsidentilController extends BaseController
             'nama_pekerjaan' => $this->request->getPost('nama_pekerjaan'),
             'keterangan'     => $this->request->getPost('keterangan'),
             'total_biaya'    => $this->request->getPost('total_biaya'),
-            'status'         => 'Pending',
+            'status'         => 'pending',
         ];
 
         if ($model->insert($data)) {
@@ -145,7 +145,7 @@ class PekerjaanInsidentilController extends BaseController
             'nama_pekerjaan' => $this->request->getPost('nama_pekerjaan'),
             'keterangan'     => $this->request->getPost('keterangan'),
             'total_biaya'    => $this->request->getPost('total_biaya'),
-            'status'         => ($role === 'admin') ? $this->request->getPost('status') : 'Pending',
+            'status'         => ($role === 'admin') ? $this->request->getPost('status') : 'pending',
         ];
 
         if ($model->update($id, $data)) {

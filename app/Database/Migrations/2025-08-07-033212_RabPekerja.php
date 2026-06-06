@@ -48,7 +48,7 @@ class RabPekerja extends Migration
 
     public function down()
     {
-        $this->forge->createTable('rab_pekerja');
+        $this->forge->dropTable('rab_pekerja');
     }
 }
  

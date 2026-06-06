@@ -20,7 +20,7 @@ class RealisasiRumah extends Migration
             ],
             'sub_total_asli' => [
                 'type' => 'BIGINT',
-                'contraint' => 20,
+                'constraint' => 20,
                 'null' => true,
             ],
             'tanggal_mulai' => [
@@ -45,6 +45,6 @@ class RealisasiRumah extends Migration
 
     public function down()
     {
-        $this->forge->createTable('realisasi_rumah');
+        $this->forge->dropTable('realisasi_rumah');
     }
 }

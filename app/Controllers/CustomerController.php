@@ -14,7 +14,7 @@ class CustomerController extends BaseController
         $model = new CustomerModel();
         $perumahan = new PerumahanModel();
        $data['customers'] = $model->orderBy('created_at', 'DESC')->findAll();
-        $data['perumahan'] = $perumahan->where('status !=', 'terjual')->findAll();
+        $data['perumahan'] = $perumahan->where('status !=', 'Terjual')->findAll();
         return view ('page/datacustomer/data-customer', $data);
     }
     

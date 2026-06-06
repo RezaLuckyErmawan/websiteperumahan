@@ -129,7 +129,7 @@ class PembelianRumahController extends BaseController
     $model->insert($data);
 
     // Update status rumah
-    $perumahanModel->update($data['perumahan_id'], ['status' => 'terjual']);
+    $perumahanModel->update($data['perumahan_id'], ['status' => 'Terjual']);
 
     return $this->response->setJSON(['status' => 'success']);
 }
@@ -199,7 +199,7 @@ class PembelianRumahController extends BaseController
         ]);
 
         // Update status perumahan jadi tersedia lagi
-        $perumahanModel->update($dataBaru['perumahan_id'], ['status' => 'dijual']);
+        $perumahanModel->update($dataBaru['perumahan_id'], ['status' => 'Dijual']);
     }
 
     $model->update($id, $dataBaru);

@@ -24,6 +24,7 @@ class PembatalanTransaksi extends Migration
             ],
             'keterangan_pembatalan' => [
                 'type' => 'VARCHAR',
+                'constraint' => 255,
             ],
             'pembelian_id' => [
                 'type' => 'INT',
@@ -44,6 +45,6 @@ class PembatalanTransaksi extends Migration
 
     public function down()
     {
-        $this->forge->createTable('pembatalan_transaksi');
+        $this->forge->dropTable('pembatalan_transaksi');
     }
 }

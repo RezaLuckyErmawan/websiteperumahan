@@ -58,7 +58,7 @@ class UserController extends BaseController
         $data = [
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
-            'password' => $this->request->getPost('password'),
+            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
             'role' => $this->request->getPost('role'),
             'status' => $this->request->getPost('status')
         ];
@@ -78,7 +78,6 @@ class UserController extends BaseController
         $data = [
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
-            'password' => $this->request->getPost('password'),
             'role' => $this->request->getPost('role'),
             'status' => $this->request->getPost('status')
         ];

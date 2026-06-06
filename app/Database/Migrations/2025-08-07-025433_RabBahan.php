@@ -12,7 +12,7 @@ class RabBahan extends Migration
             'id' => [
                 'type' => 'INT',
                 'unsigned' => true,
-                'auto_incremenet' => true,
+                'auto_increment' => true,
             ],
             'rab_id' => [
                 'type' => 'INT',
@@ -49,6 +49,6 @@ class RabBahan extends Migration
 
     public function down()
     {
-        $this->forge->createTable('rab_bahan');
+        $this->forge->dropTable('rab_bahan');
     }
 }
