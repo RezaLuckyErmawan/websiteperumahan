@@ -119,6 +119,7 @@
               <th>Total Dibayar</th>
               <th>Sisa Tagihan</th>
               <th>Status</th>
+              <th>Bukti</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -203,6 +204,13 @@
               <div class="mb-3">
                 <label class="form-label">Keterangan</label>
                 <textarea class="form-control" name="keterangan" rows="3" placeholder="Contoh: Cicilan bulan pertama, transfer BCA, atau catatan pembayaran lainnya"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Bukti Pembayaran</label>
+                <input type="file" class="form-control" name="bukti_bayar" accept=".jpg,.jpeg,.png,.pdf">
+                <small class="text-muted">Format JPG, PNG, atau PDF. Maksimal 2 MB.</small>
+                <div id="buktiSaatIni" class="mt-2"></div>
               </div>
             </div>
             <div class="modal-footer">

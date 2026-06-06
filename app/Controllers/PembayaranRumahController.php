@@ -124,6 +124,7 @@ class PembayaranRumahController extends BaseController
         }
 
         $model->delete($id);
+        $this->deleteBuktiBayar($data['bukti_bayar'] ?? null);
         $this->updateStatusPembelian($data['pembelian_rumah_id']);
 
         return $this->response->setJSON(['status' => 'success', 'message' => 'Pembayaran berhasil dihapus']);
@@ -167,15 +168,30 @@ class PembayaranRumahController extends BaseController
             'keterangan' => $this->request->getPost('keterangan'),
         ];
 
+        $uploadedBukti = $this->uploadBuktiBayar();
+        if (is_array($uploadedBukti) && ($uploadedBukti['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedBukti);
+        }
+
         if ($id) {
             $old = $model->find($id);
             if (!$old) {
                 return $this->response->setStatusCode(404)
                     ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
             }
+
+            if ($uploadedBukti) {
+                $data['bukti_bayar'] = $uploadedBukti;
+                $this->deleteBuktiBayar($old['bukti_bayar'] ?? null);
+            }
+
             $model->update($id, $data);
             $this->updateStatusPembelian($old['pembelian_rumah_id']);
         } else {
+            if ($uploadedBukti) {
+                $data['bukti_bayar'] = $uploadedBukti;
+            }
+
             $model->insert($data);
         }
 
@@ -237,5 +253,51 @@ class PembayaranRumahController extends BaseController
         }
 
         $pembelianModel->update($pembelianId, ['status_pembelian' => $status]);
+    }
+
+    private function uploadBuktiBayar()
+    {
+        $file = $this->request->getFile('bukti_bayar');
+
+        if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (!$file->isValid()) {
+            return ['status' => 'error', 'message' => 'Upload bukti pembayaran gagal'];
+        }
+
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+        $extension = strtolower($file->getClientExtension());
+
+        if (!in_array($extension, $allowedExtensions, true)) {
+            return ['status' => 'error', 'message' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF'];
+        }
+
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            return ['status' => 'error', 'message' => 'Ukuran bukti pembayaran maksimal 2 MB'];
+        }
+
+        $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'bukti_pembayaran';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0775, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadPath, $newName);
+
+        return 'uploads/bukti_pembayaran/' . $newName;
+    }
+
+    private function deleteBuktiBayar(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
     }
 }

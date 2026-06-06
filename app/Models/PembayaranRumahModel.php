@@ -16,6 +16,7 @@ class PembayaranRumahModel extends Model
         'jenis_pembayaran',
         'metode_bayar',
         'keterangan',
+        'bukti_bayar',
         'created_at',
         'updated_at',
     ];

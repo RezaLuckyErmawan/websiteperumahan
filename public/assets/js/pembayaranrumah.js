@@ -48,6 +48,15 @@ $(document).ready(function () {
         }
       },
       {
+        data: 'bukti_bayar',
+        render: function (data) {
+          if (!data) return '<span class="text-muted">Belum ada</span>';
+          return `<a class="btn btn-sm btn-outline-secondary" href="/${data}" target="_blank"><i class="fas fa-file-invoice"></i></a>`;
+        },
+        orderable: false,
+        searchable: false
+      },
+      {
         data: 'id',
         render: data => `
           <button class="btn btn-sm btn-primary" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
@@ -84,6 +93,7 @@ function openCreateForm(pembelianId = '') {
   form[0].reset();
   form.find('input[name=id]').val('');
   form.find('select[name=pembelian_rumah_id]').prop('disabled', false);
+  $('#buktiSaatIni').html('');
   $('#modalFormLabel').text('Tambah Pembayaran Rumah');
 
   if (pembelianId) {
@@ -111,6 +121,12 @@ function editData(id) {
     form.find('select[name=jenis_pembayaran]').val(data.jenis_pembayaran);
     form.find('select[name=metode_bayar]').val(data.metode_bayar);
     form.find('textarea[name=keterangan]').val(data.keterangan);
+    form.find('input[name=bukti_bayar]').val('');
+    $('#buktiSaatIni').html(
+      data.bukti_bayar
+        ? `<a href="/${data.bukti_bayar}" target="_blank">Lihat bukti pembayaran saat ini</a>`
+        : '<span class="text-muted">Belum ada bukti pembayaran.</span>'
+    );
 
     $('#modalFormLabel').text('Edit Pembayaran Rumah');
     updateRingkasan(data.id);
@@ -123,11 +139,14 @@ function simpanForm() {
   const id = form.find('input[name=id]').val();
   const url = id ? `/pembayaran-rumah/update/${id}` : '/pembayaran-rumah/store';
   const disabled = form.find(':disabled').prop('disabled', false);
+  const formData = new FormData(form[0]);
 
   $.ajax({
     url: url,
     method: 'POST',
-    data: form.serialize(),
+    data: formData,
+    processData: false,
+    contentType: false,
     success: function (res) {
       disabled.prop('disabled', true);
       if (res.status === 'success') {
