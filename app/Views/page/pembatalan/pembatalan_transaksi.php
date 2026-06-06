@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Admin</title>
+  <title>Pembatalan Transaksi | Sistem Manajemen Perumahan</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -118,8 +118,8 @@
       <!-- Navbar -->
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="search">
-        
+        <div class="page-title">
+          Pembatalan Transaksi
         </div>
         <div class="actions">
           <div class="notifications">
@@ -134,8 +134,6 @@
 
       <!-- Content -->
       <div class="content1">
-        <h2>Sistem Manajemen Informasi Perumahan</h1>
-        <h2>Data Pembatalan Transaksi</h2>
        
         <div>
         <table id="dataPembatalanTable" class="display table table-bordered">

@@ -16,7 +16,7 @@ class PembayaranRumahController extends BaseController
             ->select('pembelian_rumah.*, customer.nama AS nama_customer, perumahan.kode_rumah')
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
-            ->where('LOWER(pembelian_rumah.status_pembelian) !=', 'batal', false)
+            ->where("LOWER(pembelian_rumah.status_pembelian) != 'batal'", null, false)
             ->orderBy('pembelian_rumah.created_at', 'DESC')
             ->findAll();
 

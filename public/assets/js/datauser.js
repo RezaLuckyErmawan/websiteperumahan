@@ -46,7 +46,16 @@ $(document).ready(function() {
         orderable: false,
         searchable: false
       }
-    ]
+    ],
+    initComplete: function () {
+      $('#dataUserTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+    }
   });
 });
 

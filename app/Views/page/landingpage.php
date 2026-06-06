@@ -57,8 +57,8 @@
     }
 
     .hero {
-      min-height: 82vh;
-      padding: 128px 32px 72px;
+      min-height: 620px;
+      padding: 108px 32px 54px;
       display: flex;
       align-items: flex-end;
       color: #ffffff;
@@ -75,7 +75,7 @@
     .hero h1 {
       margin: 0 0 14px;
       max-width: 680px;
-      font-size: clamp(42px, 6vw, 72px);
+      font-size: clamp(40px, 5vw, 60px);
       line-height: 1;
       font-weight: 800;
       letter-spacing: 0;
@@ -212,8 +212,8 @@
       }
 
       .hero {
-        min-height: 78vh;
-        padding: 110px 18px 50px;
+        min-height: 560px;
+        padding: 96px 18px 42px;
       }
 
       .search-box {

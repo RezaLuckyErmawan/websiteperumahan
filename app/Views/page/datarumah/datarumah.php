@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Admin</title>
+  <title>Data Perumahan | Sistem Manajemen Perumahan</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
@@ -119,8 +119,8 @@
       <!-- Navbar -->
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="search">
-          
+        <div class="page-title">
+          Data Perumahan
         </div>
         <div class="actions">
           <div class="notifications">
@@ -134,16 +134,6 @@
       </div>
       <!-- Content -->
       <div class="content1">
-        <h2>Sistem Manajemen Informasi Perumahan</h1>
-        <h2>Data Perumahan</h2>
-        <div class="table-header">
-          <!-- <a class="add-btn1" onclick="openCreateForm()">+ Tambah Data</a> -->
-          <button onclick="openCreateForm()" class="add-btn1">
-              <i class="fas fa-plus me-1"></i> Tambah Data
-          </button>
-
-
-        </div>  
           <table  id="dataRumahTable" class="display table table-striped table-bordered w-100">
               <thead>
                   <tr>
@@ -154,7 +144,7 @@
                       <th>Luas Bangunan</th>
                       <th>Harga</th>
                       <th>Status</th>
-                      <th>action</th>
+                      <th>Aksi</th>
                   </tr>
               </thead>
               <tbody>

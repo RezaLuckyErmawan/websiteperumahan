@@ -2,7 +2,9 @@ $(document).ready(function(){
     $('#dataUserTable').DataTable({
         processing: true,
         serverSide: true,
-        lengthMenu: [5, 10,20,25],
+        
+    lengthChange: false,
+    lengthMenu: [5, 10,20,25],
         ajax: '/data-spv/json',
         columns: [
             {data : 'nama'},

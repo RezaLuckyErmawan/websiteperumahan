@@ -2,6 +2,8 @@ $(document).ready(function() {
   $('#dataUserTable').DataTable({
     processing: true,
     serverSide: true,
+    
+    lengthChange: false,
     lengthMenu: [5, 10, 20, 25],
     ajax: '/data-mandor/json',
     columns: [

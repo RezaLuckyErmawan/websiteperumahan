@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Admin</title>
+  <title>Data Customer | Sistem Manajemen Perumahan</title>
    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -120,9 +120,8 @@
       <!-- Navbar -->
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="search">
-          <!-- <span class="material-icons">search</span>
-          <input type="text" placeholder="Search..."> -->
+        <div class="page-title">
+          Data Customer
         </div>
         <div class="actions">
           <div class="notifications">
@@ -137,11 +136,6 @@
 
       <!-- Content -->
       <div class="content1">
-        <h2>Sistem Manajemen Informasi Perumahan</h1>
-        <h2>Data Customer</h2>
-        <button onclick="openCreateForm()" class="add-btn1">
-          <i class="fas fa-add"></i> Tambah Data
-        </button>
         <div class="table-responsive">
         <table id="customerTable" class="display">
              <thead>

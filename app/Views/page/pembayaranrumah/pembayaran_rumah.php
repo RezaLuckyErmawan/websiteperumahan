@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data Pembayaran Rumah</title>
+  <title>Data Pembayaran Rumah | Sistem Manajemen Perumahan</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
@@ -93,7 +93,9 @@
     <div class="main">
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="search"></div>
+        <div class="page-title">
+          Data Pembayaran Rumah
+        </div>
         <div class="actions">
           <div class="profile">
             <img src="https://i.pravatar.cc/40" alt="Profile">
@@ -102,13 +104,7 @@
       </div>
 
       <div class="content1">
-        <h2>Sistem Manajemen Informasi Perumahan</h2>
-        <h2>Data Pembayaran Rumah</h2>
-        <button onclick="openCreateForm()" class="add-btn1">
-          <i class="fas fa-plus me-1"></i> Tambah Pembayaran
-        </button>
-
-        <table id="pembayaranRumahTable" class="display table table-striped table-bordered w-100">
+<table id="pembayaranRumahTable" class="display table table-striped table-bordered w-100">
           <thead>
             <tr>
               <th>Customer</th>

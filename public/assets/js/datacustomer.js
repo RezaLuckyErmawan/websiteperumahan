@@ -24,8 +24,15 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
+      $('#customerTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
       $('#customerTable_filter input')
-        .attr('placeholder', '🔍 Cari nama, email, alamat...')
+        .attr('placeholder', 'Cari nama, email, alamat...')
         .addClass('form-control form-control-sm ms-2')
         .css({ width: '300px', display: 'inline-block', marginLeft: '10px' });
 

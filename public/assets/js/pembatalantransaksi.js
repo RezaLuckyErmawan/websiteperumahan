@@ -1,6 +1,8 @@
 $('#dataPembatalanTable').DataTable({
     processing: true,
     serverSide: true,
+    
+    lengthChange: false,
     pageLength: 5,
     lengthMenu: [5, 10, 25, 50],
     ajax: '/pembatalan-transaksi/json',
@@ -19,7 +21,7 @@ $('#dataPembatalanTable').DataTable({
 
     initComplete: function() {
         $('#dataPembatalanTable_filter input')
-        .attr('placeholder', '🔍 Cari berdasarkan kode, lokasi, tipe, status...')
+        .attr('placeholder', 'Cari berdasarkan kode, lokasi, tipe, status...')
         .addClass('form-control form-control-sm ms-2')
         .css({
             'display': 'inline-block',

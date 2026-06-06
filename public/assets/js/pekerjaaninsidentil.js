@@ -61,8 +61,15 @@ $('#dataInsidentilTable').DataTable({
         }
     ],
     initComplete: function() {
-        $('#dataInsidentilTable_filter input')
-            .attr('placeholder', '🔍 Cari berdasarkan kode, total, nama, tanggal...')
+              $('#dataInsidentilTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+$('#dataInsidentilTable_filter input')
+            .attr('placeholder', 'Cari berdasarkan kode, total, nama, tanggal...')
             .addClass('form-control form-control-sm ms-2')
             .css({
                 'display': 'inline-block',

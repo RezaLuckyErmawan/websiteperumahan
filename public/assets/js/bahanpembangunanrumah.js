@@ -27,8 +27,15 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
-      $('#bahanPembangunanTable_filter input')
-        .attr('placeholder', '🔍 Cari bahan, rumah...')
+            $('#bahanPembangunanTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+$('#bahanPembangunanTable_filter input')
+        .attr('placeholder', 'Cari bahan, rumah...')
         .addClass('form-control form-control-sm ms-2')
         .css({ 'width': '300px', 'margin-left': '10px' });
 

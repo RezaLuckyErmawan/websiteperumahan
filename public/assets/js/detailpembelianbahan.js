@@ -32,8 +32,15 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
-      $('#detailPembelianTable_filter input')
-        .attr('placeholder', '🔍 Cari nota, bahan, jumlah...')
+            $('#detailPembelianTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+$('#detailPembelianTable_filter input')
+        .attr('placeholder', 'Cari nota, bahan, jumlah...')
         .addClass('form-control form-control-sm ms-2')
         .css({
           'display': 'inline-block',

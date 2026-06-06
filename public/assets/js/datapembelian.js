@@ -29,9 +29,15 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
+            $('#pembelianTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
 
-      $('#pembelianTable_filter input')
-        .attr('placeholder', '🔍 Cari nomor nota, supplier, atau harga...')
+$('#pembelianTable_filter input')
+        .attr('placeholder', 'Cari nomor nota, supplier, atau harga...')
         .addClass('form-control form-control-sm ms-2')
         .css({
           'display': 'inline-block',

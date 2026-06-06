@@ -38,8 +38,15 @@ $(document).ready(function () {
             }
         ],
         initComplete: function() {
-            $('#dataRealisasiTable_filter input')
-            .attr('placeholder', '🔍 Cari berdasarkan kode, bahan, harga...')
+              $('#dataRealisasiTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+$('#dataRealisasiTable_filter input')
+            .attr('placeholder', 'Cari berdasarkan kode, bahan, harga...')
             .addClass('form-control form-control-sm ms-2')
             .css({ 'display': 'inline-block', 'width': '300px', 'margin-left': '10px' });
 

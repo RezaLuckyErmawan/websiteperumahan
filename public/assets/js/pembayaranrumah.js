@@ -67,7 +67,14 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
-      $('#pembayaranRumahTable_filter input')
+            $('#pembayaranRumahTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Pembayaran
+          </button>
+        `);
+
+$('#pembayaranRumahTable_filter input')
         .attr('placeholder', 'Cari customer, rumah, metode...')
         .addClass('form-control form-control-sm ms-2')
         .css({ 'display': 'inline-block', 'width': '300px', 'margin-left': '10px' });

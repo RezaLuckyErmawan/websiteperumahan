@@ -30,8 +30,15 @@ $('#dataRealisasiTable').DataTable({
         }
     ],
    initComplete: function() {
-        $('#dataRealisasiTable_filter input')
-        .attr('placeholder', '🔍 Cari berdasarkan kode, total, tanggal...')
+              $('#dataRealisasiTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
+
+$('#dataRealisasiTable_filter input')
+        .attr('placeholder', 'Cari berdasarkan kode, total, tanggal...')
         .addClass('form-control form-control-sm ms-2')
         .css({
             'display': 'inline-block',

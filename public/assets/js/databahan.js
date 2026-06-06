@@ -28,9 +28,15 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
+            $('#dataBahanTable_length')
+        .html(`
+          <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        `);
 
-      $('#dataBahanTable_filter input')
-        .attr('placeholder', '🔍 Cari nama, satuan, atau stok...')
+$('#dataBahanTable_filter input')
+        .attr('placeholder', 'Cari nama, satuan, atau stok...')
         .addClass('form-control form-control-sm ms-2')
         .css({
           'display': 'inline-block',

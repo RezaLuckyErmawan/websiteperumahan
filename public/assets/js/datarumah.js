@@ -18,28 +18,8 @@ $('#dataRumahTable').DataTable({
     },
     { data: 'status',
         render: function (data) {
-        let style = '';
-        let textColor = 'text-white'; 
-
-        switch (data.toLowerCase()) {
-        case 'tanah':
-            style = 'background-color: #8B4513;';
-            break;
-        case 'dijual':
-            style = 'background-color:rgb(255, 7, 7); color: white;';
-            textColor = '';
-            break;
-        case 'terjual':
-            style = 'background-color:rgb(34, 247, 91); color: #000';
-            break;
-        case 'proses pembangunan':
-            style = 'background-color: #ffc107; color: #000;';
-            break;
-        default:
-            style = 'background-color: #6c757d;';
-    }
-
-    return `<span class="badge ${textColor}" style="${style} padding: 8px 12px; font-size: 0.85rem; border-radius: 10px;">${data}</span>`;
+        const className = (data || '').toLowerCase().replace(/\s+/g, '-');
+        return `<span class="status-label ${className}">${data}</span>`;
   }
 },
 
@@ -53,7 +33,7 @@ $('#dataRumahTable').DataTable({
             <i class="fas fa-trash"></i> Hapus
           </button>
          
-            <a href="javascript:void(0);" class="btn btn-sm btn-warning mt-2" onclick="lihatBahan(${row.id})">
+            <a href="javascript:void(0);" class="btn btn-sm btn-warning" onclick="lihatBahan(${row.id})">
             <i class="fas fa-box-open"></i> Lihat Bahan
             </a>
         `;
@@ -64,8 +44,15 @@ $('#dataRumahTable').DataTable({
   ],
 
   initComplete: function() {
+     $('#dataRumahTable_length')
+    .html(`
+      <button type="button" onclick="openCreateForm()" class="add-btn1">
+        <i class="fas fa-plus"></i> Tambah Data
+      </button>
+    `);
+
      $('#dataRumahTable_filter input')
-    .attr('placeholder', '🔍 Cari berdasarkan kode, lokasi, tipe, status...')
+    .attr('placeholder', 'Cari berdasarkan kode, lokasi, tipe, status...')
     .addClass('form-control form-control-sm ms-2')
     .css({
         'display': 'inline-block',
