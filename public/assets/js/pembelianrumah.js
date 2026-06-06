@@ -14,6 +14,16 @@ $(document).ready(function () {
             return 'Rp' + parseInt(data).toLocaleString('id-ID');
         }
       },
+      { data: 'total_bayar',
+        render: function (data) {
+            return 'Rp' + parseInt(data || 0).toLocaleString('id-ID');
+        }
+      },
+      { data: 'sisa_bayar',
+        render: function (data) {
+            return 'Rp' + parseInt(data || 0).toLocaleString('id-ID');
+        }
+      },
       { data: 'status_pembelian',
         render: function (data) {
           let style= '';
@@ -47,6 +57,7 @@ $(document).ready(function () {
           <button class="btn btn-sm btn-primary" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
           <button class="btn btn-sm btn-danger" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
           <button class="btn btn-sm btn-secondary" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
+          <button class="btn btn-sm btn-success" onclick="bukaPembayaran(${data})"><i class="fas fa-money-bill-wave"></i></button>
           
         `,
         orderable: false,
@@ -77,6 +88,10 @@ function openCreateForm() {
   $('#modalForm').modal('show');
 }
 
+function bukaPembayaran(id) {
+  window.location.href = `/pembayaran-rumah?pembelian_id=${id}`;
+}
+
 function detailData(id) {
   $.ajax({
     url: `/pembelian-rumah/edit/${id}`,
@@ -89,6 +104,8 @@ function detailData(id) {
         $('#detailKodeRumah').text(data.kode_rumah);
         $('#detailTanggal').text(data.tanggal_pembelian);
         $('#detailHarga').text('Rp' + parseInt(data.harga_beli).toLocaleString('id-ID'));
+        $('#detailTotalBayar').text('Rp' + parseInt(data.total_bayar || 0).toLocaleString('id-ID'));
+        $('#detailSisaBayar').text('Rp' + parseInt(data.sisa_bayar || 0).toLocaleString('id-ID'));
         $('#detailStatusPembelian').text(data.status_pembelian);
         $('#detailMetode').text(data.metode_pembayaran);
         $('#detailDokumen').text(data.status_dokumen);

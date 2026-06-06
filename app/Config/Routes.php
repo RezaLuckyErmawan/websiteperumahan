@@ -79,6 +79,14 @@ $routes->delete('pembelian-rumah/delete/(:num)', 'PembelianRumahController::dele
 $routes->get('/chart-penjualan-rumah', 'PembelianRumahController::chartPenjualanRumah');
 $routes->get('/chart-penjualan-rumah', 'PembelianRumahController::chartPenjualanRumah');
 
+$routes->get('/pembayaran-rumah', 'PembayaranRumahController::pembayaranrumah');
+$routes->get('/pembayaran-rumah/json', 'PembayaranRumahController::json');
+$routes->get('/pembayaran-rumah/ringkasan/(:num)', 'PembayaranRumahController::ringkasan/$1');
+$routes->get('/pembayaran-rumah/edit/(:num)', 'PembayaranRumahController::edit/$1');
+$routes->post('/pembayaran-rumah/store', 'PembayaranRumahController::store');
+$routes->post('/pembayaran-rumah/update/(:num)', 'PembayaranRumahController::update/$1');
+$routes->delete('/pembayaran-rumah/delete/(:num)', 'PembayaranRumahController::delete/$1');
+
 
 $routes->get('/login', 'LoginController::loginform');
 $routes->post('/login/auth', 'LoginController::login');

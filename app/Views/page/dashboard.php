@@ -98,6 +98,7 @@
            </button>
            <div class="dropdown-container">
             <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Pembelian Rumah</a>
+            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Data Pembayaran Rumah</a>
            </div>
         </div> 
         <!-- Menu Master -->

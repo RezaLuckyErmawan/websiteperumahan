@@ -95,6 +95,7 @@
            </button>
            <div class="dropdown-container" style="margin-top: 10px;">
             <a class="menu-link active" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Penjualan Rumah</a>
+            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Data Pembayaran Rumah</a>
            </div>
         </div> 
         <!-- Menu Master -->
@@ -154,6 +155,8 @@
                       <th>Kode Rumah</th>
                       <th>Tanggal</th>
                       <th>Harga</th>
+                      <th>Terbayar</th>
+                      <th>Sisa</th>
                       <th>Status</th>
                       <th>Metode</th>
                       <th>action</th>
@@ -195,7 +198,7 @@
 
                     <!-- Customer -->
                     <div class="mb-3">
-                        <label class="form-label">Nama Customer</label>
+                        <label class="form-label">Nama Customer <span class="text-danger">*</span></label>
                         <select class="form-control" name="customer_id" required>
                             <option value="">-- Nama Customer --</option>
                             <?php foreach ($customer as $cs): ?>
@@ -208,7 +211,7 @@
 
                     <!-- Kode Rumah -->
                     <div class="mb-3">
-                        <label class="form-label">Kode Rumah</label>
+                        <label class="form-label">Kode Rumah <span class="text-danger">*</span></label>
                         <select name="perumahan_id" class="form-control" required>
                             <option value="">-- Pilih Rumah --</option>
 
@@ -247,13 +250,13 @@
 
                     <!-- Tanggal -->
                     <div class="mb-3">
-                        <label class="form-label">Tanggal Pembelian</label>
+                        <label class="form-label">Tanggal Pembelian <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="tanggal_pembelian" required>
                     </div>
 
                     <!-- Harga -->
                     <div class="mb-3">
-                        <label class="form-label">Harga Beli</label>
+                        <label class="form-label">Harga Beli <span class="text-danger">*</span></label>
                         <input type="number"
                                class="form-control"
                                name="harga_beli"
@@ -264,7 +267,7 @@
 
                     <!-- Status Pembelian -->
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian</label>
+                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
                         <select name="status_pembelian" class="form-control" required>
                             <option value="">-- Pilih Status --</option>
                             <option value="Lunas">Lunas</option>
@@ -276,7 +279,7 @@
 
                     <!-- Metode Pembayaran -->
                     <div class="mb-3">
-                        <label class="form-label">Metode Pembayaran</label>
+                        <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
                         <select name="metode_pembayaran" class="form-control" required>
                             <option value="">-- Pilih Metode --</option>
                             <option value="Cash">Cash</option>
@@ -287,7 +290,7 @@
 
                     <!-- Status Dokumen -->
                     <div class="mb-3">
-                        <label class="form-label">Status Dokumen</label>
+                        <label class="form-label">Status Dokumen <span class="text-danger">*</span></label>
                         <select name="status_dokumen" class="form-control" required>
                             <option value="">-- Pilih Status Dokumen --</option>
                             <option value="Lengkap">Lengkap</option>
@@ -362,6 +365,8 @@
                 <tr><th>Kode Rumah</th><td id="detailKodeRumah"></td></tr>
                 <tr><th>Tanggal</th><td id="detailTanggal"></td></tr>
                 <tr><th>Harga</th><td id="detailHarga"></td></tr>
+                <tr><th>Total Dibayar</th><td id="detailTotalBayar"></td></tr>
+                <tr><th>Sisa Tagihan</th><td id="detailSisaBayar"></td></tr>
                 <tr><th>Status Pembelian</th><td id="detailStatusPembelian"></td></tr>
                 <tr><th>Metode Pembayaran</th><td id="detailMetode"></td></tr>
                 <tr><th>Status Dokumen</th><td id="detailDokumen"></td></tr>

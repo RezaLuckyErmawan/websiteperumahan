@@ -60,10 +60,17 @@ class PembelianRumahController extends BaseController
         $builder->select('
             pembelian_rumah.*, 
             customer.nama AS customer_nama, 
-            perumahan.kode_rumah
+            perumahan.kode_rumah,
+            COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
+            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
         ');
         $builder->join('customer', 'customer.id = pembelian_rumah.customer_id');
         $builder->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id');
+        $builder->join(
+            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+            'total_bayar.pembelian_rumah_id = pembelian_rumah.id',
+            'left'
+        );
 
         $searchValue = $request->getGet('search')['value'] ?? '';
         $start = $request->getGet('start') ?? 0;
@@ -138,9 +145,20 @@ class PembelianRumahController extends BaseController
     public function edit($id)
 {
     $model = new PembelianRumahModel();
-    $data = $model->select('pembelian_rumah.*, customer.nama as nama_customer, perumahan.kode_rumah')
+    $data = $model->select('
+            pembelian_rumah.*,
+            customer.nama as nama_customer,
+            perumahan.kode_rumah,
+            COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
+            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
+        ')
         ->join('customer', 'customer.id = pembelian_rumah.customer_id')
         ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
+        ->join(
+            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+            'total_bayar.pembelian_rumah_id = pembelian_rumah.id',
+            'left'
+        )
         ->find($id);
      
     if ($data) {
