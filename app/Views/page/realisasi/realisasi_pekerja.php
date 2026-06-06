@@ -241,8 +241,8 @@
     </div>     
      <style>
     #dataRealisasiTable thead th {
-        background-color: #1a5590ff;
-        color: #ecf0f1;
+        background-color: #eef6f8;
+        color: #203246;
         text-align: center;
     }
     </style>

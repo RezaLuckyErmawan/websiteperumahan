@@ -3,169 +3,230 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Landing Page Jual Rumah</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>GreenHome.id</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
-      margin: 0;
-      padding: 0;
       box-sizing: border-box;
     }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: url('https://images.unsplash.com/photo-1600607688188-cf5d6e4caa3d') center/cover fixed no-repeat;
+      margin: 0;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.85);
-      z-index: -1;
+      background: #f5f7fb;
+      color: #172033;
+      font-family: 'Inter', Arial, sans-serif;
     }
 
     header {
-      background: linear-gradient(to right, #4CAF50, #2E7D32);
-      padding: 1rem 2rem;
-      color: white;
+      min-height: 68px;
+      padding: 0 32px;
+      color: #ffffff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      position: sticky;
-      top: 0;
+      position: fixed;
+      inset: 0 0 auto 0;
       z-index: 10;
+      background: rgba(23, 50, 77, 0.72);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
     }
 
     nav a {
-      color: white;
-      margin-left: 1.5rem;
+      color: rgba(255, 255, 255, 0.88);
       text-decoration: none;
-      font-weight: bold;
-      transition: color 0.3s;
+      font-size: 14px;
+      font-weight: 700;
     }
 
     nav a:hover {
-      color: #C8E6C9;
+      color: #ffffff;
     }
 
     .hero {
-      background: linear-gradient(rgba(0, 100, 0, 0.7), rgba(0, 100, 0, 0.7)), url('https://source.unsplash.com/1600x600/?real-estate,green') center/cover no-repeat;
-      color: white;
-      padding: 5rem 2rem;
-      text-align: center;
-      border-bottom-left-radius: 40px;
-      border-bottom-right-radius: 40px;
+      min-height: 82vh;
+      padding: 128px 32px 72px;
+      display: flex;
+      align-items: flex-end;
+      color: #ffffff;
+      background:
+        linear-gradient(90deg, rgba(15, 23, 42, 0.74), rgba(15, 118, 110, 0.34)),
+        url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1800&q=85') center/cover no-repeat;
+    }
+
+    .hero-inner {
+      width: min(1080px, 100%);
+      margin: 0 auto;
     }
 
     .hero h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+      margin: 0 0 14px;
+      max-width: 680px;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 620px;
+      margin: 0 0 24px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 18px;
+      line-height: 1.6;
     }
 
     .search-box {
-      margin-top: 1.5rem;
+      width: min(560px, 100%);
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 8px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
     }
 
     .search-box input {
-      padding: 0.8rem 1rem;
-      border-radius: 30px;
-      border: none;
-      width: 80%;
-      max-width: 500px;
-      font-size: 1rem;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      flex: 1;
+      min-width: 0;
+      min-height: 44px;
+      padding: 10px 13px;
+      border: 1px solid #d9e0ea;
+      border-radius: 8px;
+      outline: none;
+      font: inherit;
     }
 
-    main {
-      background: url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
-      background-attachment: fixed;
-      padding: 3rem 2rem;
-      backdrop-filter: blur(3px);
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: 2.5rem;
-      color: #ffffffff;
-      /* text-shadow: 1px 1px 2px #fff; */
-    }
-
-    .card-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-    }
-
-    .card {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-      width: 300px;
-      overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
+    .search-box button {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid #2563eb;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-weight: 800;
       cursor: pointer;
     }
 
+    main {
+      padding: 42px 32px 60px;
+      background: #f5f7fb;
+    }
+
+    .section-title {
+      width: min(1080px, 100%);
+      margin: 0 auto 20px;
+      font-size: 28px;
+      color: #172033;
+      font-weight: 800;
+    }
+
+    .card-container {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e4e8ef;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      overflow: hidden;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
     .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
     }
 
     .card img {
       width: 100%;
-      height: 200px;
+      height: 190px;
       object-fit: cover;
     }
 
     .card-content {
-      padding: 1rem;
+      padding: 16px;
     }
 
     .card-content h3 {
-      margin-bottom: 0.5rem;
-      color: #388e3c;
+      margin: 0 0 8px;
+      color: #172033;
+      font-size: 18px;
+      font-weight: 800;
     }
 
     .card-content p {
-      font-size: 0.95rem;
-      color: #555;
+      margin: 0;
+      font-size: 14px;
+      color: #647084;
+      line-height: 1.55;
     }
 
     footer {
-      background-color: #2e7d32;
-      color: white;
+      background: #17324d;
+      color: rgba(255, 255, 255, 0.86);
       text-align: center;
-      padding: 1.5rem 1rem;
-      margin-top: auto;
+      padding: 24px 16px;
+    }
+
+    footer p {
+      margin: 0;
     }
 
     footer a {
-      color: #BBDEFB;
-      margin: 0 10px;
+      color: #bfdbfe;
+      margin: 0 8px;
       text-decoration: none;
+      font-weight: 700;
     }
 
     footer a:hover {
-      text-decoration: underline;
+      color: #ffffff;
     }
 
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2rem;
+    @media (max-width: 760px) {
+      header {
+        padding: 0 18px;
       }
 
-      .card {
-        width: 90%;
+      nav {
+        display: none;
+      }
+
+      .hero {
+        min-height: 78vh;
+        padding: 110px 18px 50px;
+      }
+
+      .search-box {
+        display: block;
+      }
+
+      .search-box button {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      main {
+        padding: 32px 18px 48px;
       }
     }
   </style>
@@ -177,14 +238,18 @@
       <a href="#">Beranda</a>
       <a href="#">Tentang</a>
       <a href="#">Daftar Rumah</a>
-      <a href="#">Kontak</a>
+      <a href="/login">Login</a>
     </nav>
   </header>
 
   <section class="hero">
-    <h1>Lingkungan Asri, Hidup Lebih Harmonis</h1>
-    <div class="search-box">
-      <input type="text" placeholder="Cari rumah berdasarkan lokasi, tipe, harga..." />
+    <div class="hero-inner">
+      <h1>GreenHome.id</h1>
+      <p>Hunian modern dengan lingkungan nyaman, lokasi strategis, dan pilihan rumah yang mudah dibandingkan.</p>
+      <div class="search-box">
+        <input type="text" placeholder="Cari rumah berdasarkan lokasi, tipe, atau harga" />
+        <button type="button">Cari</button>
+      </div>
     </div>
   </section>
 
@@ -192,21 +257,21 @@
     <div class="section-title">Daftar Rumah</div>
     <div class="card-container">
       <div class="card">
-        <img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80" alt="Rumah Modern" />
+        <img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=900&q=85" alt="Rumah Modern" />
         <div class="card-content">
           <h3>Rumah Modern</h3>
           <p>Lokasi strategis, 3 kamar tidur, harga mulai 500jt.</p>
         </div>
       </div>
       <div class="card">
-        <img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80" alt="Rumah Klasik" />
+        <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=900&q=85" alt="Rumah Klasik" />
         <div class="card-content">
           <h3>Rumah Klasik</h3>
           <p>Dekat alam, lingkungan tenang, harga mulai 400jt.</p>
         </div>
       </div>
       <div class="card">
-        <img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80" alt="Rumah Mewah" />
+        <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=85" alt="Rumah Mewah" />
         <div class="card-content">
           <h3>Rumah Mewah</h3>
           <p>Desain elegan, 5 kamar tidur, kolam renang pribadi.</p>
@@ -216,12 +281,12 @@
   </main>
 
   <footer>
-    <p>&copy; 2025 GreenHome.id — Semua Hak Dilindungi</p>
-    <div style="margin-top: 1rem;">
-      <a href="https://instagram.com/greenhomeid" target="_blank">Instagram</a> |
-      <a href="https://facebook.com/greenhomeid" target="_blank">Facebook</a> |
-      <a href="mailto:info@greenhome.id">Email</a> |
-      <span>📞 0812-3456-7890</span>
+    <p>&copy; <?= date('Y') ?> GreenHome.id. Semua hak dilindungi.</p>
+    <div style="margin-top: 12px;">
+      <a href="https://instagram.com/greenhomeid" target="_blank">Instagram</a>
+      <a href="https://facebook.com/greenhomeid" target="_blank">Facebook</a>
+      <a href="mailto:info@greenhome.id">Email</a>
+      <span>0812-3456-7890</span>
     </div>
   </footer>
 </body>
