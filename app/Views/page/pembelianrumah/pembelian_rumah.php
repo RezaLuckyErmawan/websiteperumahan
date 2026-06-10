@@ -272,7 +272,6 @@
                         <select name="metode_pembayaran" class="form-control" required>
                             <option value="">-- Pilih Metode --</option>
                             <option value="Cash">Cash</option>
-                            <option value="KPR">KPR</option>
                             <option value="Cicilan Internal">Cicilan Internal</option>
                         </select>
                     </div>

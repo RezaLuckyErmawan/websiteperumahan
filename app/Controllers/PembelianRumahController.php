@@ -113,7 +113,7 @@ class PembelianRumahController extends BaseController
     $model = new PembelianRumahModel();
     $perumahanModel = new PerumahanModel();
     $allowedStatus = ['Lunas', 'Cicil', 'DP', 'Batal'];
-    $allowedMetode = ['Cash', 'KPR', 'Cicilan Internal'];
+    $allowedMetode = ['Cash', 'Cicilan Internal'];
     $allowedDokumen = ['Lengkap', 'Pending', 'Verifikasi'];
 
     $statusPembelian = $request->getPost('status_pembelian');
@@ -219,7 +219,7 @@ class PembelianRumahController extends BaseController
     $pembatalanModel = new PembatalanModel();
     $perumahanModel = new PerumahanModel();
     $allowedStatus = ['Lunas', 'Cicil', 'DP', 'Batal'];
-    $allowedMetode = ['Cash', 'KPR', 'Cicilan Internal'];
+    $allowedMetode = ['Cash', 'Cicilan Internal'];
     $allowedDokumen = ['Lengkap', 'Pending', 'Verifikasi'];
 
     $dataLama = $model->find($id);
