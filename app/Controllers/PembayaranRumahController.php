@@ -151,7 +151,7 @@ class PembayaranRumahController extends BaseController
         $jenis = $this->request->getPost('jenis_pembayaran');
         $metode = $this->request->getPost('metode_bayar');
         $allowedJenis = ['booking_fee', 'dp', 'cicilan', 'pelunasan'];
-        $allowedMetode = ['Cash', 'Transfer Bank', 'KPR', 'Cicilan Internal'];
+        $allowedMetode = ['Cash', 'Transfer Bank', 'Cicilan Internal'];
 
         if ($pembelianId <= 0 || $jumlahBayar <= 0 || empty($tanggalBayar) || empty($jenis) || empty($metode)) {
             return $this->response->setStatusCode(400)

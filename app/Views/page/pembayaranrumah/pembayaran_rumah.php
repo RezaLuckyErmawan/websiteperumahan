@@ -191,7 +191,6 @@
                     <option value="">Pilih metode pembayaran</option>
                     <option value="Cash">Cash</option>
                     <option value="Transfer Bank">Transfer Bank</option>
-                    <option value="KPR">KPR</option>
                     <option value="Cicilan Internal">Cicilan Internal</option>
                   </select>
                 </div>

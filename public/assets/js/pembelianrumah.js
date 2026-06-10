@@ -89,6 +89,7 @@ function openCreateForm() {
   const form = $('#modalForm form');
   form[0].reset();
   form.find('input[name="id"]').val('');
+  restoreSoldHouseOptions();
   $('#modalFormLabel').text('Form Pembelian Rumah');
   $('#btnBatal').prop('disabled', true);
   $('#textareaBatal').collapse('hide');
@@ -157,10 +158,14 @@ function simpanForm() {
       }
     },
     error: function (xhr) {
-      alert('Terjadi kesalahan pada server.');
+      alert(xhr.responseJSON?.message || 'Terjadi kesalahan pada server.');
       console.log(xhr.responseText);
     }
   });
+}
+
+function restoreSoldHouseOptions() {
+  $('#modalForm select[name="perumahan_id"] option[data-sold="1"]').prop('disabled', true);
 }
 
 function editData(id) {
@@ -171,9 +176,12 @@ function editData(id) {
       if (response.status) {
         const data = response.data;
         const form = $('#modalForm form');
+        form[0].reset();
+        restoreSoldHouseOptions();
         
         form.find('input[name="id"]').val(data.id);
         form.find('select[name="customer_id"]').val(data.customer_id);
+        form.find(`select[name="perumahan_id"] option[value="${data.perumahan_id}"]`).prop('disabled', false);
         form.find('select[name="perumahan_id"]').val(data.perumahan_id);
         form.find('input[name="tanggal_pembelian"]').val(data.tanggal_pembelian);
         form.find('input[name="harga_beli"]').val(data.harga_beli);

@@ -231,14 +231,15 @@ class PembelianRumahController extends BaseController
     }
 
     // Ambil input alasan pembatalan
-    $alasanPembatalan = trim($request->getPost('alasan_pembatalan'));
+    $alasanPembatalan = trim((string) $request->getPost('alasan_pembatalan'));
     $statusPembelian = $alasanPembatalan ? 'Batal' : $request->getPost('status_pembelian');
     $metodePembayaran = $request->getPost('metode_pembayaran');
     $statusDokumen = $request->getPost('status_dokumen');
+    $perumahanId = $request->getPost('perumahan_id') ?: $dataLama['perumahan_id'];
 
     if (
         !$request->getPost('customer_id') ||
-        !$request->getPost('perumahan_id') ||
+        !$perumahanId ||
         !$request->getPost('tanggal_pembelian') ||
         !in_array($statusPembelian, $allowedStatus, true) ||
         !in_array($metodePembayaran, $allowedMetode, true) ||
@@ -251,7 +252,7 @@ class PembelianRumahController extends BaseController
     // Data baru default
     $dataBaru = [
         'customer_id'       => $request->getPost('customer_id'),
-        'perumahan_id'      => $request->getPost('perumahan_id'),
+        'perumahan_id'      => $perumahanId,
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
         'harga_beli'        => $request->getPost('harga_beli'),
         'status_pembelian'  => $statusPembelian,

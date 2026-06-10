@@ -227,6 +227,7 @@
                                 ?>
                                 <option value="<?= $item['id']; ?>"
                                 data-harga="<?= $item['harga']; ?>"
+                                data-sold="<?= strtolower($item['status']) === 'terjual' ? '1' : '0'; ?>"
                                 style="<?= $style; ?>"
                                 <?= strtolower($item['status']) === 'terjual' ? 'disabled' : ''; ?>>
                                 <?= $item['kode_rumah']; ?><?= $labelStatus; ?>
