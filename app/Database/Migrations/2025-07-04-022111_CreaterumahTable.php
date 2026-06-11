@@ -27,9 +27,14 @@ class CreateuserTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => '255',
             ],
+            'customer_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+                'null'     => true,
+            ],
             'role' => [
                 'type'       => 'ENUM',
-                'constraint' => ['admin', 'mandor', 'karyawan', 'spv'],
+                'constraint' => ['admin', 'mandor', 'karyawan', 'spv', 'customer'],
             ],
             'status' => [
                 'type'       => 'ENUM',

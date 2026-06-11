@@ -1,5 +1,7 @@
 let idToDelete = null;
 let pembayaranTable = null;
+const canCreatePayments = window.canCreatePayments !== false;
+const canModifyPayments = window.canModifyPayments !== false;
 
 const jenisPembayaranLabels = {
   booking_fee: 'Booking Fee',
@@ -62,9 +64,11 @@ $(document).ready(function () {
         data: 'id',
         render: data => `
           <div class="payment-actions">
-            <button class="btn btn-sm btn-primary" title="Edit" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
             <button class="btn btn-sm btn-secondary" title="Detail" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-sm btn-danger" title="Hapus" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
+            ${canModifyPayments ? `
+              <button class="btn btn-sm btn-primary" title="Edit" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-danger" title="Hapus" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
+            ` : ''}
           </div>
         `,
         orderable: false,
@@ -72,12 +76,16 @@ $(document).ready(function () {
       }
     ],
     initComplete: function () {
+      if (!canCreatePayments) {
+        $('#pembayaranRumahTable_length').html('');
+      } else {
             $('#pembayaranRumahTable_length')
         .html(`
           <button type="button" onclick="openCreateForm()" class="add-btn1">
-            <i class="fas fa-plus"></i> Tambah Pembayaran
+            <i class="fas fa-plus"></i> Tambah Cicilan
           </button>
         `);
+      }
 
 $('#pembayaranRumahTable_filter input')
         .attr('placeholder', 'Cari customer, rumah, metode...')
@@ -91,7 +99,7 @@ $('#pembayaranRumahTable_filter input')
   });
 
   const selectedId = window.selectedPembelianId || '';
-  if (selectedId) {
+  if (selectedId && canCreatePayments) {
     openCreateForm(selectedId);
   }
 });

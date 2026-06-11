@@ -32,16 +32,18 @@ class LoginController extends BaseController
         
         session()->set([
             'user_id' => $user['id'],
+            'nama' => $user['nama'],
             'username' => $user['username'],
+            'customer_id' => $user['customer_id'] ?? null,
             'role' => $user['role'],
             'isLoggedIn' => true,
         ]);
 
-        if ($user['role'] === 'admin') {
-            return redirect()->to('/dashboard');
-        } else {
-            return redirect()->to('/dashboard');
+        if ($user['role'] === 'customer') {
+            return redirect()->to('/pembayaran-rumah');
         }
+
+        return redirect()->to('/dashboard');
      }
 
      public function logout() {

@@ -13,6 +13,7 @@ class UserModel extends Model
      'nama', 
      'username',
      'password',
+     'customer_id',
      'role',
      'status',
      'created_at',

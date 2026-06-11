@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\CustomerModel;
 use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -11,7 +12,9 @@ class UserController extends BaseController
     public function user()
     {
         $userModel = new UserModel();
+        $customerModel = new CustomerModel();
         $data['user'] = $userModel->findAll();
+        $data['customers'] = $customerModel->orderBy('nama', 'ASC')->findAll();
         return view('page/user/user', $data);
     }
 
@@ -55,11 +58,25 @@ class UserController extends BaseController
 
     public function store() {
         $userModel = new UserModel();
+        $allowedRoles = ['admin', 'mandor', 'karyawan', 'spv', 'customer'];
+        $role = $this->request->getPost('role');
+
+        if (!in_array($role, $allowedRoles, true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Role tidak valid']);
+        }
+
+        if ($role === 'customer' && !$this->request->getPost('customer_id')) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Customer terkait wajib dipilih']);
+        }
+
         $data = [
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
             'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'role' => $this->request->getPost('role'),
+            'customer_id' => $role === 'customer' ? $this->request->getPost('customer_id') : null,
+            'role' => $role,
             'status' => $this->request->getPost('status')
         ];
         $userModel->insert($data);
@@ -75,10 +92,24 @@ class UserController extends BaseController
 
     public function update($id) {
         $userModel = new UserModel();
+        $allowedRoles = ['admin', 'mandor', 'karyawan', 'spv', 'customer'];
+        $role = $this->request->getPost('role');
+
+        if (!in_array($role, $allowedRoles, true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Role tidak valid']);
+        }
+
+        if ($role === 'customer' && !$this->request->getPost('customer_id')) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Customer terkait wajib dipilih']);
+        }
+
         $data = [
             'nama' => $this->request->getPost('nama'),
             'username' => $this->request->getPost('username'),
-            'role' => $this->request->getPost('role'),
+            'customer_id' => $role === 'customer' ? $this->request->getPost('customer_id') : null,
+            'role' => $role,
             'status' => $this->request->getPost('status')
         ];
 

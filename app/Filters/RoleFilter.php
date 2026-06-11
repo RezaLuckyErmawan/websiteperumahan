@@ -26,7 +26,9 @@ class RoleFilter implements FilterInterface
                 ]);
         }
 
-        return redirect()->to('/dashboard')->with('error', 'Kamu tidak punya akses ke fitur ini.');
+        $redirectTo = $role === 'customer' ? '/pembayaran-rumah' : '/dashboard';
+
+        return redirect()->to($redirectTo)->with('error', 'Kamu tidak punya akses ke fitur ini.');
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

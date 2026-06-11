@@ -18,12 +18,18 @@ class PembayaranRumahController extends BaseController
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
             ->where(new RawSql("LOWER(pembelian_rumah.status_pembelian) != 'batal'"))
-            ->orderBy('pembelian_rumah.created_at', 'DESC')
-            ->findAll();
+            ->orderBy('pembelian_rumah.created_at', 'DESC');
+
+        if ($this->isCustomer()) {
+            $this->applyCustomerScope($pembelian, 'customer');
+        }
 
         return view('page/pembayaranrumah/pembayaran_rumah', [
-            'pembelian' => $pembelian,
+            'pembelian' => $pembelian->findAll(),
             'selectedPembelianId' => $this->request->getGet('pembelian_id'),
+            'canCreatePayments' => true,
+            'canModifyPayments' => !$this->isCustomer(),
+            'userRole' => session()->get('role'),
         ]);
     }
 
@@ -51,6 +57,10 @@ class PembayaranRumahController extends BaseController
                 'left'
             );
 
+        if ($this->isCustomer()) {
+            $this->applyCustomerScope($builder, 'customer');
+        }
+
         $searchValue = $request->getGet('search')['value'] ?? '';
         if ($searchValue) {
             $builder->groupStart()
@@ -62,7 +72,14 @@ class PembayaranRumahController extends BaseController
                 ->groupEnd();
         }
 
-        $total = $db->table('pembayaran_rumah')->countAll();
+        $totalBuilder = $db->table('pembayaran_rumah pr')
+            ->join('pembelian_rumah', 'pembelian_rumah.id = pr.pembelian_rumah_id')
+            ->join('customer', 'customer.id = pembelian_rumah.customer_id');
+        if ($this->isCustomer()) {
+            $this->applyCustomerScope($totalBuilder, 'customer');
+        }
+
+        $total = $totalBuilder->countAllResults();
         $filtered = $builder->countAllResults(false);
 
         $start = (int) ($request->getGet('start') ?? 0);
@@ -93,6 +110,11 @@ class PembayaranRumahController extends BaseController
 
     public function edit($id)
     {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Customer hanya dapat melihat data pembayaran.']);
+        }
+
         $model = new PembayaranRumahModel();
         $data = $model->find($id);
 
@@ -111,11 +133,21 @@ class PembayaranRumahController extends BaseController
 
     public function update($id)
     {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Customer tidak dapat mengubah pembayaran.']);
+        }
+
         return $this->savePembayaran($id);
     }
 
     public function delete($id)
     {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Customer tidak dapat menghapus pembayaran.']);
+        }
+
         $db = \Config\Database::connect();
         $model = new PembayaranRumahModel();
         $data = $model->find($id);
@@ -138,6 +170,27 @@ class PembayaranRumahController extends BaseController
         $this->deleteBuktiBayar($data['bukti_bayar'] ?? null);
 
         return $this->response->setJSON(['status' => 'success', 'message' => 'Pembayaran berhasil dihapus']);
+    }
+
+    private function isCustomer(): bool
+    {
+        return session()->get('role') === 'customer';
+    }
+
+    private function applyCustomerScope($builder, string $customerAlias)
+    {
+        $customerId = session()->get('customer_id');
+        if ($customerId) {
+            return $builder->where($customerAlias . '.id', $customerId);
+        }
+
+        $name = (string) session()->get('nama');
+        $username = (string) session()->get('username');
+
+        return $builder->groupStart()
+            ->where($customerAlias . '.nama', $name)
+            ->orWhere($customerAlias . '.nama', $username)
+            ->groupEnd();
     }
 
     private function savePembayaran(?int $id = null)
@@ -262,7 +315,13 @@ class PembayaranRumahController extends BaseController
             ->select('pembelian_rumah.*, customer.nama AS nama_customer, perumahan.kode_rumah')
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
-            ->find($pembelianId);
+            ->where('pembelian_rumah.id', $pembelianId);
+
+        if ($this->isCustomer()) {
+            $this->applyCustomerScope($pembelian, 'customer');
+        }
+
+        $pembelian = $pembelian->first();
 
         if (!$pembelian) {
             return null;

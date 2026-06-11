@@ -187,7 +187,18 @@
                     <option value="mandor">👷 Mandor</option>
                     <!-- <option value="spv">🧑‍💼 SPV</option> -->
                     <option value="karyawan">🙋 Karyawan</option>
+                    <option value="customer">Customer</option>
                   </select>
+                </div>
+                <div class="mb-3">
+                  <label for="customer_id" class="form-label">Customer Terkait</label>
+                  <select name="customer_id" class="form-select">
+                    <option value="">-- Pilih Customer --</option>
+                    <?php foreach ($customers ?? [] as $customer): ?>
+                      <option value="<?= esc($customer['id']) ?>"><?= esc($customer['nama']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                  <small class="text-muted">Wajib diisi untuk role Customer agar data pembayaran terfilter ke customer tersebut.</small>
                 </div>
                 <div class="mb-3">
                   <label for="status" class="form-label">Status</label>

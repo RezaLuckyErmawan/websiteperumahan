@@ -23,6 +23,9 @@ $(document).ready(function() {
           case 'spv':
             style = 'background-color: #ff4d07ff; color: white;';
             break;
+          case 'customer':
+            style = 'background-color: #14b8a6; color: white;';
+            break;
         default:
             style = 'background-color: #6c757d; color: white;';
         }
@@ -81,17 +84,18 @@ function simpanUser() {
       $('#successModal').modal('hide');
     }, 2000);
   }).fail(function (xhr) {
-    alert('Gagal menyimpan data user. Pastikan semua isian sudah benar.');
+    alert(xhr.responseJSON?.message || 'Gagal menyimpan data user. Pastikan semua isian sudah benar.');
     console.error(xhr.responseText);
   });
 }
 
 function editUser(id) {
-  $.get(`/ user/edit/${id}`, function (data) {
+  $.get(`/user/edit/${id}`, function (data) {
     $('#modalUserForm input[name=id]').val(data.id);
     $('#modalUserForm input[name=nama]').val(data.nama);
     $('#modalUserForm input[name=username]').val(data.username);
     $('#modalUserForm select[name=role]').val(data.role);
+    $('#modalUserForm select[name=customer_id]').val(data.customer_id || '');
     $('#modalUserForm select[name=status]').val(data.status);
     $('#modalUserForm input[name=password]').val('');
     $('#modalUserFormLabel').text('Edit data User')

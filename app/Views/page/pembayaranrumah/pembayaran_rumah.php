@@ -19,48 +19,50 @@
       <div>
         <h4>Sistem Manajemen Informasi Perumahan</h4>
         <div class="nav1">
-          <a class="menu-link" href="/dashboard"><span class="material-icons rotate-icon">dashboard</span> Dashboard</a>
+          <?php if (($userRole ?? '') !== 'customer'): ?>
+            <a class="menu-link" href="/dashboard"><span class="material-icons rotate-icon">dashboard</span> Dashboard</a>
 
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">analytics</span> Marketing
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-customer"><span class="material-icons rotate-icon">groups</span> Data Customer</a>
-              <a class="menu-link" href="/pembatalan-transaksi"><span class="material-icons rotate-icon">remove_shopping_cart</span> Pembatalan Transaksi</a>
+            <div class="menu-dropdown">
+              <button class="dropdown-btn">
+                <span class="material-icons rotate-icon">analytics</span> Marketing
+                <span class="material-icons arrow">expand_more</span>
+              </button>
+              <div class="dropdown-container">
+                <a class="menu-link" href="/data-customer"><span class="material-icons rotate-icon">groups</span> Data Customer</a>
+                <a class="menu-link" href="/pembatalan-transaksi"><span class="material-icons rotate-icon">remove_shopping_cart</span> Pembatalan Transaksi</a>
+              </div>
             </div>
-          </div>
 
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">business_center</span> Manajemen Proyek
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-bahan" style="margin-top: 10px;"><span class="material-icons rotate-icon">construction</span> Bahan Bangunan</a>
-              <a class="menu-link" href="/data-rumah"><span class="material-icons rotate-icon">home_work</span> Data Rumah</a>
-              <a class="menu-link" href="/rab-rumah"><span class="material-icons rotate-icon">description</span> RAB Rumah</a>
-              <a class="menu-link" href="/rab-bahan"><span class="material-icons rotate-icon">description</span> RAB Bahan</a>
-              <a class="menu-link" href="/rab-pekerja"><span class="material-icons rotate-icon">description</span> RAB Pekerja</a>
-              <a class="menu-link" href="/realisasi-rumah"><span class="material-icons rotate-icon">description</span> Realisasi Rumah</a>
-              <a class="menu-link" href="/realisasi-bahan"><span class="material-icons rotate-icon">description</span> Realisasi Bahan</a>
-              <a class="menu-link" href="/realisasi-pekerja"><span class="material-icons rotate-icon">description</span> Realisasi Pekerja</a>
-              <a class="menu-link" href="/data-bahan-pembangunan"><span class="material-icons rotate-icon">business</span> Data Bahan Pembangunan</a>
-              <a class="menu-link" href="/pekerjaan-insidentil"><span class="material-icons rotate-icon">architecture</span> Data Pekerjaan Insidentil</a>
+            <div class="menu-dropdown">
+              <button class="dropdown-btn">
+                <span class="material-icons rotate-icon">business_center</span> Manajemen Proyek
+                <span class="material-icons arrow">expand_more</span>
+              </button>
+              <div class="dropdown-container">
+                <a class="menu-link" href="/data-bahan" style="margin-top: 10px;"><span class="material-icons rotate-icon">construction</span> Bahan Bangunan</a>
+                <a class="menu-link" href="/data-rumah"><span class="material-icons rotate-icon">home_work</span> Data Rumah</a>
+                <a class="menu-link" href="/rab-rumah"><span class="material-icons rotate-icon">description</span> RAB Rumah</a>
+                <a class="menu-link" href="/rab-bahan"><span class="material-icons rotate-icon">description</span> RAB Bahan</a>
+                <a class="menu-link" href="/rab-pekerja"><span class="material-icons rotate-icon">description</span> RAB Pekerja</a>
+                <a class="menu-link" href="/realisasi-rumah"><span class="material-icons rotate-icon">description</span> Realisasi Rumah</a>
+                <a class="menu-link" href="/realisasi-bahan"><span class="material-icons rotate-icon">description</span> Realisasi Bahan</a>
+                <a class="menu-link" href="/realisasi-pekerja"><span class="material-icons rotate-icon">description</span> Realisasi Pekerja</a>
+                <a class="menu-link" href="/data-bahan-pembangunan"><span class="material-icons rotate-icon">business</span> Data Bahan Pembangunan</a>
+                <a class="menu-link" href="/pekerjaan-insidentil"><span class="material-icons rotate-icon">architecture</span> Data Pekerjaan Insidentil</a>
+              </div>
             </div>
-          </div>
 
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">fact_check</span> Manajemen Logistik
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-pembelian-bahan"><span class="material-icons rotate-icon">shopping_cart</span> Data Pembelian Bahan</a>
-              <a class="menu-link" href="/detail-pembelian-bahan"><span class="material-icons rotate-icon">receipt_long</span> Detail Pembelian Bahan</a>
+            <div class="menu-dropdown">
+              <button class="dropdown-btn">
+                <span class="material-icons rotate-icon">fact_check</span> Manajemen Logistik
+                <span class="material-icons arrow">expand_more</span>
+              </button>
+              <div class="dropdown-container">
+                <a class="menu-link" href="/data-pembelian-bahan"><span class="material-icons rotate-icon">shopping_cart</span> Data Pembelian Bahan</a>
+                <a class="menu-link" href="/detail-pembelian-bahan"><span class="material-icons rotate-icon">receipt_long</span> Detail Pembelian Bahan</a>
+              </div>
             </div>
-          </div>
+          <?php endif; ?>
 
           <div class="menu-dropdown aktif">
             <button class="dropdown-btn">
@@ -68,21 +70,26 @@
               <span class="material-icons arrow">expand_more</span>
             </button>
             <div class="dropdown-container" style="margin-top: 10px;">
-              <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Penjualan Rumah</a>
+              <?php if (($userRole ?? '') !== 'customer'): ?>
+                <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Penjualan Rumah</a>
+              <?php endif; ?>
               <a class="menu-link active" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
+              <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
             </div>
           </div>
 
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">folder_open</span> Menu Master
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
-              <a class="menu-link" href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
+          <?php if (($userRole ?? '') !== 'customer'): ?>
+            <div class="menu-dropdown">
+              <button class="dropdown-btn">
+                <span class="material-icons rotate-icon">folder_open</span> Menu Master
+                <span class="material-icons arrow">expand_more</span>
+              </button>
+              <div class="dropdown-container">
+                <a class="menu-link" href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
+                <a class="menu-link" href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
+              </div>
             </div>
-          </div>
+          <?php endif; ?>
         </div>
       </div>
       <div class="logout">
@@ -422,6 +429,8 @@
 
   <script>
     window.selectedPembelianId = "<?= esc($selectedPembelianId ?? '') ?>";
+    window.canCreatePayments = <?= ($canCreatePayments ?? true) ? 'true' : 'false' ?>;
+    window.canModifyPayments = <?= ($canModifyPayments ?? true) ? 'true' : 'false' ?>;
 
     function toggleSidebar() {
       const sidebar = document.getElementById("sidebar");
