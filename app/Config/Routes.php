@@ -85,6 +85,7 @@ $routes->get('/pembayaran-rumah/ringkasan/(:num)', 'PembayaranRumahController::r
 $routes->get('/pembayaran-rumah/edit/(:num)', 'PembayaranRumahController::edit/$1');
 $routes->post('/pembayaran-rumah/store', 'PembayaranRumahController::store');
 $routes->post('/pembayaran-rumah/update/(:num)', 'PembayaranRumahController::update/$1');
+$routes->post('/pembayaran-rumah/approve/(:num)', 'PembayaranRumahController::approve/$1');
 $routes->delete('/pembayaran-rumah/delete/(:num)', 'PembayaranRumahController::delete/$1');
 
 $routes->get('/progres-pembayaran-rumah', 'ProgresPembayaranRumahController::index');

@@ -20,11 +20,14 @@ $(document).ready(function () {
     columns: [
       { data: 'nama_customer' },
       { data: 'kode_rumah' },
-      { data: 'tanggal_bayar' },
+      {
+        data: 'tanggal_bayar',
+        render: data => data || '-'
+      },
       {
         data: 'jenis_pembayaran',
         render: function (data) {
-          return jenisPembayaranLabels[data] || data;
+          return jenisPembayaranLabels[data] || data || '-';
         }
       },
       {
@@ -52,6 +55,10 @@ $(document).ready(function () {
         }
       },
       {
+        data: 'status_pengajuan',
+        render: data => renderApprovalBadge(data)
+      },
+      {
         data: 'bukti_bayar',
         render: function (data) {
           if (!data) return '<span class="text-muted">Belum ada</span>';
@@ -62,10 +69,11 @@ $(document).ready(function () {
       },
       {
         data: 'id',
-        render: data => `
+        render: (data, type, row) => `
           <div class="payment-actions">
             <button class="btn btn-sm btn-secondary" title="Detail" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
             ${canModifyPayments ? `
+              ${rowApproveButton(data, row)}
               <button class="btn btn-sm btn-primary" title="Edit" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
               <button class="btn btn-sm btn-danger" title="Hapus" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
             ` : ''}
@@ -113,8 +121,10 @@ function openCreateForm(pembelianId = '') {
   form[0].reset();
   form.find('input[name=id]').val('');
   form.find('select[name=pembelian_rumah_id]').prop('disabled', false);
+  form.find('input[name=tanggal_bayar], select[name=jenis_pembayaran]').prop('required', canModifyPayments);
+  $('.admin-payment-field').toggle(canModifyPayments);
   $('#buktiSaatIni').html('');
-  $('#modalFormLabel').text('Tambah Pembayaran Rumah');
+  $('#modalFormLabel').text(canModifyPayments ? 'Tambah Pembayaran Rumah' : 'Tambah Pengajuan Cicilan');
 
   if (pembelianId) {
     form.find('select[name=pembelian_rumah_id]').val(pembelianId);
@@ -136,6 +146,8 @@ function editData(id) {
     form[0].reset();
     form.find('input[name=id]').val(data.id);
     form.find('select[name=pembelian_rumah_id]').val(data.pembelian_rumah_id).prop('disabled', true);
+    $('.admin-payment-field').show();
+    form.find('input[name=tanggal_bayar], select[name=jenis_pembayaran]').prop('required', true);
     form.find('input[name=tanggal_bayar]').val(data.tanggal_bayar);
     form.find('input[name=jumlah_bayar]').val(data.jumlah_bayar);
     form.find('select[name=jenis_pembayaran]').val(data.jenis_pembayaran);
@@ -175,6 +187,7 @@ function detailData(id) {
   $('#detailTotalBayar').text(formatRupiah(data.total_bayar));
   $('#detailSisaBayar').text(formatRupiah(data.sisa_bayar));
   $('#detailStatusPembelian').html(renderStatusBadge(data.status_pembelian));
+  $('#detailStatusPengajuan').html(renderApprovalBadge(data.status_pengajuan));
   $('#detailKeterangan').text(data.keterangan || '-');
   $('#detailBuktiBayar').html(
     data.bukti_bayar
@@ -196,6 +209,42 @@ function renderStatusBadge(statusText) {
   return `<span class="badge text-white" style="background:${color};">${statusText || '-'}</span>`;
 }
 
+function renderApprovalBadge(statusText) {
+  const status = (statusText || 'disetujui').toLowerCase();
+  const label = {
+    pending: 'Menunggu Approval',
+    disetujui: 'Disetujui',
+    ditolak: 'Ditolak'
+  };
+  let color = '#198754';
+  if (status === 'pending') color = '#ffc107';
+  if (status === 'ditolak') color = '#dc3545';
+
+  return `<span class="badge text-white" style="background:${color};">${label[status] || statusText || '-'}</span>`;
+}
+
+function rowApproveButton(id, row) {
+  if (!row || (row.status_pengajuan || 'disetujui') !== 'pending') {
+    return '';
+  }
+
+  return `<button class="btn btn-sm btn-success" title="Approve" onclick="approveData(${id})"><i class="fas fa-check"></i></button>`;
+}
+
+function approveData(id) {
+  $.post(`/pembayaran-rumah/approve/${id}`, function (response) {
+    if (response.status === 'success') {
+      $('#pembayaranRumahTable').DataTable().ajax.reload(null, false);
+      showSuccess('Pengajuan cicilan berhasil disetujui!');
+      return;
+    }
+
+    alert(response.message || 'Gagal menyetujui pembayaran');
+  }).fail(function (xhr) {
+    alert(xhr.responseJSON?.message || 'Gagal menyetujui pembayaran');
+  });
+}
+
 function simpanForm() {
   const form = $('#modalForm form');
   const id = form.find('input[name=id]').val();
@@ -214,7 +263,7 @@ function simpanForm() {
       if (res.status === 'success') {
         $('#modalForm').modal('hide');
         $('#pembayaranRumahTable').DataTable().ajax.reload(null, false);
-        showSuccess(id ? 'Pembayaran berhasil diperbarui!' : 'Pembayaran berhasil ditambahkan!');
+        showSuccess(id ? 'Pembayaran berhasil diperbarui!' : (canModifyPayments ? 'Pembayaran berhasil ditambahkan!' : 'Pengajuan cicilan berhasil dikirim dan menunggu approval admin!'));
       } else {
         alert(res.message || 'Gagal menyimpan data');
       }

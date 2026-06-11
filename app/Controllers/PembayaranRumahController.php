@@ -52,7 +52,7 @@ class PembayaranRumahController extends BaseController
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
             ->join(
-                '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+                "(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah WHERE status_pengajuan = 'disetujui' GROUP BY pembelian_rumah_id) total_bayar",
                 'total_bayar.pembelian_rumah_id = pr.pembelian_rumah_id',
                 'left'
             );
@@ -141,6 +141,41 @@ class PembayaranRumahController extends BaseController
         return $this->savePembayaran($id);
     }
 
+    public function approve($id)
+    {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Customer tidak dapat menyetujui pembayaran.']);
+        }
+
+        $db = \Config\Database::connect();
+        $model = new PembayaranRumahModel();
+        $data = $model->find($id);
+
+        if (!$data) {
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
+        }
+
+        $db->transStart();
+        $model->update($id, [
+            'tanggal_bayar'     => $data['tanggal_bayar'] ?: date('Y-m-d'),
+            'jenis_pembayaran'  => $data['jenis_pembayaran'] ?: 'cicilan',
+            'status_pengajuan'  => 'disetujui',
+            'approved_at'       => date('Y-m-d H:i:s'),
+            'approved_by'       => session()->get('user_id'),
+        ]);
+        $this->updateStatusPembelian((int) $data['pembelian_rumah_id']);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)
+                ->setJSON(['status' => 'error', 'message' => 'Gagal menyetujui pembayaran']);
+        }
+
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Pembayaran berhasil disetujui']);
+    }
+
     public function delete($id)
     {
         if ($this->isCustomer()) {
@@ -200,13 +235,13 @@ class PembayaranRumahController extends BaseController
 
         $pembelianId = (int) $this->request->getPost('pembelian_rumah_id');
         $jumlahBayar = (int) $this->request->getPost('jumlah_bayar');
-        $tanggalBayar = $this->request->getPost('tanggal_bayar');
-        $jenis = $this->request->getPost('jenis_pembayaran');
+        $tanggalBayar = $this->isCustomer() ? null : $this->request->getPost('tanggal_bayar');
+        $jenis = $this->isCustomer() ? 'cicilan' : $this->request->getPost('jenis_pembayaran');
         $metode = $this->request->getPost('metode_bayar');
         $allowedJenis = ['booking_fee', 'dp', 'cicilan', 'pelunasan'];
         $allowedMetode = ['Cash', 'Transfer Bank', 'Cicilan Internal'];
 
-        if ($pembelianId <= 0 || $jumlahBayar <= 0 || empty($tanggalBayar) || empty($jenis) || empty($metode)) {
+        if ($pembelianId <= 0 || $jumlahBayar <= 0 || (!$this->isCustomer() && empty($tanggalBayar)) || empty($jenis) || empty($metode)) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Data pembayaran belum lengkap']);
         }
@@ -221,7 +256,7 @@ class PembayaranRumahController extends BaseController
                 ->setJSON(['status' => 'error', 'message' => 'Metode bayar tidak valid']);
         }
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalBayar)) {
+        if (!$this->isCustomer() && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalBayar)) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Format tanggal bayar tidak valid']);
         }
@@ -261,6 +296,9 @@ class PembayaranRumahController extends BaseController
             'jenis_pembayaran' => $jenis,
             'metode_bayar' => $metode,
             'keterangan' => $this->request->getPost('keterangan'),
+            'status_pengajuan' => $this->resolveApprovalStatus($id, $old),
+            'approved_at' => $this->resolveApprovalStatus($id, $old) === 'disetujui' ? date('Y-m-d H:i:s') : null,
+            'approved_by' => $this->resolveApprovalStatus($id, $old) === 'disetujui' ? session()->get('user_id') : null,
         ];
 
         $uploadedBukti = $this->uploadBuktiBayar();
@@ -293,7 +331,9 @@ class PembayaranRumahController extends BaseController
             $model->insert($data);
         }
 
-        $this->updateStatusPembelian($pembelianId);
+        if (!$this->isCustomer()) {
+            $this->updateStatusPembelian($pembelianId);
+        }
         $db->transComplete();
 
         if ($db->transStatus() === false) {
@@ -304,6 +344,19 @@ class PembayaranRumahController extends BaseController
         }
 
         return $this->response->setJSON(['status' => 'success']);
+    }
+
+    private function resolveApprovalStatus(?int $id, ?array $old): string
+    {
+        if ($this->isCustomer()) {
+            return 'pending';
+        }
+
+        if ($id && $old) {
+            return $old['status_pengajuan'] ?? 'disetujui';
+        }
+
+        return 'disetujui';
     }
 
     private function getRingkasanPembayaran(int $pembelianId, ?int $excludePaymentId = null): ?array
@@ -327,7 +380,9 @@ class PembayaranRumahController extends BaseController
             return null;
         }
 
-        $query = $pembayaranModel->where('pembelian_rumah_id', $pembelianId);
+        $query = $pembayaranModel
+            ->where('pembelian_rumah_id', $pembelianId)
+            ->where('status_pengajuan', 'disetujui');
         if ($excludePaymentId) {
             $query->where('id !=', $excludePaymentId);
         }

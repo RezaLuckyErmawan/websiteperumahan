@@ -29,7 +29,7 @@ class ProgresPembayaranRumahController extends BaseController
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
             ->join(
-                '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+                "(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah WHERE status_pengajuan = 'disetujui' GROUP BY pembelian_rumah_id) total_bayar",
                 'total_bayar.pembelian_rumah_id = pembelian_rumah.id',
                 'left'
             );

@@ -122,6 +122,7 @@
               <th>Total Dibayar</th>
               <th>Sisa Tagihan</th>
               <th>Status</th>
+              <th>Verifikasi</th>
               <th>Bukti</th>
               <th>Aksi</th>
             </tr>
@@ -278,7 +279,7 @@
               </div>
 
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3 admin-payment-field">
                   <label class="form-label">Tanggal Bayar <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" name="tanggal_bayar" required>
                 </div>
@@ -286,10 +287,7 @@
                   <label class="form-label">Jumlah Bayar <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Contoh: 5000000" required>
                 </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3 admin-payment-field">
                   <label class="form-label">Jenis Pembayaran <span class="text-danger">*</span></label>
                   <select class="form-control" name="jenis_pembayaran" required>
                     <option value="">Pilih jenis pembayaran</option>
@@ -373,6 +371,10 @@
               <div class="payment-detail-item">
                 <div class="payment-detail-label">Status Pembelian</div>
                 <div class="payment-detail-value" id="detailStatusPembelian"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Status Verifikasi</div>
+                <div class="payment-detail-value" id="detailStatusPengajuan"></div>
               </div>
               <div class="payment-detail-item">
                 <div class="payment-detail-label">Jenis Pembayaran</div>
