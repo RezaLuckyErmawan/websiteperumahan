@@ -1,7 +1,15 @@
 let idToDelete = null;
+let pembayaranTable = null;
+
+const jenisPembayaranLabels = {
+  booking_fee: 'Booking Fee',
+  dp: 'DP',
+  cicilan: 'Cicilan',
+  pelunasan: 'Pelunasan'
+};
 
 $(document).ready(function () {
-  $('#pembayaranRumahTable').DataTable({
+  pembayaranTable = $('#pembayaranRumahTable').DataTable({
     processing: true,
     serverSide: true,
     pageLength: 5,
@@ -14,13 +22,7 @@ $(document).ready(function () {
       {
         data: 'jenis_pembayaran',
         render: function (data) {
-          const label = {
-            booking_fee: 'Booking Fee',
-            dp: 'DP',
-            cicilan: 'Cicilan',
-            pelunasan: 'Pelunasan'
-          };
-          return label[data] || data;
+          return jenisPembayaranLabels[data] || data;
         }
       },
       {
@@ -59,8 +61,11 @@ $(document).ready(function () {
       {
         data: 'id',
         render: data => `
-          <button class="btn btn-sm btn-primary" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-sm btn-danger" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
+          <div class="payment-actions">
+            <button class="btn btn-sm btn-primary" title="Edit" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-secondary" title="Detail" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm btn-danger" title="Hapus" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
+          </div>
         `,
         orderable: false,
         searchable: false
@@ -139,6 +144,48 @@ function editData(id) {
     updateRingkasan(data.id);
     new bootstrap.Modal(document.getElementById('modalForm')).show();
   });
+}
+
+function detailData(id) {
+  const data = pembayaranTable
+    .rows()
+    .data()
+    .toArray()
+    .find(item => parseInt(item.id, 10) === parseInt(id, 10));
+
+  if (!data) {
+    alert('Data tidak ditemukan.');
+    return;
+  }
+
+  $('#detailCustomer').text(data.nama_customer || '-');
+  $('#detailKodeRumah').text(data.kode_rumah || '-');
+  $('#detailTanggalBayar').text(data.tanggal_bayar || '-');
+  $('#detailJenisPembayaran').text(jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-');
+  $('#detailMetodeBayar').text(data.metode_bayar || '-');
+  $('#detailJumlahBayar').text(formatRupiah(data.jumlah_bayar));
+  $('#detailTotalBayar').text(formatRupiah(data.total_bayar));
+  $('#detailSisaBayar').text(formatRupiah(data.sisa_bayar));
+  $('#detailStatusPembelian').html(renderStatusBadge(data.status_pembelian));
+  $('#detailKeterangan').text(data.keterangan || '-');
+  $('#detailBuktiBayar').html(
+    data.bukti_bayar
+      ? `<a class="btn btn-sm btn-outline-secondary" href="/${data.bukti_bayar}" target="_blank"><i class="fas fa-file-invoice"></i> Lihat Bukti Pembayaran</a>`
+      : '<span class="text-muted">Belum ada bukti pembayaran.</span>'
+  );
+
+  new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
+function renderStatusBadge(statusText) {
+  const status = (statusText || '').toLowerCase();
+  let color = '#6c757d';
+  if (status === 'lunas') color = '#198754';
+  if (status === 'cicil') color = '#0d6efd';
+  if (status === 'dp') color = '#ffc107';
+  if (status === 'batal') color = '#dc3545';
+
+  return `<span class="badge text-white" style="background:${color};">${statusText || '-'}</span>`;
 }
 
 function simpanForm() {

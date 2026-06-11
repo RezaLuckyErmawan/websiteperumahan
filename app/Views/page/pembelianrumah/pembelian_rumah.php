@@ -95,7 +95,7 @@
            </button>
            <div class="dropdown-container" style="margin-top: 10px;">
             <a class="menu-link active" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Penjualan Rumah</a>
-            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Data Pembayaran Rumah</a>
+            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
            </div>
         </div> 
         <!-- Menu Master -->

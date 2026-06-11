@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data Pembayaran Rumah | Sistem Manajemen Perumahan</title>
+  <title>Pembayaran Cicilan Rumah | Sistem Manajemen Perumahan</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
@@ -69,7 +69,7 @@
             </button>
             <div class="dropdown-container" style="margin-top: 10px;">
               <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Penjualan Rumah</a>
-              <a class="menu-link active" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Data Pembayaran Rumah</a>
+              <a class="menu-link active" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
             </div>
           </div>
 
@@ -94,7 +94,7 @@
       <div class="navbar1">
         <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
         <div class="page-title">
-          Data Pembayaran Rumah
+          Pembayaran Cicilan Rumah
         </div>
         <div class="actions">
           <div class="profile">
@@ -127,6 +127,113 @@
             background-color: #eef6f8;
             color: #203246;
             text-align: center;
+          }
+
+          #pembayaranRumahTable td:last-child {
+            text-align: center;
+          }
+
+          .payment-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+          }
+
+          .payment-actions .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+          }
+
+          .payment-detail-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e4e8ef;
+          }
+
+          .payment-detail-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .payment-detail-title .material-icons {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 20px;
+          }
+
+          .payment-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+          }
+
+          .payment-summary-item {
+            padding: 14px;
+            border: 1px solid #e4e8ef;
+            border-radius: 8px;
+            background: #f8fafc;
+          }
+
+          .payment-summary-item span {
+            display: block;
+            margin-bottom: 6px;
+            color: #647084;
+            font-size: 12px;
+            font-weight: 800;
+          }
+
+          .payment-summary-item strong {
+            color: #172033;
+            font-size: 16px;
+            font-weight: 800;
+          }
+
+          .payment-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .payment-detail-item {
+            min-height: 66px;
+            padding: 13px 14px;
+            border: 1px solid #e4e8ef;
+            border-radius: 8px;
+            background: #ffffff;
+          }
+
+          .payment-detail-item.full {
+            grid-column: 1 / -1;
+          }
+
+          .payment-detail-label {
+            margin-bottom: 5px;
+            color: #647084;
+            font-size: 12px;
+            font-weight: 800;
+          }
+
+          .payment-detail-value {
+            color: #172033;
+            font-size: 14px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+          }
+
+          @media (max-width: 768px) {
+            .payment-summary,
+            .payment-detail-grid {
+              grid-template-columns: 1fr;
+            }
           }
         </style>
       </div>
@@ -213,6 +320,71 @@
               <button type="submit" class="btn btn-primary">Simpan</button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header payment-detail-header">
+            <h5 class="modal-title payment-detail-title" id="detailModalLabel">
+              <span class="material-icons">receipt_long</span>
+              Detail Pembayaran Cicilan Rumah
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="payment-summary">
+              <div class="payment-summary-item">
+                <span>Jumlah Bayar</span>
+                <strong id="detailJumlahBayar"></strong>
+              </div>
+              <div class="payment-summary-item">
+                <span>Total Dibayar</span>
+                <strong id="detailTotalBayar"></strong>
+              </div>
+              <div class="payment-summary-item">
+                <span>Sisa Tagihan</span>
+                <strong id="detailSisaBayar"></strong>
+              </div>
+            </div>
+
+            <div class="payment-detail-grid">
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Customer</div>
+                <div class="payment-detail-value" id="detailCustomer"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Kode Rumah</div>
+                <div class="payment-detail-value" id="detailKodeRumah"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Tanggal Bayar</div>
+                <div class="payment-detail-value" id="detailTanggalBayar"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Status Pembelian</div>
+                <div class="payment-detail-value" id="detailStatusPembelian"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Jenis Pembayaran</div>
+                <div class="payment-detail-value" id="detailJenisPembayaran"></div>
+              </div>
+              <div class="payment-detail-item">
+                <div class="payment-detail-label">Metode Bayar</div>
+                <div class="payment-detail-value" id="detailMetodeBayar"></div>
+              </div>
+              <div class="payment-detail-item full">
+                <div class="payment-detail-label">Keterangan</div>
+                <div class="payment-detail-value" id="detailKeterangan"></div>
+              </div>
+              <div class="payment-detail-item full">
+                <div class="payment-detail-label">Bukti Pembayaran</div>
+                <div class="payment-detail-value" id="detailBuktiBayar"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
