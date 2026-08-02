@@ -283,15 +283,28 @@
                   <label class="form-label">Tanggal Bayar <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" name="tanggal_bayar" required>
                 </div>
-                <div class="col-md-6 mb-3">
+                <!-- <div class="col-md-6 mb-3">
                   <label class="form-label">Jumlah Bayar <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Contoh: 5000000" required>
-                </div>
+                </div> -->
+                <div class="col-md-6 mb-3">
+    <label class="form-label">
+        Jumlah Bayar <span class="text-danger">*</span>
+    </label>
+    <input
+        type="number"
+        class="form-control"
+        name="jumlah_bayar"
+        min="1000000"
+        placeholder="Contoh: 5000000"
+        title="Minimal Rp. 1.000.000"
+        required>
+</div>
                 <div class="col-md-6 mb-3 admin-payment-field">
                   <label class="form-label">Jenis Pembayaran <span class="text-danger">*</span></label>
                   <select class="form-control" name="jenis_pembayaran" required>
                     <option value="">Pilih jenis pembayaran</option>
-                    <option value="booking_fee">Booking Fee</option>
+                    <!-- <option value="booking_fee">Booking Fee</option> -->
                     <option value="dp">DP</option>
                     <option value="cicilan">Cicilan</option>
                     <option value="pelunasan">Pelunasan</option>
@@ -303,7 +316,7 @@
                     <option value="">Pilih metode pembayaran</option>
                     <option value="Cash">Cash</option>
                     <option value="Transfer Bank">Transfer Bank</option>
-                    <option value="Cicilan Internal">Cicilan Internal</option>
+                    <!-- <option value="Cicilan Internal">KPR</option> -->
                   </select>
                 </div>
               </div>
@@ -315,7 +328,7 @@
 
               <div class="mb-3">
                 <label class="form-label">Bukti Pembayaran</label>
-                <input type="file" class="form-control" name="bukti_bayar" accept=".jpg,.jpeg,.png,.pdf">
+                <input type="file" class="form-control" name="bukti_bayar" accept=".jpg,.jpeg,.png,.pdf" title="Berikan file berisi bukti pembayaran disini.">
                 <small class="text-muted">Format JPG, PNG, atau PDF. Maksimal 2 MB.</small>
                 <div id="buktiSaatIni" class="mt-2"></div>
               </div>
