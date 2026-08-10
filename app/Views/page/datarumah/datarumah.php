@@ -97,6 +97,9 @@
             <a class="menu-link" href="/detail-pembelian-list"><span class="material-icons rotate-icon">person</span> Detail Pembelian Rumah</a>
             <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
             <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
+            <?php if ((session()->get('role') ?? '') === 'admin'): ?>
+            <a class="menu-link" href="/laporan"><span class="material-icons rotate-icon">picture_as_pdf</span> Laporan</a>
+            <?php endif; ?>
            </div>
         </div> 
         <!-- Menu Master -->

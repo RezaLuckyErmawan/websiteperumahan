@@ -101,6 +101,9 @@
             <a class="menu-link" href="/detail-pembelian-list"><span class="material-icons rotate-icon">person</span> Detail Pembelian Rumah</a>
             <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
             <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
+            <?php if ((session()->get('role') ?? '') === 'admin'): ?>
+            <a class="menu-link" href="/laporan"><span class="material-icons rotate-icon">picture_as_pdf</span> Laporan</a>
+            <?php endif; ?>
            </div>
         </div> 
         <!-- Menu Master -->
@@ -139,6 +142,16 @@
 
       <!-- Content -->
         <div class="content1">
+          <?php
+            /** @var int|float|string $jumlahrumah */
+            /** @var int|float|string $jumlahcustomer */
+            /** @var int|float|string $totalpembelian */
+            /** @var int|float|string $stoktotal */
+            $jumlahrumah = $jumlahrumah ?? 0;
+            $jumlahcustomer = $jumlahcustomer ?? 0;
+            $totalpembelian = $totalpembelian ?? 0;
+            $stoktotal = $stoktotal ?? 0;
+          ?>
 
           <div class="card-container">
             <div class="card">

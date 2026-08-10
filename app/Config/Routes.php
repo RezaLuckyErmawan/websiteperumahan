@@ -93,6 +93,10 @@ $routes->delete('/pembayaran-rumah/delete/(:num)', 'PembayaranRumahController::d
 $routes->get('/progres-pembayaran-rumah', 'ProgresPembayaranRumahController::index');
 $routes->get('/progres-pembayaran-rumah/json', 'ProgresPembayaranRumahController::json');
 
+$routes->get('/laporan', 'LaporanController::index');
+$routes->get('/laporan/pdf-penjualan', 'LaporanController::pdfPenjualan');
+$routes->get('/laporan/pdf-cicilan', 'LaporanController::pdfCicilan');
+
 
 $routes->get('/login', 'LoginController::loginform');
 $routes->post('/login/auth', 'LoginController::login');

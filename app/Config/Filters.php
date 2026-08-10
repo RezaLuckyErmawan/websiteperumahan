@@ -119,6 +119,7 @@ class Filters extends BaseFilters
                 'pembayaran-rumah*',
                 'progres-pembayaran-rumah*',
                 'chart-penjualan-rumah',
+                'laporan*',
                 'user*',
                 'mandor*',
                 'rab-*',
@@ -129,7 +130,12 @@ class Filters extends BaseFilters
                 'pekerjaan-insidentil*',
             ],
         ],
-        'role:admin,owner' => [
+        'role:admin' => [
+            'before' => [
+                'laporan*',
+            ],
+        ],
+        'role:admin,owner,karyawan' => [
             'before' => [
                 'data-user*',
                 'user*',
@@ -138,7 +144,7 @@ class Filters extends BaseFilters
                 'data-spv*',
             ],
         ],
-        'role:admin,owner,mandor,spv' => [
+        'role:admin,owner,karyawan,mandor,spv' => [
             'before' => [
                 'dashboard',
                 'perumahan',
@@ -163,14 +169,6 @@ class Filters extends BaseFilters
                 'realisasi-*',
                 'pembatalan-transaksi*',
                 'pekerjaan-insidentil*',
-            ],
-        ],
-        'role:customer' => [
-            'before' => [
-                'dashboard',
-                'detail-pembelian-list',
-                'detail-pembelian-rumah*',
-                'progres-pembayaran-rumah*',
             ],
         ],
     ];
