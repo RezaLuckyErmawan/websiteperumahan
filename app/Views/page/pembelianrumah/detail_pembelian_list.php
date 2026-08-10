@@ -107,8 +107,31 @@
           Detail Pembelian Rumah
         </div>
         <div class="actions">
+          <?php
+            $loginNama = session()->get('nama') ?? '-';
+            $loginUsername = session()->get('username') ?? '-';
+            $loginRole = session()->get('role') ?? '-';
+            $popoverContent = '<div class="user-popover">'
+              . '<div class="user-popover-row"><span>Nama</span><strong>' . esc($loginNama) . '</strong></div>'
+              . '<div class="user-popover-row"><span>Username</span><strong>' . esc($loginUsername) . '</strong></div>'
+              . '<div class="user-popover-row"><span>Role</span><strong>' . esc(ucfirst((string) $loginRole)) . '</strong></div>'
+              . '<a class="user-popover-logout" href="/logout"><span class="material-icons" style="font-size:16px;">logout</span> Logout</a>'
+              . '</div>';
+          ?>
           <div class="profile">
-            <img src="https://i.pravatar.cc/40" alt="Profile">
+            <img
+              src="https://i.pravatar.cc/40"
+              alt="Profile"
+              id="userProfileBtn"
+              role="button"
+              tabindex="0"
+              style="cursor: pointer;"
+              data-bs-toggle="popover"
+              data-bs-placement="bottom"
+              data-bs-html="true"
+              data-bs-title="Info Akun"
+              data-bs-content="<?= esc($popoverContent, 'attr') ?>"
+            >
           </div>
         </div>
       </div>
@@ -344,6 +367,48 @@
               grid-template-columns: 1fr;
             }
           }
+
+          .user-popover {
+            min-width: 180px;
+            padding: 2px 0;
+          }
+
+          .user-popover-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 10px;
+          }
+
+          .user-popover-row span {
+            color: #647084;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .user-popover-row strong {
+            color: #172033;
+            font-size: 13px;
+            font-weight: 700;
+          }
+
+          .user-popover-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            padding-top: 10px;
+            border-top: 1px solid #e4e8ef;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+          }
+
+          .user-popover-logout:hover {
+            color: #b91c1c;
+          }
         </style>
       </div>
 
@@ -373,6 +438,21 @@
           url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
         }
       });
+
+      const profileBtn = document.getElementById('userProfileBtn');
+      if (profileBtn) {
+        const userPopover = new bootstrap.Popover(profileBtn, {
+          trigger: 'click',
+          container: 'body',
+          sanitize: false
+        });
+
+        document.addEventListener('click', function (e) {
+          if (!profileBtn.contains(e.target) && !e.target.closest('.popover')) {
+            userPopover.hide();
+          }
+        });
+      }
     });
   </script>
 </body>
