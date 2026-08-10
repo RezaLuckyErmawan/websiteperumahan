@@ -146,7 +146,11 @@ class Filters extends BaseFilters
                 'form-tambahdata-rumah',
                 'data-bahan*',
                 'data-pembelian-bahan*',
-                'detail-pembelian*',
+                'detail-pembelian-bahan*',
+                'detail-pembelian/json',
+                'detail-pembelian/store',
+                'detail-pembelian/edit*',
+                'detail-pembelian/update*',
                 'form-tambahdata-detailpembelian',
                 'data-bahan-pembangunan*',
                 'bahan-pembangunan*',
@@ -159,6 +163,14 @@ class Filters extends BaseFilters
                 'realisasi-*',
                 'pembatalan-transaksi*',
                 'pekerjaan-insidentil*',
+            ],
+        ],
+        'role:customer' => [
+            'before' => [
+                'dashboard',
+                'detail-pembelian-list',
+                'detail-pembelian-rumah*',
+                'progres-pembayaran-rumah*',
             ],
         ],
     ];

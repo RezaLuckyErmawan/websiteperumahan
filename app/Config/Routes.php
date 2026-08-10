@@ -71,6 +71,8 @@ $routes->get('/customer/delete/(:num)', 'CustomerController::delete/$1');
 
 $routes->get('/pembelian-rumah', 'PembelianRumahController::pembelianrumah');
 $routes->get('/pembelian-rumah/json', 'PembelianRumahController::json');
+$routes->get('/detail-pembelian-list', 'PembelianRumahController::detailPembelianList');
+$routes->get('/detail-pembelian-rumah/(:num)', 'PembelianRumahController::detailPembelian/$1');
 $routes->post('/pembelian-rumah/store', 'PembelianRumahController::store');
 $routes->get('/pembelian-rumah/edit/(:num)', 'PembelianRumahController::edit/$1');
 $routes->post('/pembelian-rumah/update/(:num)', 'PembelianRumahController::update/$1');

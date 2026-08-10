@@ -10,8 +10,8 @@ class PembelianRumahSeeder extends Seeder
     {
         $data = [
             [
-                'customer_id'         => 4,
-                'perumahan_id'        => 10,
+                'customer_id'         => 3,
+                'perumahan_id'        => 1,
                 'tanggal_pembelian'   => '2025-07-21',
                 'harga_beli'          => 350000000,
                 'status_pembelian'    => 'Lunas',
@@ -23,8 +23,8 @@ class PembelianRumahSeeder extends Seeder
                 'updated_at'          => date('Y-m-d H:i:s'),
             ],
             [
-                'customer_id'         => 5,
-                'perumahan_id'        => 9,
+                'customer_id'         => 1,
+                'perumahan_id'        => 2,
                 'tanggal_pembelian'   => '2025-07-20',
                 'harga_beli'          => 280000000,
                 'status_pembelian'    => 'Cicil',
@@ -36,8 +36,8 @@ class PembelianRumahSeeder extends Seeder
                 'updated_at'          => date('Y-m-d H:i:s'),
             ],
             [
-                'customer_id'         => 8,
-                'perumahan_id'        => 12,
+                'customer_id'         => 4,
+                'perumahan_id'        => 3,
                 'tanggal_pembelian'   => '2025-07-18',
                 'harga_beli'          => 300000000,
                 'status_pembelian'    => 'DP',

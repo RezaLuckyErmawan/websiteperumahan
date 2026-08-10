@@ -29,6 +29,47 @@ class PembelianRumahController extends BaseController
     return view('page/pembelianrumah/pembelian_rumah', $data);
 }
 
+    public function detailPembelianList()
+{
+    $db = \Config\Database::connect();
+
+    // Get pembelian data with customer and perumahan details
+    $builder = $db->table('pembelian_rumah pr')
+        ->select('
+            pr.*,
+            customer.nama as nama_customer,
+            customer.telepon as telepon_customer,
+            perumahan.kode_rumah,
+            perumahan.tipe as tipe_rumah,
+            perumahan.lokasi as lokasi_rumah,
+            COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
+            (pr.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
+        ')
+        ->join('customer', 'customer.id = pr.customer_id')
+        ->join('perumahan', 'perumahan.id = pr.perumahan_id')
+        ->join(
+            "(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah WHERE status_pengajuan = 'disetujui' GROUP BY pembelian_rumah_id) total_bayar",
+            'total_bayar.pembelian_rumah_id = pr.id',
+            'left'
+        );
+
+    // Apply customer scope if user is customer
+    if ($this->isCustomer()) {
+        $this->applyCustomerScope($builder, 'customer');
+    }
+
+    $pembelian = $builder
+        ->orderBy('pr.tanggal_pembelian', 'DESC')
+        ->get()
+        ->getResultArray();
+
+    $data = [
+        'pembelian' => $pembelian,
+        'userRole' => session()->get('role'),
+    ];
+
+    return view('page/pembelianrumah/detail_pembelian_list', $data);
+}
 
     public function chartPenjualanRumah() {
         $db = \config\Database::connect();
@@ -312,6 +353,68 @@ class PembelianRumahController extends BaseController
 }
 
 
+    public function detailPembelian($id)
+    {
+        $model = new PembelianRumahModel();
+        $pembayaranModel = new PembayaranRumahModel();
+        $db = \Config\Database::connect();
+
+        // Build query for pembelian data
+        $builder = $db->table('pembelian_rumah pr')
+            ->select('
+                pr.*,
+                customer.nama as nama_customer,
+                customer.email as email_customer,
+                customer.telepon as telepon_customer,
+                customer.alamat as alamat_customer,
+                perumahan.kode_rumah,
+                perumahan.tipe as tipe_rumah,
+                perumahan.luas_tanah,
+                perumahan.luas_bangunan,
+                perumahan.lokasi as lokasi_rumah
+            ')
+            ->join('customer', 'customer.id = pr.customer_id')
+            ->join('perumahan', 'perumahan.id = pr.perumahan_id')
+            ->where('pr.id', $id);
+
+        // Apply customer scope if user is customer
+        if ($this->isCustomer()) {
+            $this->applyCustomerScope($builder, 'customer');
+        }
+
+        $pembelian = $builder->get()->getRowArray();
+
+        if (!$pembelian) {
+            return redirect()->to('/detail-pembelian-list')->with('error', 'Data pembelian tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        // Get payment history for this purchase
+        $pembayaran = $pembayaranModel
+            ->where('pembelian_rumah_id', $id)
+            ->orderBy('tanggal_bayar', 'DESC')
+            ->findAll();
+
+        $totalDibayar = 0;
+        foreach ($pembayaran as $p) {
+            if ($p['status_pengajuan'] === 'disetujui') {
+                $totalDibayar += $p['jumlah_bayar'];
+            }
+        }
+
+        $sisaTagihan = $pembelian['harga_beli'] - $totalDibayar;
+
+        $data = [
+            'pembelian' => $pembelian,
+            'pembayaran' => $pembayaran,
+            'total_dibayar' => $totalDibayar,
+            'sisa_tagihan' => $sisaTagihan,
+            'userRole' => session()->get('role'),
+            'isCustomer' => $this->isCustomer(),
+        ];
+
+        return view('page/pembelianrumah/detail_pembelian', $data);
+    }
+
     public function delete($id)
 {
     $model = new PembelianRumahModel();
@@ -373,5 +476,26 @@ class PembelianRumahController extends BaseController
         ]);
     }
 }
+
+    private function isCustomer(): bool
+    {
+        return session()->get('role') === 'customer';
+    }
+
+    private function applyCustomerScope($builder, string $customerAlias)
+    {
+        $customerId = session()->get('customer_id');
+        if ($customerId) {
+            return $builder->where($customerAlias . '.id', $customerId);
+        }
+
+        $name = (string) session()->get('nama');
+        $username = (string) session()->get('username');
+
+        return $builder->groupStart()
+            ->where($customerAlias . '.nama', $name)
+            ->orWhere($customerAlias . '.nama', $username)
+            ->groupEnd();
+    }
 
 }
