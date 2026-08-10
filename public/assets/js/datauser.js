@@ -14,7 +14,7 @@ $(document).ready(function() {
         case 'admin':
             style = 'background-color: #198754; color: white;';
             break;
-        case 'karyawan':
+        case 'owner':
             style = 'background-color: #0d6efd; color: white;';
             break;
         case 'mandor':
@@ -30,7 +30,7 @@ $(document).ready(function() {
             style = 'background-color: #6c757d; color: white;';
         }
 
-        return `<span style="${style} padding: 6px 10px; font-size: 0.85rem; border-radius: 10px;">${data}</span>`;
+        return `<span style="${style} padding: 6px 10px; font-size: 0.85rem; border-radius: 10px;">${data.toLowerCase() === 'owner' ? 'Owner' : data}</span>`;
     }
     },
       { data: 'status' },

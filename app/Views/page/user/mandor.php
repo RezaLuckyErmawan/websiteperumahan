@@ -186,7 +186,7 @@
                     <option value="">-- Pilih Role --</option>
                     <option value="admin">🛡️ Admin</option>
                     <option value="mandor">👷 Mandor</option>
-                    <option value="karyawan">🙋 Karyawan</option>
+                    <option value="owner">Owner</option>
                   </select>
                 </div>
                 <div class="mb-3">

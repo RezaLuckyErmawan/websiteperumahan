@@ -16,7 +16,7 @@ $(document).ready(function(){
                 case 'admin':
                     style = 'background-color: #198754; color: white;';
                     break;
-                case 'karyawan':
+                case 'owner':
                     style = 'background-color: #0d6efd; color: white;';
                     break;
                 case 'mandor':

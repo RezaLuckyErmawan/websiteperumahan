@@ -129,7 +129,7 @@ class Filters extends BaseFilters
                 'pekerjaan-insidentil*',
             ],
         ],
-        'role:admin' => [
+        'role:admin,owner' => [
             'before' => [
                 'data-user*',
                 'user*',
@@ -138,7 +138,7 @@ class Filters extends BaseFilters
                 'data-spv*',
             ],
         ],
-        'role:admin,karyawan,mandor,spv' => [
+        'role:admin,owner,mandor,spv' => [
             'before' => [
                 'dashboard',
                 'perumahan',

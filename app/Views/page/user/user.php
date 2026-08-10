@@ -189,7 +189,7 @@
                     <option value="admin">🛡️ Admin</option>
                     <option value="mandor">👷 Mandor</option>
                     <!-- <option value="spv">🧑‍💼 SPV</option> -->
-                    <option value="karyawan">🙋 Karyawan</option>
+                    <option value="owner">Owner</option>
                     <option value="customer">Customer</option>
                   </select>
                 </div>

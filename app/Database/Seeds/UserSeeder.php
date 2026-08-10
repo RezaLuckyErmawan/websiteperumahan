@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
                 'nama'         => 'Rika',
                 'username'     => 'Rika',
                 'password'     => password_hash('password123', PASSWORD_DEFAULT),
-                'role'         => 'karyawan',
+                'role'         => 'owner',
                 'customer_id'  => null,
                 'status'       => 'aktif'
             ],
@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
                 'nama'         => 'El Gato',
                 'username'     => 'ElGato',
                 'password'     => password_hash('password123', PASSWORD_DEFAULT),
-                'role'         => 'karyawan',
+                'role'         => 'owner',
                 'customer_id'  => null,
                 'status'       => 'aktif'
             ],

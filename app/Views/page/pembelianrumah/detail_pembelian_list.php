@@ -81,7 +81,7 @@
             </div>
           </div>
 
-          <?php if (($userRole ?? '') !== 'customer'): ?>
+          <?php if (in_array(($userRole ?? ''), ['admin', 'owner'], true)): ?>
             <div class="menu-dropdown">
               <button class="dropdown-btn">
                 <span class="material-icons rotate-icon">folder_open</span> Menu Master
@@ -111,10 +111,19 @@
             $loginNama = session()->get('nama') ?? '-';
             $loginUsername = session()->get('username') ?? '-';
             $loginRole = session()->get('role') ?? '-';
+            $roleLabel = match (strtolower((string) $loginRole)) {
+                'owner' => 'Owner',
+                'admin' => 'Admin',
+                'mandor' => 'Mandor',
+                'spv' => 'SPV',
+                'customer' => 'Customer',
+                'karyawan' => 'Owner',
+                default => ucfirst((string) $loginRole),
+            };
             $popoverContent = '<div class="user-popover">'
               . '<div class="user-popover-row"><span>Nama</span><strong>' . esc($loginNama) . '</strong></div>'
               . '<div class="user-popover-row"><span>Username</span><strong>' . esc($loginUsername) . '</strong></div>'
-              . '<div class="user-popover-row"><span>Role</span><strong>' . esc(ucfirst((string) $loginRole)) . '</strong></div>'
+              . '<div class="user-popover-row"><span>Role</span><strong>' . esc($roleLabel) . '</strong></div>'
               . '<a class="user-popover-logout" href="/logout"><span class="material-icons" style="font-size:16px;">logout</span> Logout</a>'
               . '</div>';
           ?>

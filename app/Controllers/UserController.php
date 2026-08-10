@@ -58,7 +58,7 @@ class UserController extends BaseController
 
     public function store() {
         $userModel = new UserModel();
-        $allowedRoles = ['admin', 'mandor', 'karyawan', 'spv', 'customer'];
+        $allowedRoles = ['admin', 'mandor', 'owner', 'spv', 'customer'];
         $role = $this->request->getPost('role');
 
         if (!in_array($role, $allowedRoles, true)) {
@@ -92,7 +92,7 @@ class UserController extends BaseController
 
     public function update($id) {
         $userModel = new UserModel();
-        $allowedRoles = ['admin', 'mandor', 'karyawan', 'spv', 'customer'];
+        $allowedRoles = ['admin', 'mandor', 'owner', 'spv', 'customer'];
         $role = $this->request->getPost('role');
 
         if (!in_array($role, $allowedRoles, true)) {
