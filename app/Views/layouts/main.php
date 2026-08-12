@@ -84,6 +84,7 @@
                           data-bs-html="true"
                           data-bs-title="Info Akun"
                           data-bs-content="<?= esc($popoverContent, 'attr') ?>"
+                          data-bs-custom-class="user-profile-popover"
                         >
                     </div>
                 </div>
@@ -125,9 +126,18 @@
             }
         }
 
-        document.querySelectorAll('.dropdown-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                this.parentElement.classList.toggle('aktif');
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('aktif');
+            });
+
+            document.querySelectorAll('.dropdown-btn').forEach(btn => {
+                btn.setAttribute('aria-expanded', 'false');
+                btn.addEventListener('click', function () {
+                    const parentDropdown = this.parentElement;
+                    const isOpen = parentDropdown.classList.toggle('aktif');
+                    this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
             });
         });
 

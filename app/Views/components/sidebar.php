@@ -29,8 +29,8 @@ $menuItems = $menuConfig->getMenuForRole($userRole);
 
                 <?php elseif ($menuItem['type'] === 'dropdown'): ?>
                     <!-- Dropdown Menu -->
-                    <div class="menu-dropdown <?= $menuConfig->isMenuItemActive($menuItem['link'] ?? '', $currentUrl) ? 'aktif' : '' ?>">
-                        <button class="dropdown-btn">
+                    <div class="menu-dropdown">
+                        <button class="dropdown-btn" aria-expanded="false">
                             <span class="material-icons rotate-icon"><?= esc($menuItem['icon']) ?></span>
                             <?= esc($menuItem['label']) ?>
                             <span class="material-icons arrow">expand_more</span>
