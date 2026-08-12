@@ -13,8 +13,8 @@
 
     <!-- DataTables CSS (conditionally loaded) -->
     <?php if (isset($useDataTables) && $useDataTables): ?>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.css') ?>" />
+    <script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
     <?php endif; ?>
 
     <!-- Additional CSS -->
