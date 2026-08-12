@@ -9,6 +9,8 @@ class ProgresPembayaranRumahController extends BaseController
     public function index()
     {
         return view('page/pembayaranrumah/progres_pembayaran_rumah', [
+            'pageTitle' => 'Data Progres Pembayaran Rumah',
+            'useDataTables' => true,
             'userRole' => session()->get('role'),
         ]);
     }

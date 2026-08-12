@@ -64,6 +64,7 @@ class PembelianRumahController extends BaseController
         ->getResultArray();
 
     $data = [
+        'pageTitle' => 'Detail Pembelian Rumah',
         'pembelian' => $pembelian,
         'userRole' => session()->get('role'),
     ];

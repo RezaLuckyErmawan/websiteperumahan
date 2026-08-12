@@ -1,296 +1,351 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data User | Sistem Manajemen Perumahan</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  
-</head>
-<body>
-  <style>
-    /* Gaya dasar */
+<?= $this->extend('layouts/main') ?>
 
-  </style>
-  <div class="container1">
-    <!-- Sidebar -->
-   <div class="sidebar1" id="sidebar">
-      <div>
-        <h4>
-          Sistem Manajemen Perumahan
-        </h4>
-        <div class="nav1">
-          <a class=" menu-link" href="/dashboard"><span class="material-icons rotate-icon">dashboard</span> Dashboard</a>
-          <!-- Manajemen Marketing -->
-           <div class="menu-dropdown">
-            <button class="dropdown-btn">
-               <span class="material-icons rotate-icon">analytics</span> Marketing
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-            <a class="menu-link"href="/data-customer"><span class="material-icons rotate-icon">groups</span> Data Customer</a>
-             <a class="menu-link"href="/pembatalan-transaksi"><span class="material-icons rotate-icon">remove_shopping_cart</span> Pembatalan Transaksi</a>
-            </div>
-           </div>
-
-          <!-- Manejemen Proyek -->
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">business_center</span> Manajemen Proyek
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-bahan" style="margin-top: 10px;">
-                <span class="material-icons rotate-icon">construction</span> Bahan Bangunan
-              </a>
-              <a class="menu-link" href="/data-rumah">
-                <span class="material-icons rotate-icon">home_work</span> Data Rumah
-              </a>
-              <a class="menu-link" href="/rab-rumah">
-                <span class="material-icons rotate-icon">description</span> RAB Rumah
-              </a>
-               <a class="menu-link" href="/rab-bahan">
-                <span class="material-icons rotate-icon">description</span> RAB Bahan
-              </a>
-              <a class="menu-link" href="/rab-pekerja">
-                <span class="material-icons rotate-icon">description</span> RAB Pekerja
-              </a>
-              <a class="menu-link" href="/realisasi-rumah">
-                <span class="material-icons rotate-icon">description</span> Realisasi Rumah
-              </a>
-              <a class="menu-link" href="/realisasi-bahan">
-                <span class="material-icons rotate-icon">description</span> Realisasi Bahan
-              </a>
-              <a class="menu-link" href="/realisasi-pekerja">
-                <span class="material-icons rotate-icon">description</span> Realisasi Pekerja
-              </a>
-              <a class="menu-link" href="/data-bahan-pembangunan">
-                <span class="material-icons rotate-icon">business</span> Data Bahan Pembangunan
-              </a>
-               <a class="menu-link" href="/pekerjaan-insidentil">
-                <span class="material-icons rotate-icon">architecture</span> Data Pekerjaan Insidentil
-              </a>
-            </div>
-        </div>
-        <!-- Manajemen LOgistik -->
-        <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">fact_check</span> Manajemen Logistik
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-             <a class="menu-link" href="data-pembelian-bahan"><span class="material-icons rotate-icon">shopping_cart</span> Data Pembelian Bahan</a>
-          <a class="menu-link" href="/detail-pembelian-bahan"><span class="material-icons rotate-icon">receipt_long</span> Detail Pembelian  Bahan</a> 
-            </div>
-        </div>
-        <!-- Manajemen Keuangan -->
-        <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">monetization_on </span> Keuangan
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Pembelian Rumah</a>
-            <a class="menu-link" href="/detail-pembelian-list"><span class="material-icons rotate-icon">person</span> Detail Pembelian Rumah</a>
-            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
-            <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
-            <?php if ((session()->get('role') ?? '') === 'admin'): ?>
-            <a class="menu-link" href="/laporan"><span class="material-icons rotate-icon">picture_as_pdf</span> Laporan</a>
-            <?php endif; ?>
-           </div>
-        </div> 
-        <!-- Menu Master -->
-         <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">folder_open</span> Menu Master
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link active"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
-            <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <a class="menu-link"href="/data-spv"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a>
-           </div>
-        </div>
-        </div>
-      </div>
-      <div class="logout">
-        <a href="/logout"><span class="material-icons">logout</span> Logout</a>
-      </div>
-    </div>
-    <!-- Main -->
-    <div class="main">
-      <!-- Navbar -->
-      <div class="navbar1">
-        <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="page-title">
-          Data User
-        </div>
-        <div class="actions">
-          <div class="notifications">
-            <span class="material-icons">notifications</span>
-            <span class="badge">3</span>
-          </div>
-          <div class="profile">
-            <img src="https://i.pravatar.cc/40" alt="Profile">
-          </div>
-        </div>
-      </div>
-      <!-- Content -->
-      <div class="content1">
-        <!-- Filter dan Tambah -->
-<div class="table-responsive">
-        <table id="dataUserTable" class="display table table-striped table-bordered w-100">
-             <thead>
-                  <tr>
-                    
-                      <th>Nama</th>
-                      <th>username</th>
-                      <th>role</th>
-                      <th>status</th>
-                      <th>Aksi</th>
-                  </tr>
-              </thead>
-            <tbody>
-            </tbody>
-        </table>
-        </div>
-        <!-- MODAL FORM TAMBAH/EDIT USER -->
-      <div class="modal fade" id="modalUserForm" tabindex="-1" aria-labelledby="modalUserFormLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md">
-          <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title" id="modalUserFormLabel">Form Data User</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form onsubmit="event.preventDefault(); simpanUser();">
-              <div class="modal-body">
-                <input type="hidden" name="id">
-                <div class="mb-3">
-                  <label for="nama" class="form-label">Nama</label>
-                  <input type="text" class="form-control" name="nama" required>
-                </div>
-                <div class="mb-3">
-                  <label for="username" class="form-label">Username</label>
-                  <input type="text" class="form-control" name="username" required>
-                </div>
-                <div class="mb-3">
-                  <label for="password" class="form-label">Password</label>
-                  <input type="password" class="form-control" name="password">
-                  <small class="text-muted hint-password" style="display: none;">*Kosongkan jika tidak ingin mengubah password</small>
-                </div>
-               <div class="mb-3">
-                  <label for="role" class="form-label">Role</label>
-                  <select name="role" class="form-select" required>
-                    <option value="">-- Pilih Role --</option>
-                    <option value="admin">🛡️ Admin</option>
-                    <option value="mandor">👷 Mandor</option>
-                    <!-- <option value="spv">🧑‍💼 SPV</option> -->
-                    <option value="owner">Owner</option>
-                    <option value="customer">Customer</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label for="customer_id" class="form-label">Customer Terkait</label>
-                  <select name="customer_id" class="form-select">
-                    <option value="">-- Pilih Customer --</option>
-                    <?php foreach ($customers ?? [] as $customer): ?>
-                      <option value="<?= esc($customer['id']) ?>"><?= esc($customer['nama']) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                  <small class="text-muted">Wajib diisi untuk role Customer agar data pembayaran terfilter ke customer tersebut.</small>
-                </div>
-                <div class="mb-3">
-                  <label for="status" class="form-label">Status</label>
-                  <select name="status" class="form-select" required>
-                    <option value="aktif">✅ Aktif</option>
-                    <option value="nonaktif">🚫 Nonaktif</option>
-                  </select>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Hapus -->
-       <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-              <h5 class="modal-title" id="confirmDeleteLabel">Konfirmasi Hapus</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              Apakah kamu yakin ingin menghapus data ini?
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-              <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn">Hapus</button>
-            </div>
-          </div>
-        </div>
-       </div>
-      
-       <!-- MODAL KONFIRMASI PESAN BERHASIL DIHAPUS -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content bg-success text-black">
-          <div class="modal-header border-0">
-            <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-center">
-            <p id="successMessage">Data berhasil dihapus!</p>
-          </div>
-        </div>
-      </div>
-    </div>
-      </div>
-        <footer class="footer1">
-            <p>&copy; <?= date('Y') ?> Sistem Manajemen Informasi Perumahan. All rights reserved.</p>
-        </footer>
-    </div>
-    
-  </div>
-  <script>
-      function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("active");
-      
-    }
-    function showSuccess(message = 'Data berhasil diproses.') {
-        $('#successMessage').text(message);
-        const modal = new bootstrap.Modal(document.getElementById('successModal'));
-        modal.show();
-        setTimeout(() => {
-          modal.hide();
-        }, 2500);
-    }
-    document.querySelectorAll('.dropdown-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        this.parentElement.classList.toggle('aktif');
-      });
-    });
-  </script>
-  <style>
-     #dataUserTable thead th {
+<?= $this->section('styles') ?>
+<style>
+    #userTable thead th {
         background-color: #eef6f8;
         color: #203246;
         text-align: center;
     }
-  </style>
-</body>
-<script src="<?= base_url('assets/js/datauser.js') ?>"></script>
-    
-</html>
+
+    .user-popover {
+        min-width: 180px;
+        padding: 2px 0;
+    }
+
+    .user-popover-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 10px;
+    }
+
+    .user-popover-row span {
+        color: #647084;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .user-popover-row strong {
+        color: #172033;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .user-popover-logout {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px solid #e4e8ef;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .user-popover-logout:hover {
+        color: #b91c1c;
+    }
+</style>
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<table id="userTable" class="display table table-striped table-bordered w-100">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<!-- Modal Tambah User -->
+<div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFormLabel">Tambah User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="event.preventDefault(); simpanForm();">
+                <div class="modal-body">
+                    <input type="hidden" name="id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nama <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nama" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role <span class="text-danger">*</span></label>
+                        <select class="form-control" name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="mandor">Mandor</option>
+                            <option value="spv">SPV</option>
+                            <option value="customer">Customer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit User -->
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="event.preventDefault(); updateForm();">
+                <div class="modal-body">
+                    <input type="hidden" name="id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nama <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nama" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password (kosongkan jika tidak diubah)</label>
+                        <input type="password" class="form-control" name="password">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role <span class="text-danger">*</span></label>
+                        <select class="form-control" name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="mandor">Mandor</option>
+                            <option value="spv">SPV</option>
+                            <option value="customer">Customer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sukses -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content bg-success text-black">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="successMessage">Data berhasil disimpan!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmDeleteLabel">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah kamu yakin ingin menghapus user ini?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+$(document).ready(function() {
+    $('#userTable').DataTable({
+        processing: true,
+        serverSide: true,
+        pageLength: 5,
+        lengthMenu: [5, 10, 25, 50],
+        ajax: '/data-user/json',
+        columns: [
+            { data: 'username' },
+            { data: 'nama' },
+            { data: 'email' },
+            {
+                data: 'role',
+                render: function (data) {
+                    const roleLabels = {
+                        'admin': 'Admin',
+                        'mandor': 'Mandor',
+                        'spv': 'SPV',
+                        'customer': 'Customer',
+                        'owner': 'Owner'
+                    };
+                    return roleLabels[data] || data;
+                }
+            },
+            {
+                data: 'id',
+                render: function (data) {
+                    return `
+                        <button class="btn btn-sm btn-primary" onclick="editData(${data})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="hapusData(${data})">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    `;
+                },
+                orderable: false,
+                searchable: false
+            }
+        ]
+    });
+
+    $('#userTable_length').html(`
+        <button type="button" onclick="openCreateForm()" class="add-btn1">
+            <i class="fas fa-plus"></i> Tambah User
+        </button>
+    `);
+});
+
+function openCreateForm() {
+    $('#modalForm form')[0].reset();
+    $('#modalForm input[name=id]').val('');
+    $('#modalFormLabel').text('Tambah User');
+    $('#modalForm').modal('show');
+}
+
+function editData(id) {
+    $.get(`/data-user/edit/${id}`, function (data) {
+        $('#modalEdit input[name=id]').val(data.id);
+        $('#modalEdit input[name=username]').val(data.username);
+        $('#modalEdit input[name=nama]').val(data.nama);
+        $('#modalEdit input[name=email]').val(data.email || '');
+        $('#modalEdit select[name=role]').val(data.role);
+        $('#modalEditLabel').text('Edit User');
+        $('#modalEdit').modal('show');
+    });
+}
+
+let idToDelete = null;
+
+function hapusData(id) {
+    idToDelete = id;
+    $('#confirmDeleteModal').modal('show');
+}
+
+$('#confirmDeleteBtn').on('click', function () {
+    if (idToDelete) {
+        $.ajax({
+            url: `/data-user/delete/${idToDelete}`,
+            type: 'DELETE',
+            success: function () {
+                $('#confirmDeleteModal').modal('hide');
+                $('#userTable').DataTable().ajax.reload();
+                showSuccess('User berhasil dihapus');
+            },
+            error: function () {
+                alert('Gagal menghapus user');
+            }
+        });
+    }
+});
+
+function simpanForm() {
+    let formData = new FormData($('#modalForm form')[0]);
+
+    $.ajax({
+        url: '/data-user/store',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+            $('#modalForm').modal('hide');
+            $('#userTable').DataTable().ajax.reload();
+            showSuccess('User berhasil ditambahkan');
+        },
+        error: function (xhr) {
+            let errorMessage = 'Terjadi kesalahan';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            alert(errorMessage);
+        }
+    });
+}
+
+function updateForm() {
+    let id = $('#modalEdit input[name=id]').val();
+    let formData = new FormData($('#modalEdit form')[0]);
+
+    $.ajax({
+        url: `/data-user/update/${id}`,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+            $('#modalEdit').modal('hide');
+            $('#userTable').DataTable().ajax.reload();
+            showSuccess('User berhasil diperbarui');
+        },
+        error: function (xhr) {
+            let errorMessage = 'Terjadi kesalahan';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            alert(errorMessage);
+        }
+    });
+}
+</script>
+<?= $this->endSection() ?>

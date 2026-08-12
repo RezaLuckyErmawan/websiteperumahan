@@ -12,6 +12,8 @@ class PembelianbahanController extends BaseController
     {
         $model = new PembelianBahanModel();
         $data['pembelianbahan'] = $model->findAll();
+        $data['pageTitle'] = 'Pembelian Bahan';
+        $data['useDataTables'] = true;
         return view ('page/pembelianbahan/data_pembelian_bahan', $data);
     }
 

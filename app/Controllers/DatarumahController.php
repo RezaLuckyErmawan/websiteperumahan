@@ -9,7 +9,11 @@ use CodeIgniter\HTTP\ResponseInterface;
 class DatarumahController extends BaseController
 {
     public function datarumah() {
-        return view('page/datarumah/datarumah');
+        $data = [
+            'pageTitle' => 'Data Perumahan',
+            'useDataTables' => true
+        ];
+        return view('page/datarumah/datarumah', $data);
     }
 
     public function json() {

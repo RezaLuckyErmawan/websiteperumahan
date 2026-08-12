@@ -37,10 +37,11 @@ class DashboardController extends BaseController
     $stoktotal    = $jumlahbahan['stok'] ?? 0;
 
     return view('page/dashboard', [
+        'pageTitle'       => 'Dashboard',
         'jumlahrumah'     => $jumlahrumah,
         'jumlahcustomer'  => $jumlahcustomer,
-        'totalpembelian'  => $totalpembelian, 
-        'stoktotal'       => $stoktotal,  
+        'totalpembelian'  => $totalpembelian,
+        'stoktotal'       => $stoktotal,
     ]);
 }
 

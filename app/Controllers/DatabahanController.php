@@ -10,7 +10,11 @@ class DatabahanController extends BaseController
 {
     public function databahan() {
         $model = new BahanBangunanModel();
-        $data['bahan'] = $model->findAll();
+        $data = [
+            'pageTitle' => 'Data Bahan Bangunan',
+            'useDataTables' => true,
+            'bahan' => $model->findAll()
+        ];
         return view('/page/databahan/databahan', $data);
     }
 

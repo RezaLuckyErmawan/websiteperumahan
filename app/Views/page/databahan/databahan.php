@@ -1,264 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data Bahan Bangunan | Sistem Manajemen Perumahan</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-</head>
-<body>
-  <div class="container1">
-    <!-- Sidebar -->
-    <div class="sidebar1" id="sidebar">
-      <div>
-        <h4>
-          Sistem Manajemen Perumahan
-        </h4>
-        <div class="nav1">
-          <a class=" menu-link" href="/dashboard"><span class="material-icons rotate-icon">dashboard</span> Dashboard</a>
-          <!-- Manajemen Marketing -->
-           <div class="menu-dropdown">
-            <button class="dropdown-btn">
-               <span class="material-icons rotate-icon">analytics</span> Marketing
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-            <a class="menu-link"href="/data-customer"><span class="material-icons rotate-icon">groups</span> Data Customer</a>
-             <a class="menu-link"href="/pembatalan-transaksi"><span class="material-icons rotate-icon">remove_shopping_cart</span> Pembatalan Transaksi</a>
-            </div>
-           </div>
+<?= $this->extend('layouts/main') ?>
 
-          <!-- Manejemen Proyek -->
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">business_center</span> Manajemen Proyek
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-              <a class="menu-link active" href="/data-bahan" style="margin-top: 10px;">
-                <span class="material-icons rotate-icon">construction</span> Bahan Bangunan
-              </a>
-              <a class="menu-link" href="/data-rumah">
-                <span class="material-icons rotate-icon">home_work</span> Data Rumah
-              </a>
-               <a class="menu-link" href="/rab-rumah">
-                <span class="material-icons rotate-icon">description</span> RAB Rumah
-              </a>
-               <a class="menu-link" href="/rab-bahan">
-                <span class="material-icons rotate-icon">description</span> RAB Bahan
-              </a>
-              <a class="menu-link" href="/rab-pekerja">
-                <span class="material-icons rotate-icon">description</span> RAB Pekerja
-              </a>
-               <a class="menu-link" href="/realisasi-rumah">
-                <span class="material-icons rotate-icon">description</span> Realisasi Rumah
-              </a>
-               <a class="menu-link" href="/realisasi-bahan">
-                <span class="material-icons rotate-icon">description</span> Realisasi Bahan
-              </a>
-              <a class="menu-link" href="/realisasi-pekerja">
-                <span class="material-icons rotate-icon">description</span> Realisasi Pekerja
-              </a>
-              <a class="menu-link" href="/data-bahan-pembangunan">
-                <span class="material-icons rotate-icon">business</span> Data Bahan Pembangunan
-              </a>
-               <a class="menu-link" href="/pekerjaan-insidentil">
-                <span class="material-icons rotate-icon">architecture</span> Data Pekerjaan Insidentil
-              </a>
-            </div>
-        </div>
-        <!-- Manajemen LOgistik -->
-        <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">fact_check</span> Manajemen Logistik
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-             <a class="menu-link" href="data-pembelian-bahan"><span class="material-icons rotate-icon">shopping_cart</span> Data Pembelian Bahan</a>
-          <a class="menu-link" href="/detail-pembelian-bahan"><span class="material-icons rotate-icon">receipt_long</span> Detail Pembelian  Bahan</a> 
-            </div>
-        </div>
-        <!-- Manajemen Keuangan -->
-        <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">monetization_on </span> Keuangan
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Pembelian Rumah</a>
-            <a class="menu-link" href="/detail-pembelian-list"><span class="material-icons rotate-icon">person</span> Detail Pembelian Rumah</a>
-            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
-            <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
-            <?php if ((session()->get('role') ?? '') === 'admin'): ?>
-            <a class="menu-link" href="/laporan"><span class="material-icons rotate-icon">picture_as_pdf</span> Laporan</a>
-            <?php endif; ?>
-           </div>
-        </div> 
-        <!-- Menu Master -->
-         <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">folder_open</span> Menu Master
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
-            <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <!-- <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a> -->
-           </div>
-        </div>
-        </div>
-      </div>
-      <div class="logout">
-        <a href="/logout"><span class="material-icons">logout</span> Logout</a>
-      </div>
-    </div>
-    
-    <!-- Main -->
-    <div class="main">
-      <!-- Navbar -->
-      <div class="navbar1">
-        <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="page-title">
-          Data Bahan Bangunan
-        </div>
-        <div class="actions">
-          <div class="notifications">
-            <span class="material-icons">notifications</span>
-            <span class="badge">3</span>
-          </div>
-          <div class="profile">
-            <img src="https://i.pravatar.cc/40" alt="Profile">
-          </div>
-        </div>
-      </div>
+<?= $this->section('styles') ?>
+<style>
+    #dataBahanTable thead th {
+        background-color: #eef6f8;
+        color: #203246;
+        text-align: center;
+    }
 
-      <!-- Content -->
-      <div class="content1">
-        <div>
-        <table id="dataBahanTable" class="display table table-bordered">
-            <thead>
-                <tr>
-                    <th>Nama Bahan</th>
-                    <th>Stok</th>
-                    <th>Satuan</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-               
-            </tbody>
-        </table>
-         <style>
-          #dataBahanTable thead th {
-              background-color: #eef6f8;
-              color: #203246;
-              text-align: center;
-          }
-          </style>
-        <!-- Modal Tambah dan Edit -->
-        <div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <form onsubmit="event.preventDefault(); simpanForm();">
+    .user-popover {
+        min-width: 180px;
+        padding: 2px 0;
+    }
+
+    .user-popover-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 10px;
+    }
+
+    .user-popover-row span {
+        color: #647084;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .user-popover-row strong {
+        color: #172033;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .user-popover-logout {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px solid #e4e8ef;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .user-popover-logout:hover {
+        color: #b91c1c;
+    }
+</style>
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<table id="dataBahanTable" class="display table table-bordered">
+    <thead>
+        <tr>
+            <th>Nama Bahan</th>
+            <th>Stok</th>
+            <th>Satuan</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<!-- Modal Tambah dan Edit -->
+<div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form onsubmit="event.preventDefault(); simpanForm();">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="modalFormLabel">Tambah Data Bahan</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="modalFormLabel">Tambah Data Bahan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                  <input type="hidden" name="id">
-                  <div class="mb-3">
-                    <label class="form-label">Nama Bahan</label>
-                    <input type="text" class="form-control" name="nama_bahan" required>
-                  </div>
-                 
-                  <div class="mb-3">
-                    <label class="form-label">Satuan</label>
-                    <input type="text" class="form-control" name="satuan" required>
-                  </div>
+                    <input type="hidden" name="id">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Bahan</label>
+                        <input type="text" class="form-control" name="nama_bahan" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Satuan</label>
+                        <input type="text" class="form-control" name="satuan" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                  <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
                 </div>
-              </form>
-            </div>
-          </div>
+            </form>
         </div>
+    </div>
+</div>
 
-        <!-- Modal Konfirmasi Hapus -->
-       <!-- Modal Konfirmasi Hapus -->
-        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-              <div class="modal-header bg-danger text-white">
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="confirmDeleteModalLabel">Konfirmasi Hapus</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
+            </div>
+            <div class="modal-body">
                 Apakah Anda yakin ingin menghapus data ini?
-              </div>
-              <div class="modal-footer">
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn">Hapus</button>
-              </div>
             </div>
-          </div>
         </div>
-
-      <!-- MODAL PESAN BERHASIL -->
-        <div class="modal fade" id="successmodal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" >
-          <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content bg-success text-black">
-              <div class="modal-header border-0">
-                  <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
-                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body text-center">
-                <p id="successMessage">Data Berhasil Dihapus</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        </div>
-
-      </div>
-        <footer class="footer1">
-            <p>&copy; <?= date('Y') ?> Sistem Manajemen Informasi Perumahan. All rights reserved.</p>
-        </footer>
     </div>
-    
-  </div>
-  <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("active");
-    }
-    function showSuccess(message = 'Berhasil!') {
-  $('#successMessage').text(message);
-  const modal = new bootstrap.Modal(document.getElementById('successmodal'));
-  modal.show();
+</div>
 
-  // Auto-close modal setelah 2 detik
-  setTimeout(() => {
-    modal.hide();
-  }, 2000);
-}
-document.querySelectorAll('.dropdown-btn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    this.parentElement.classList.toggle('aktif');
-  });
-});
-  </script>
-  <script src="<?= base_url('assets/js/databahan.js') ?>"></script>
-</body>
-</html>
+<!-- Modal Pesan Berhasil -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content bg-success text-black">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="successMessage">Data Berhasil Dihapus</p>
+            </div>
+        </div>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('assets/js/databahan.js') ?>"></script>
+<?= $this->endSection() ?>
