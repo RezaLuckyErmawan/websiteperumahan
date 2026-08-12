@@ -50,6 +50,12 @@ class DatarumahController extends BaseController
 
     public function store() {
         $model = new PerumahanModel();
+
+        $uploadedGambar = $this->uploadGambar();
+        if (is_array($uploadedGambar) && ($uploadedGambar['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedGambar);
+        }
+
         $data  = [
             'kode_rumah'     => $this->request->getPost('kode_rumah'),
             'lokasi'         => $this->request->getPost('lokasi'),
@@ -59,8 +65,13 @@ class DatarumahController extends BaseController
             'harga'          => $this->request->getPost('harga'),
             'status'         => $this->request->getPost('status')
         ];
+
+        if ($uploadedGambar) {
+            $data['gambar'] = $uploadedGambar;
+        }
+
         $model->insert($data);
-        return redirect()->to('/data-rumah');
+        return $this->response->setJSON(['success' => true, 'message' => 'Data berhasil ditambahkan']);
     }
 
     public function edit($id) {
@@ -71,6 +82,13 @@ class DatarumahController extends BaseController
 
     public function update($id) {
         $model = new PerumahanModel();
+        $old = $model->find($id);
+
+        $uploadedGambar = $this->uploadGambar();
+        if (is_array($uploadedGambar) && ($uploadedGambar['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedGambar);
+        }
+
         $data = [
             'kode_rumah'     => $this->request->getPost('kode_rumah'),
             'lokasi'         => $this->request->getPost('lokasi'),
@@ -80,13 +98,69 @@ class DatarumahController extends BaseController
             'harga'          => $this->request->getPost('harga'),
             'status'         => $this->request->getPost('status'),
         ];
+
+        if ($uploadedGambar) {
+            $data['gambar'] = $uploadedGambar;
+            $this->deleteGambar($old['gambar'] ?? null);
+        }
+
         $model->update($id, $data);
         return $this->response->setJSON(['success' => true]);
     }
 
     public function delete($id) {
         $model = new PerumahanModel();
+        $data = $model->find($id);
         $model->delete($id);
+        $this->deleteGambar($data['gambar'] ?? null);
         return $this->response->setJSON(['success' => true]);
+    }
+
+    private function uploadGambar()
+    {
+        $file = $this->request->getFile('gambar');
+
+        if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (!$file->isValid()) {
+            return ['status' => 'error', 'message' => 'Upload gambar gagal'];
+        }
+
+        $validated = $this->validate([
+            'gambar' => [
+                'uploaded[gambar]',
+                'mime_in[gambar,image/jpg,image/jpeg,image/png]',
+                'max_size[gambar,2048]',
+            ]
+        ]);
+
+        if (!$validated) {
+            return ['status' => 'error', 'message' => implode(', ', $this->validator->getErrors())];
+        }
+
+        $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'perumahan';
+
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0775, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadPath, $newName);
+
+        return 'uploads/perumahan/' . $newName;
+    }
+
+    private function deleteGambar(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
     }
 }

@@ -17,6 +17,7 @@ class PerumahanModel extends Model
         'luas_bangunan',
         'harga',
         'status',
+        'gambar',
         'created_at',
         'updated_at'
     ];

@@ -144,6 +144,7 @@
               <thead>
                   <tr>
                       <th>Kode Rumah</th>
+                      <th>Gambar</th>
                       <th>Lokasi</th>
                       <th>Tipe</th>
                       <th>Luas Tanah</th>
@@ -214,6 +215,16 @@
                   <option value="Proses Pembangunan">Proses Pembangunan</option>
                 </select>
               </div>
+              <div class="mb-3">
+                <label for="gambar" class="form-label">Gambar Perumahan</label>
+                <input type="file" class="form-control" name="gambar" accept="image/*" onchange="previewImage(event)">
+                <input type="hidden" name="existing_gambar" id="existingGambar">
+                <div id="imagePreview" class="mt-2" style="display: none;">
+                  <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                  <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeImage()">Hapus</button>
+                </div>
+                <small class="text-muted">Format: JPG, JPEG, PNG. Maksimal 2MB.</small>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -257,6 +268,21 @@
         </div>
       </div>
     </div>
+    <!-- Modal Lihat Gambar -->
+    <div class="modal fade" id="lihatGambarModal" tabindex="-1" aria-labelledby="lihatGambarLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="lihatGambarLabel">📷 Gambar Perumahan</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img id="gambarPreview" src="" alt="Gambar Perumahan" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal untuk menampilkan lihat bahan -->
      <!-- Modal Lihat Bahan -->
     <div class="modal fade" id="lihatBahanModal" tabindex="-1" aria-labelledby="lihatBahanLabel" aria-hidden="true">

@@ -17,6 +17,7 @@ class PerumahanSeeder extends Seeder
                 'luas_bangunan'  => 36,
                 'harga'          => 350000000,
                 'status'         => 'Tanah',
+                'gambar'         => null,
                 'created_at'     => date('Y-m-d H:i:s'),
                 'updated_at'     => date('Y-m-d H:i:s'),
             ],
@@ -28,6 +29,7 @@ class PerumahanSeeder extends Seeder
                 'luas_bangunan'  => 45,
                 'harga'          => 480000000,
                 'status'         => 'Dijual',
+                'gambar'         => null,
                 'created_at'     => date('Y-m-d H:i:s'),
                 'updated_at'     => date('Y-m-d H:i:s'),
             ],
@@ -39,6 +41,7 @@ class PerumahanSeeder extends Seeder
                 'luas_bangunan'  => 60,
                 'harga'          => 650000000,
                 'status'         => 'Terjual',
+                'gambar'         => null,
                 'created_at'     => date('Y-m-d H:i:s'),
                 'updated_at'     => date('Y-m-d H:i:s'),
             ]

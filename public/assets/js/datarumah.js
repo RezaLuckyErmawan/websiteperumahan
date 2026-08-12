@@ -6,11 +6,22 @@ $('#dataRumahTable').DataTable({
   ajax: '/data-rumah/json',
   columns: [
     { data: 'kode_rumah' },
+    {
+      data: 'gambar',
+      render: function (data) {
+        if (data) {
+          return `<img src="/${data}" alt="Gambar" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="lihatGambar('${data}')">`;
+        }
+        return '<span class="text-muted">-</span>';
+      },
+      orderable: false,
+      searchable: false
+    },
     { data: 'lokasi' },
     { data: 'tipe' },
     { data: 'luas_tanah' },
     { data: 'luas_bangunan' },
-    { 
+    {
       data: 'harga',
       render: function (data) {
         return 'Rp ' + parseInt(data).toLocaleString('id-ID');
@@ -22,7 +33,6 @@ $('#dataRumahTable').DataTable({
         return `<span class="status-label ${className}">${data}</span>`;
   }
 },
-
     { data: 'id',
       render: function (data, type, row) {
         return `
@@ -32,7 +42,7 @@ $('#dataRumahTable').DataTable({
           <button class="btn btn-sm btn-danger" onclick="hapusData(${data})">
             <i class="fas fa-trash"></i> Hapus
           </button>
-         
+
             <a href="javascript:void(0);" class="btn btn-sm btn-warning" onclick="lihatBahan(${row.id})">
             <i class="fas fa-box-open"></i> Lihat Bahan
             </a>
@@ -80,7 +90,17 @@ function editData(id) {
     $('#modalForm input[name=luas_bangunan]').val(data.luas_bangunan);
     $('#modalForm input[name=harga]').val(data.harga);
     $('#modalForm select[name=status]').val(data.status);
-    // Lanjutkan untuk field lain...
+
+    // Handle existing image
+    $('#modalForm input[name=existing_gambar]').val(data.gambar || '');
+    if (data.gambar) {
+      $('#previewImg').attr('src', '/' + data.gambar);
+      $('#imagePreview').show();
+    } else {
+      $('#imagePreview').hide();
+    }
+
+    $('#modalFormLabel').text('Edit Data Rumah');
     $('#modalForm').modal('show');
   });
 }
@@ -112,6 +132,9 @@ function hapusData(id) {
 function openCreateForm() {
     $('#modalForm form')[0].reset(); // perbaikan di sini
     $('#modalForm input[name=id]').val('');
+    $('#modalForm input[name=existing_gambar]').val('');
+    $('#imagePreview').hide();
+    $('#previewImg').attr('src', '');
     $('#modalFormLabel').text('Tambah Data Rumah');
     $('#modalForm').modal('show');
 }
@@ -121,10 +144,27 @@ function simpanForm() {
   let id = $('#modalForm input[name=id]').val();
   let url = id ? `/data-rumah/update/${id}` : `/data-rumah/store`;
 
-  $.post(url, $('#modalForm form').serialize(), function () {
-    $('#modalForm').modal('hide');
-    $('#dataRumahTable').DataTable().ajax.reload();
-    showSuccess(id ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
+  // Use FormData for file upload
+  let formData = new FormData($('#modalForm form')[0]);
+
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function () {
+      $('#modalForm').modal('hide');
+      $('#dataRumahTable').DataTable().ajax.reload();
+      showSuccess(id ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
+    },
+    error: function (xhr) {
+      let errorMessage = 'Terjadi kesalahan saat menyimpan data.';
+      if (xhr.responseJSON && xhr.responseJSON.message) {
+        errorMessage = xhr.responseJSON.message;
+      }
+      alert(errorMessage);
+    }
   });
 }
 
@@ -138,5 +178,32 @@ function lihatBahan(id) {
   }).fail(function () {
     $('#lihatBahanContent').html('<div class="alert alert-danger">Gagal Memuat Data.</div>');
   });
+}
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      $('#previewImg').attr('src', e.target.result);
+      $('#imagePreview').show();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    $('#imagePreview').hide();
+  }
+}
+
+function removeImage() {
+  $('#modalForm input[name=gambar]').val('');
+  $('#modalForm input[name=existing_gambar]').val('');
+  $('#imagePreview').hide();
+  $('#previewImg').attr('src', '');
+}
+
+function lihatGambar(gambarPath) {
+  $('#gambarPreview').attr('src', '/' + gambarPath);
+  const modal = new bootstrap.Modal(document.getElementById('lihatGambarModal'));
+  modal.show();
 }
 
