@@ -62,6 +62,7 @@ writable/uploads/*
 
 public/uploads/*
 !public/uploads/.gitkeep
+!public/uploads/documents/.gitkeep
 
 writable/debugbar/*
 !writable/debugbar/.gitkeep

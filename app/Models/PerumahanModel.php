@@ -18,6 +18,8 @@ class PerumahanModel extends Model
         'harga',
         'status',
         'gambar',
+        'dokumen',
+        'deskripsi',
         'created_at',
         'updated_at'
     ];

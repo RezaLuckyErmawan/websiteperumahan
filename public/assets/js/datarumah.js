@@ -33,6 +33,20 @@ $('#dataRumahTable').DataTable({
         return `<span class="status-label ${className}">${data}</span>`;
   }
 },
+    {
+      data: 'dokumen',
+      render: function (data) {
+        if (data) {
+          return `
+            <a href="/${data}" target="_blank" class="btn btn-sm btn-info" title="Download Dokumen">
+              <i class="fas fa-file-alt"></i> Download
+            </a>`;
+        }
+        return '<span class="text-muted">-</span>';
+      },
+      orderable: false,
+      searchable: false
+    },
     { data: 'id',
       render: function (data, type, row) {
         return `
@@ -90,6 +104,7 @@ function editData(id) {
     $('#modalForm input[name=luas_bangunan]').val(data.luas_bangunan);
     $('#modalForm input[name=harga]').val(data.harga);
     $('#modalForm select[name=status]').val(data.status);
+    $('#modalForm textarea[name=deskripsi]').val(data.deskripsi || '');
 
     // Handle existing image
     $('#modalForm input[name=existing_gambar]').val(data.gambar || '');
@@ -98,6 +113,17 @@ function editData(id) {
       $('#imagePreview').show();
     } else {
       $('#imagePreview').hide();
+    }
+
+    // Handle existing document
+    $('#modalForm input[name=existing_dokumen]').val(data.dokumen || '');
+    if (data.dokumen) {
+      const fileName = data.dokumen.split('/').pop();
+      $('#dokumenName').text(fileName);
+      $('#dokumenLink').attr('href', '/' + data.dokumen);
+      $('#dokumenInfo').show();
+    } else {
+      $('#dokumenInfo').hide();
     }
 
     $('#modalFormLabel').text('Edit Data Rumah');
@@ -133,8 +159,13 @@ function openCreateForm() {
     $('#modalForm form')[0].reset(); // perbaikan di sini
     $('#modalForm input[name=id]').val('');
     $('#modalForm input[name=existing_gambar]').val('');
+    $('#modalForm input[name=existing_dokumen]').val('');
+    $('#modalForm textarea[name=deskripsi]').val('');
     $('#imagePreview').hide();
     $('#previewImg').attr('src', '');
+    $('#dokumenInfo').hide();
+    $('#dokumenName').text('');
+    $('#dokumenLink').attr('href', '#');
     $('#modalFormLabel').text('Tambah Data Rumah');
     $('#modalForm').modal('show');
 }
@@ -199,6 +230,14 @@ function removeImage() {
   $('#modalForm input[name=existing_gambar]').val('');
   $('#imagePreview').hide();
   $('#previewImg').attr('src', '');
+}
+
+function removeDokumen() {
+  $('#modalForm input[name=dokumen]').val('');
+  $('#modalForm input[name=existing_dokumen]').val('');
+  $('#dokumenInfo').hide();
+  $('#dokumenName').text('');
+  $('#dokumenLink').attr('href', '#');
 }
 
 function lihatGambar(gambarPath) {

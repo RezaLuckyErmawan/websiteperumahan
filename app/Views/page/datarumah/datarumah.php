@@ -64,6 +64,7 @@
             <th>Luas Bangunan</th>
             <th>Harga</th>
             <th>Status</th>
+            <th>Dokumen</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -117,6 +118,11 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="deskripsi" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" name="deskripsi" rows="4" placeholder="Tambahkan deskripsi detail perumahan..."></textarea>
+                        <small class="text-muted">Deskripsi detail tentang perumahan (fasilitas, lokasi, dll).</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="gambar" class="form-label">Gambar Perumahan</label>
                         <input type="file" class="form-control" name="gambar" accept="image/*" onchange="previewImage(event)">
                         <input type="hidden" name="existing_gambar" id="existingGambar">
@@ -125,6 +131,22 @@
                             <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeImage()">Hapus</button>
                         </div>
                         <small class="text-muted">Format: JPG, JPEG, PNG. Maksimal 2MB.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dokumen" class="form-label">Dokumen Perumahan</label>
+                        <input type="file" class="form-control" name="dokumen" accept=".pdf,.doc,.docx">
+                        <input type="hidden" name="existing_dokumen" id="existingDokumen">
+                        <div id="dokumenInfo" class="mt-2" style="display: none;">
+                            <div class="alert alert-info py-2">
+                                <i class="fas fa-file-alt me-2"></i>
+                                <span id="dokumenName"></span>
+                                <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeDokumen()">Hapus</button>
+                                <a href="#" id="dokumenLink" target="_blank" class="btn btn-sm btn-primary ms-2">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                        <small class="text-muted">Format: PDF, DOC, DOCX. Maksimal 5MB.</small>
                     </div>
                 </div>
                 <div class="modal-footer">

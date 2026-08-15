@@ -67,11 +67,21 @@ class DatarumahController extends BaseController
             'luas_tanah'     => $this->request->getPost('luas_tanah'),
             'luas_bangunan'  => $this->request->getPost('luas_bangunan'),
             'harga'          => $this->request->getPost('harga'),
-            'status'         => $this->request->getPost('status')
+            'status'         => $this->request->getPost('status'),
+            'deskripsi'      => $this->request->getPost('deskripsi')
         ];
 
         if ($uploadedGambar) {
             $data['gambar'] = $uploadedGambar;
+        }
+
+        $uploadedDokumen = $this->uploadDokumen();
+        if (is_array($uploadedDokumen) && ($uploadedDokumen['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedDokumen);
+        }
+
+        if ($uploadedDokumen) {
+            $data['dokumen'] = $uploadedDokumen;
         }
 
         $model->insert($data);
@@ -93,6 +103,11 @@ class DatarumahController extends BaseController
             return $this->response->setStatusCode(400)->setJSON($uploadedGambar);
         }
 
+        $uploadedDokumen = $this->uploadDokumen();
+        if (is_array($uploadedDokumen) && ($uploadedDokumen['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedDokumen);
+        }
+
         $data = [
             'kode_rumah'     => $this->request->getPost('kode_rumah'),
             'lokasi'         => $this->request->getPost('lokasi'),
@@ -101,11 +116,17 @@ class DatarumahController extends BaseController
             'luas_bangunan'  => $this->request->getPost('luas_bangunan'),
             'harga'          => $this->request->getPost('harga'),
             'status'         => $this->request->getPost('status'),
+            'deskripsi'      => $this->request->getPost('deskripsi'),
         ];
 
         if ($uploadedGambar) {
             $data['gambar'] = $uploadedGambar;
             $this->deleteGambar($old['gambar'] ?? null);
+        }
+
+        if ($uploadedDokumen) {
+            $data['dokumen'] = $uploadedDokumen;
+            $this->deleteDokumen($old['dokumen'] ?? null);
         }
 
         $model->update($id, $data);
@@ -117,6 +138,7 @@ class DatarumahController extends BaseController
         $data = $model->find($id);
         $model->delete($id);
         $this->deleteGambar($data['gambar'] ?? null);
+        $this->deleteDokumen($data['dokumen'] ?? null);
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -157,6 +179,54 @@ class DatarumahController extends BaseController
     }
 
     private function deleteGambar(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+
+    private function uploadDokumen()
+    {
+        $file = $this->request->getFile('dokumen');
+
+        if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (!$file->isValid()) {
+            return ['status' => 'error', 'message' => 'Upload dokumen gagal'];
+        }
+
+        $validated = $this->validate([
+            'dokumen' => [
+                'uploaded[dokumen]',
+                'mime_in[dokumen,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document]',
+                'max_size[dokumen,5120]',
+            ]
+        ]);
+
+        if (!$validated) {
+            return ['status' => 'error', 'message' => implode(', ', $this->validator->getErrors())];
+        }
+
+        $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'documents';
+
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0775, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadPath, $newName);
+
+        return 'uploads/documents/' . $newName;
+    }
+
+    private function deleteDokumen(?string $path): void
     {
         if (!$path) {
             return;
