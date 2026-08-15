@@ -19,6 +19,12 @@ class Menu extends BaseConfig
                 'link' => '/dashboard',
                 'type' => 'link'
             ],
+            'chat' => [
+                'label' => 'Chat',
+                'icon' => 'chat',
+                'link' => '/chat',
+                'type' => 'link'
+            ],
             'marketing' => [
                 'label' => 'Marketing',
                 'icon' => 'analytics',
@@ -162,6 +168,12 @@ class Menu extends BaseConfig
                 'link' => '/dashboard',
                 'type' => 'link'
             ],
+            'chat' => [
+                'label' => 'Chat',
+                'icon' => 'chat',
+                'link' => '/chat',
+                'type' => 'link'
+            ],
             'manajemen_proyek' => [
                 'label' => 'Manajemen Proyek',
                 'icon' => 'business_center',
@@ -180,6 +192,12 @@ class Menu extends BaseConfig
                 'label' => 'Dashboard',
                 'icon' => 'dashboard',
                 'link' => '/dashboard',
+                'type' => 'link'
+            ],
+            'chat' => [
+                'label' => 'Chat',
+                'icon' => 'chat',
+                'link' => '/chat',
                 'type' => 'link'
             ],
             'perumahan' => [
@@ -229,6 +247,12 @@ class Menu extends BaseConfig
                 'link' => '/dashboard',
                 'type' => 'link'
             ],
+            'chat' => [
+                'label' => 'Chat',
+                'icon' => 'chat',
+                'link' => '/chat',
+                'type' => 'link'
+            ],
             'manajemen_proyek' => [
                 'label' => 'Manajemen Proyek',
                 'icon' => 'business_center',
@@ -257,6 +281,12 @@ class Menu extends BaseConfig
                 'label' => 'Dashboard',
                 'icon' => 'dashboard',
                 'link' => '/dashboard',
+                'type' => 'link'
+            ],
+            'chat' => [
+                'label' => 'Chat',
+                'icon' => 'chat',
+                'link' => '/chat',
                 'type' => 'link'
             ],
             'marketing' => [

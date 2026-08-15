@@ -188,3 +188,19 @@ $routes->post('/perumahan/data-rumah/(:num)/checkout', 'PerumahanCustomerControl
 $routes->get('/perumahan/rumah-booking', 'PerumahanCustomerController::rumahBooking');
 $routes->get('/perumahan/rumah-booking/(:num)/berkas', 'PerumahanCustomerController::formBerkas/$1');
 $routes->post('/perumahan/rumah-booking/(:num)/berkas', 'PerumahanCustomerController::unggahBerkas/$1');
+
+// Chat Routes
+$routes->get('/chat', 'ChatController::index');
+$routes->post('/chat/send', 'ChatController::send');
+$routes->get('/chat/history/(:any)', 'ChatController::history/$1');
+$routes->post('/chat/read', 'ChatController::markAsRead');
+$routes->get('/chat/unread', 'ChatController::unread');
+$routes->post('/chat/join', 'ChatController::join');
+$routes->post('/chat/leave', 'ChatController::leave');
+$routes->post('/chat/typing', 'ChatController::typing');
+$routes->get('/chat/typing-users/(:any)', 'ChatController::typingUsers/$1');
+$routes->get('/chat/conversations', 'ChatController::conversations');
+$routes->get('/chat/participants/(:any)', 'ChatController::participants/$1');
+$routes->post('/chat/online-status', 'ChatController::onlineStatus');
+$routes->get('/chat/search', 'ChatController::search');
+$routes->get('/chat/stats/(:any)', 'ChatController::stats/$1');
