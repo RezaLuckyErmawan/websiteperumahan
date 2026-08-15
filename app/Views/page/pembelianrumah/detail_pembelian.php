@@ -194,6 +194,47 @@
     margin-top: 12px;
   }
 
+  .berkas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .berkas-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e4e8ef;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+
+  .berkas-row strong {
+    display: block;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .berkas-row small {
+    color: #647084;
+  }
+
+  .berkas-meta {
+    display: inline-flex;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .berkas-meta.wajib { background: #fee2e2; color: #b91c1c; }
+  .berkas-meta.opsional { background: #e2e8f0; color: #334155; }
+  }
+
   .description-box .description-label {
     font-size: 12px;
     font-weight: 700;
@@ -261,6 +302,8 @@
   $total_dibayar = $total_dibayar ?? 0;
   $sisa_tagihan = $sisa_tagihan ?? 0;
   $userRole = $userRole ?? '';
+  $berkasCustomer = is_array($berkasCustomer ?? null) ? $berkasCustomer : [];
+  $infoBerkas = is_array($infoBerkas ?? null) ? $infoBerkas : [];
   $backUrl = '/detail-pembelian-list';
 
   $statusPembelian = strtolower((string) ($pembelian['status_pembelian'] ?? ''));
@@ -416,6 +459,43 @@
   </div>
   <?php endif; ?>
 </div>
+
+<?php if (($pembelian['sumber'] ?? '') === 'customer'): ?>
+<div class="detail-section">
+  <div class="detail-section-header">
+    <span class="material-icons">folder</span>
+    <h5>Berkas Booking Customer</h5>
+  </div>
+  <p style="margin:0 0 12px;color:#647084;font-size:13px;">
+    Status berkas: <strong><?= esc($infoBerkas['status'] ?? ($pembelian['status_berkas'] ?? 'pending')) ?></strong>
+    · Verifikasi: <strong><?= esc($pembelian['status_verifikasi'] ?? 'pending') ?></strong>
+  </p>
+  <div class="berkas-list">
+    <?php foreach ($berkasCustomer as $item): ?>
+      <div class="berkas-row">
+        <div>
+          <strong>
+            <?= esc($item['label']) ?>
+            <span class="berkas-meta <?= !empty($item['wajib']) ? 'wajib' : 'opsional' ?>">
+              <?= !empty($item['wajib']) ? 'Wajib' : 'Opsional' ?>
+            </span>
+          </strong>
+          <small><?= esc($item['keterangan']) ?></small>
+        </div>
+        <div>
+          <?php if (!empty($item['file'])): ?>
+            <a href="/<?= esc($item['file']) ?>" target="_blank" class="btn btn-sm btn-primary">
+              <i class="fas fa-eye"></i> Lihat
+            </a>
+          <?php else: ?>
+            <span class="status-pill status-danger">Belum diunggah</span>
+          <?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="detail-section">
   <div class="detail-section-header">

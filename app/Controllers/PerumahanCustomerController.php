@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\CustomerModel;
+use App\Models\PembelianRumahModel;
 use App\Models\PerumahanModel;
 use App\Models\TransaksiRumahModel;
 
@@ -40,14 +41,24 @@ class PerumahanCustomerController extends BaseController
     public function checkout($id)
     {
         $perumahanModel = new PerumahanModel();
-        $transaksiModel = new TransaksiRumahModel();
         $rumah = $perumahanModel->find($id);
 
         if (!$rumah) {
             return redirect()->to('/perumahan/data-rumah')->with('error', 'Data rumah tidak ditemukan.');
         }
 
-        if (!$this->rumahDapatCheckout($rumah) || $transaksiModel->where('perumahan_id', $id)->first()) {
+        if (!$this->rumahDapatCheckout($rumah)) {
+            return redirect()->to('/perumahan/data-rumah/' . $id)
+                ->with('error', 'Rumah ini sudah di-booking dan tidak dapat di-checkout user lain.');
+        }
+
+        $pembelianModel = new PembelianRumahModel();
+        $bookingAktif = $pembelianModel
+            ->where('perumahan_id', $id)
+            ->whereIn('status_verifikasi', ['pending', 'disetujui', 'tidak_perlu'])
+            ->where('status_pembelian !=', 'Batal')
+            ->first();
+        if ($bookingAktif) {
             return redirect()->to('/perumahan/data-rumah/' . $id)
                 ->with('error', 'Rumah ini sudah di-booking dan tidak dapat di-checkout user lain.');
         }
@@ -69,15 +80,39 @@ class PerumahanCustomerController extends BaseController
         $db->transStart();
 
         try {
-            $transaksiModel->insert([
+            $customerModel = new CustomerModel();
+            $customer = $customerModel->where('email', $data['email'])->first();
+            if (!$customer) {
+                $customerModel->insert([
+                    'nama' => $data['nama'],
+                    'telepon' => $data['telepon'],
+                    'email' => $data['email'],
+                    'alamat' => $data['alamat'],
+                    'perumahan_id' => (int) $id,
+                    'tanggal_pembelian' => date('Y-m-d'),
+                ]);
+                $customerId = (int) $customerModel->getInsertID();
+            } else {
+                $customerId = (int) $customer['id'];
+                $customerModel->update($customerId, [
+                    'nama' => $data['nama'],
+                    'telepon' => $data['telepon'],
+                    'alamat' => $data['alamat'],
+                    'perumahan_id' => (int) $id,
+                ]);
+            }
+
+            $pembelianModel->insert([
+                'customer_id' => $customerId,
                 'perumahan_id' => (int) $id,
+                'tanggal_pembelian' => date('Y-m-d'),
+                'harga_beli' => $rumah['harga'] ?? 0,
+                'status_pembelian' => 'Booking',
+                'status_dokumen' => 'Pending',
+                'sumber' => 'customer',
                 'user_id' => session()->get('user_id'),
-                'nama' => $data['nama'],
-                'telepon' => $data['telepon'],
-                'email' => $data['email'],
-                'alamat' => $data['alamat'],
-                'status' => 'booked',
                 'status_berkas' => 'pending',
+                'status_verifikasi' => 'pending',
             ]);
             $perumahanModel->update($id, ['status' => 'Booked']);
             $db->transComplete();
@@ -97,14 +132,16 @@ class PerumahanCustomerController extends BaseController
 
     public function rumahBooking()
     {
-        $transaksiModel = new TransaksiRumahModel();
+        $pembelianModel = new PembelianRumahModel();
         $userId = session()->get('user_id');
 
-        $booking = $transaksiModel
-            ->select('transaksi_rumah.*, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi, perumahan.harga, perumahan.gambar, perumahan.status AS status_rumah')
-            ->join('perumahan', 'perumahan.id = transaksi_rumah.perumahan_id')
-            ->where('transaksi_rumah.user_id', $userId)
-            ->orderBy('transaksi_rumah.created_at', 'DESC')
+        $booking = $pembelianModel
+            ->select('pembelian_rumah.*, customer.nama, customer.telepon, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi, perumahan.harga, perumahan.gambar, perumahan.status AS status_rumah')
+            ->join('customer', 'customer.id = pembelian_rumah.customer_id')
+            ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
+            ->where('pembelian_rumah.user_id', $userId)
+            ->where('pembelian_rumah.sumber', 'customer')
+            ->orderBy('pembelian_rumah.created_at', 'DESC')
             ->findAll();
 
         foreach ($booking as &$item) {
@@ -181,7 +218,7 @@ class PerumahanCustomerController extends BaseController
             $statusBerkas = 'lengkap';
         }
 
-        $model = new TransaksiRumahModel();
+        $model = new PembelianRumahModel();
         $model->update($id, [
             'berkas' => json_encode($uploaded),
             'status_berkas' => $statusBerkas,
@@ -196,12 +233,13 @@ class PerumahanCustomerController extends BaseController
 
     private function bookingMilikUser($id): ?array
     {
-        $model = new TransaksiRumahModel();
+        $model = new PembelianRumahModel();
         $transaksi = $model
-            ->select('transaksi_rumah.*, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi')
-            ->join('perumahan', 'perumahan.id = transaksi_rumah.perumahan_id')
-            ->where('transaksi_rumah.id', $id)
-            ->where('transaksi_rumah.user_id', session()->get('user_id'))
+            ->select('pembelian_rumah.*, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi')
+            ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
+            ->where('pembelian_rumah.id', $id)
+            ->where('pembelian_rumah.user_id', session()->get('user_id'))
+            ->where('pembelian_rumah.sumber', 'customer')
             ->first();
 
         return $transaksi ?: null;

@@ -8,6 +8,8 @@ $(document).ready(function () {
   const table = $('#pembelianRumahTable').DataTable({
     processing: true,
     serverSide: true,
+    scrollX: true,
+    autoWidth: false,
     pageLength: 5,
     lengthMenu: [5, 10, 25, 50],
     ajax:'/pembelian-rumah/json',
@@ -54,6 +56,9 @@ $(document).ready(function () {
             case 'dp':
               style = 'background-color: #ffc107;';
               break;
+            case 'booking':
+              style = 'background-color: #6f42c1;';
+              break;
             case 'batal':
               style = 'background-color: #dc3545;';
               break;
@@ -61,6 +66,28 @@ $(document).ready(function () {
               style = 'background-color: #6c757d';
           }
           return `<span class="badge ${textColor}" style="${style} padding: 8px 12px; font-size: 0.85rem; border-radius: 10px;">${data || '-'}</span>`;
+        }
+      },
+      {
+        data: 'sumber',
+        defaultContent: 'admin',
+        render: function (data) {
+          return data === 'customer' ? 'Customer' : 'Admin';
+        }
+      },
+      {
+        data: 'status_verifikasi',
+        defaultContent: 'tidak_perlu',
+        render: function (data, type, row) {
+          if ((row.sumber || 'admin') !== 'customer') {
+            return '<span class="text-muted">-</span>';
+          }
+          const label = data || 'pending';
+          let style = 'background-color:#6c757d;';
+          if (label === 'disetujui') style = 'background-color:#28a745;';
+          if (label === 'pending') style = 'background-color:#17a2b8;';
+          if (label === 'ditolak') style = 'background-color:#dc3545;';
+          return `<span class="badge text-white" style="${style} padding:8px 12px;border-radius:10px;">${label}</span>`;
         }
       },
       { data: 'metode_pembayaran',
@@ -91,12 +118,19 @@ $(document).ready(function () {
       },
       {
         data: 'id',
-        render: (data) => `
+        render: (data, type, row) => {
+          const perluVerifikasi = row.sumber === 'customer' && (row.status_verifikasi || 'pending') === 'pending';
+          const verifikasiBtn = perluVerifikasi
+            ? `<button class="btn btn-sm btn-success" onclick="bukaVerifikasiBooking(${data})"><i class="fas fa-check"></i></button>`
+            : '';
+          return `
+          ${verifikasiBtn}
           <button class="btn btn-sm btn-primary" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
           <button class="btn btn-sm btn-danger" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
           <button class="btn btn-sm btn-secondary" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
           <button class="btn btn-sm btn-success" onclick="bukaPembayaran(${data})"><i class="fas fa-money-bill-wave"></i></button>
-        `,
+        `;
+        },
         orderable: false,
         searchable: false
       }
@@ -427,3 +461,109 @@ $('#confirmDeleteBtn').on('click', function() {
     }
   })
 })
+
+function getCsrfData() {
+  const el = document.querySelector('input[name^="csrf"]');
+  return el ? { [el.name]: el.value } : {};
+}
+
+function bukaVerifikasiBooking(id) {
+  $('#bookingVerifikasiId').val(id);
+  $('#catatanVerifikasi').val('');
+  $('#bookingDetailInfo').html('Memuat...');
+  const form = $('#formVerifikasiPembayaran');
+  $.getJSON('/pembelian-rumah/booking/' + id, function (res) {
+    if (!res.status) {
+      $('#bookingDetailInfo').html('Data tidak ditemukan.');
+      return;
+    }
+    const d = res.data || {};
+    const info = res.info_berkas || {};
+    let html = `
+      <p><strong>${d.nama || '-'}</strong> · ${d.telepon || '-'} · ${d.email || '-'}</p>
+      <p>${d.kode_rumah || '-'} · ${d.tipe || '-'} · ${d.lokasi || '-'}</p>
+      <p>Alamat: ${d.alamat || '-'} · Harga: <strong>Rp ${parseInt(d.harga || 0).toLocaleString('id-ID')}</strong></p>
+      <p>Status berkas: <strong>${info.status || '-'}</strong> · Verifikasi: <strong>${d.status_verifikasi || 'pending'}</strong></p>
+      <div class="mb-3"><strong>Berkas</strong></div>
+    `;
+    (res.berkas || []).forEach(function (item) {
+      const file = item.file
+        ? `<a href="/${item.file}" target="_blank">Lihat file</a>`
+        : '<span class="text-danger">Belum diunggah</span>';
+      html += `<div class="mb-2">${item.label} ${item.wajib ? '(wajib)' : '(opsional)'}: ${file}</div>`;
+    });
+    $('#bookingDetailInfo').html(html);
+
+    $('#verifikasiHargaBeli').val(d.harga || 0);
+    $('#verifikasiMetode').val(d.metode_pembayaran || 'Cicilan Internal');
+    $('#verifikasiLamaCicilan').val(d.lama_cicilan_tahun || 5);
+    $('#verifikasiStatusPembelian').val(d.status_pembelian && d.status_pembelian !== 'Booking' ? d.status_pembelian : 'DP');
+    const today = new Date().toISOString().split('T')[0];
+    $('#verifikasiTanggalCicilan').val(d.tanggal_cicilan || today);
+    toggleCicilanTahunField(form);
+
+    const pending = (d.status_verifikasi || 'pending') === 'pending';
+    $('#modalVerifikasiBooking .btn-success, #modalVerifikasiBooking .btn-danger').toggle(pending);
+    form.toggle(pending);
+  });
+  new bootstrap.Modal(document.getElementById('modalVerifikasiBooking')).show();
+}
+
+function verifikasiBooking(aksi) {
+  const id = $('#bookingVerifikasiId').val();
+  if (!id) return;
+
+  const payload = Object.assign(getCsrfData(), {
+    aksi: aksi,
+    catatan_verifikasi: $('#catatanVerifikasi').val()
+  });
+
+  if (aksi === 'setujui') {
+    const metode = $('#verifikasiMetode').val();
+    const statusPembelian = $('#verifikasiStatusPembelian').val();
+    const lama = $('#verifikasiLamaCicilan').val();
+    const tanggal = $('#verifikasiTanggalCicilan').val();
+
+    if (!metode || !statusPembelian) {
+      alert('Metode pembayaran dan status pembelian wajib diisi.');
+      return;
+    }
+    if (metode === 'Cicilan Internal') {
+      const tahun = parseInt(lama, 10);
+      if (!tahun || tahun < 1 || tahun > 30) {
+        alert('Lama cicilan wajib diisi 1-30 tahun untuk Cicilan Internal.');
+        return;
+      }
+      if (!tanggal) {
+        alert('Tanggal cicilan wajib diisi untuk Cicilan Internal.');
+        return;
+      }
+    }
+
+    payload.metode_pembayaran = metode;
+    payload.status_pembelian = statusPembelian;
+    payload.lama_cicilan_tahun = lama;
+    payload.tanggal_cicilan = tanggal;
+  }
+
+  if (!confirm(aksi === 'setujui' ? 'Setujui booking ini?' : 'Tolak booking ini?')) return;
+
+  $.ajax({
+    url: '/pembelian-rumah/booking/' + id + '/verifikasi',
+    method: 'POST',
+    data: payload,
+    success: function (res) {
+      if (res.status === 'success') {
+        bootstrap.Modal.getInstance(document.getElementById('modalVerifikasiBooking')).hide();
+        $('#pembelianRumahTable').DataTable().ajax.reload();
+        showSuccess(res.message);
+      } else {
+        alert(res.message || 'Verifikasi gagal.');
+      }
+    },
+    error: function (xhr) {
+      const msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Verifikasi gagal.';
+      alert(msg);
+    }
+  });
+}

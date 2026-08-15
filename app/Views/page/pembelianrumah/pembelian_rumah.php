@@ -10,6 +10,41 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
 
 <?= $this->section('styles') ?>
 <style>
+    .main,
+    .content1 {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .content1 {
+        overflow-x: hidden;
+    }
+
+    #pembelianRumahTable_wrapper {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    #pembelianRumahTable_wrapper .dataTables_scroll {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+    }
+
+    #pembelianRumahTable_wrapper .dataTables_scrollBody {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+    }
+
+    #pembelianRumahTable_wrapper table.dataTable {
+        min-width: 1400px;
+        overflow: visible;
+    }
+
     #pembelianRumahTable thead th {
         background-color: #eef6f8;
         color: #203246;
@@ -71,6 +106,8 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
             <th>Total Dibayar</th>
             <th>Sisa Tagihan</th>
             <th>Status Pembelian</th>
+            <th>Sumber</th>
+            <th>Verifikasi</th>
             <th>Metode Pembayaran</th>
             <th>Lama Cicilan</th>
             <th>Cicilan Ke</th>
@@ -337,6 +374,69 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalVerifikasiBooking" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verifikasi Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="bookingDetailInfo"></div>
+                <form id="formVerifikasiPembayaran" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="bookingVerifikasiId">
+                    <input type="hidden" name="harga_beli" id="verifikasiHargaBeli" value="0">
+
+                    <div class="mb-3">
+                        <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
+                        <select class="form-control" name="metode_pembayaran" id="verifikasiMetode">
+                            <option value="Cash">Cash</option>
+                            <option value="Cicilan Internal" selected>Cicilan Internal</option>
+                        </select>
+                    </div>
+
+                    <div class="cicilan-tahun-field">
+                        <div class="mb-3">
+                            <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="lama_cicilan_tahun" id="verifikasiLamaCicilan" min="1" max="30" value="5">
+                            <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Cicilan <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_cicilan" id="verifikasiTanggalCicilan">
+                            <small class="text-muted cicilan-jatuh-tempo-hint">Pilih tanggal, misalnya 15. Cicilan jatuh tempo setiap tanggal 15 tiap bulan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Cicilan / Bulan</label>
+                            <input type="text" class="form-control" name="info_jumlah_cicilan" id="verifikasiJumlahCicilan" readonly>
+                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status_pembelian" id="verifikasiStatusPembelian">
+                            <option value="DP" selected>DP</option>
+                            <option value="Cicil">Cicil</option>
+                            <option value="Lunas">Lunas</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Catatan verifikasi</label>
+                        <textarea class="form-control" id="catatanVerifikasi" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="verifikasiBooking('tolak')">Tolak</button>
+                <button type="button" class="btn btn-success" onclick="verifikasiBooking('setujui')">Setujui</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?= csrf_field() ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

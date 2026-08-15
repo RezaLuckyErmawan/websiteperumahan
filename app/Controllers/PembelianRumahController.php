@@ -8,6 +8,7 @@ use App\Models\PembatalanModel;
 use App\Models\PembayaranRumahModel;
 use App\Models\PembelianRumahModel;
 use App\Models\PerumahanModel;
+use App\Models\TransaksiRumahModel;
 use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -107,7 +108,9 @@ class PembelianRumahController extends BaseController
         
         $builder->select('
             pembelian_rumah.*, 
-            customer.nama AS customer_nama, 
+            customer.nama AS customer_nama,
+            customer.telepon AS customer_telepon,
+            customer.email AS customer_email,
             perumahan.kode_rumah,
             COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
             (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar,
@@ -225,6 +228,9 @@ class PembelianRumahController extends BaseController
         'status_dokumen'    => $statusDokumen,
         'request_khusus'    => $request->getPost('request_khusus'),
         'catatan_marketing' => $request->getPost('catatan_marketing'),
+        'sumber'            => 'admin',
+        'status_verifikasi' => 'tidak_perlu',
+        'status_berkas'     => 'pending',
     ];
 
     $db->transStart();
@@ -456,6 +462,21 @@ class PembelianRumahController extends BaseController
 
         $sisaTagihan = $pembelian['harga_beli'] - $totalDibayar;
 
+        $berkasCustomer = [];
+        $infoBerkas = null;
+        if (($pembelian['sumber'] ?? '') === 'customer') {
+            $infoBerkas = TransaksiRumahModel::infoBerkas($pembelian);
+            foreach (TransaksiRumahModel::JENIS_BERKAS as $key => $meta) {
+                $berkasCustomer[] = [
+                    'key' => $key,
+                    'label' => $meta['label'],
+                    'wajib' => $meta['wajib'],
+                    'keterangan' => $meta['keterangan'],
+                    'file' => $infoBerkas['uploaded'][$key] ?? null,
+                ];
+            }
+        }
+
         $data = [
             'pembelian' => $pembelian,
             'pembayaran' => $pembayaran,
@@ -463,6 +484,8 @@ class PembelianRumahController extends BaseController
             'sisa_tagihan' => $sisaTagihan,
             'userRole' => session()->get('role'),
             'isCustomer' => $this->isCustomer(),
+            'berkasCustomer' => $berkasCustomer,
+            'infoBerkas' => $infoBerkas,
         ];
 
         return view('page/pembelianrumah/detail_pembelian', $data);
@@ -677,6 +700,141 @@ class PembelianRumahController extends BaseController
         $row['info_cicilan_berikutnya'] = $jatuhTempo . $nominalText;
 
         return $row;
+    }
+
+    public function bookingJson()
+    {
+        return $this->json();
+    }
+
+    public function bookingDetail($id)
+    {
+        $model = new PembelianRumahModel();
+        $row = $model
+            ->select('pembelian_rumah.*, customer.nama, customer.telepon, customer.email, customer.alamat, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi, perumahan.harga')
+            ->join('customer', 'customer.id = pembelian_rumah.customer_id')
+            ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
+            ->where('pembelian_rumah.id', $id)
+            ->first();
+
+        if (!$row || ($row['sumber'] ?? '') !== 'customer') {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Data booking tidak ditemukan',
+            ]);
+        }
+
+        $info = TransaksiRumahModel::infoBerkas($row);
+        $berkas = [];
+        foreach (TransaksiRumahModel::JENIS_BERKAS as $key => $meta) {
+            $berkas[] = [
+                'key' => $key,
+                'label' => $meta['label'],
+                'wajib' => $meta['wajib'],
+                'file' => $info['uploaded'][$key] ?? null,
+            ];
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'data' => $row,
+            'info_berkas' => $info,
+            'berkas' => $berkas,
+        ]);
+    }
+
+    public function verifikasiBooking($id)
+    {
+        $aksi = strtolower((string) $this->request->getPost('aksi'));
+        $catatan = trim((string) $this->request->getPost('catatan_verifikasi'));
+        if (!in_array($aksi, ['setujui', 'tolak'], true)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Aksi verifikasi tidak valid.',
+            ]);
+        }
+
+        $model = new PembelianRumahModel();
+        $pembelian = $model->find($id);
+        if (!$pembelian || ($pembelian['sumber'] ?? '') !== 'customer') {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Data booking tidak ditemukan.',
+            ]);
+        }
+
+        if (strtolower((string) ($pembelian['status_verifikasi'] ?? '')) !== 'pending') {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Booking ini sudah diverifikasi.',
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $perumahanModel = new PerumahanModel();
+        $update = [
+            'status_verifikasi' => $aksi === 'setujui' ? 'disetujui' : 'ditolak',
+            'catatan_verifikasi' => $catatan !== '' ? $catatan : null,
+            'verified_at' => date('Y-m-d H:i:s'),
+            'verified_by' => session()->get('user_id'),
+        ];
+
+        if ($aksi === 'tolak') {
+            $update['status_pembelian'] = 'Batal';
+            $perumahanModel->update($pembelian['perumahan_id'], ['status' => 'Dijual']);
+        } else {
+            $metodePembayaran = $this->request->getPost('metode_pembayaran');
+            $statusPembelian = $this->request->getPost('status_pembelian');
+            $allowedMetode = ['Cash', 'Cicilan Internal'];
+            $allowedStatus = ['DP', 'Cicil', 'Lunas'];
+
+            if (!in_array($metodePembayaran, $allowedMetode, true) || !in_array($statusPembelian, $allowedStatus, true)) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'status' => 'error',
+                    'message' => 'Metode pembayaran dan status pembelian wajib diisi dengan benar.',
+                ]);
+            }
+
+            $lamaCicilan = $this->resolveLamaCicilan($metodePembayaran, $this->request->getPost('lama_cicilan_tahun'));
+            $tanggalCicilan = $this->resolveTanggalCicilan($metodePembayaran, $this->request->getPost('tanggal_cicilan'));
+            if ($lamaCicilan === false) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'status' => 'error',
+                    'message' => 'Lama cicilan wajib diisi 1-30 tahun untuk Cicilan Internal.',
+                ]);
+            }
+            if ($tanggalCicilan === false) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'status' => 'error',
+                    'message' => 'Tanggal cicilan wajib diisi untuk Cicilan Internal.',
+                ]);
+            }
+
+            $info = TransaksiRumahModel::infoBerkas($pembelian);
+            $update['status_pembelian'] = $statusPembelian;
+            $update['metode_pembayaran'] = $metodePembayaran;
+            $update['lama_cicilan_tahun'] = $lamaCicilan;
+            $update['tanggal_cicilan'] = $tanggalCicilan;
+            $update['status_dokumen'] = $info['wajib_terisi'] ? 'Lengkap' : 'Verifikasi';
+            $perumahanModel->update($pembelian['perumahan_id'], ['status' => 'Terjual']);
+        }
+
+        $model->update($id, $update);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal memverifikasi booking.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $aksi === 'setujui' ? 'Booking disetujui.' : 'Booking ditolak.',
+        ]);
     }
 
 }
