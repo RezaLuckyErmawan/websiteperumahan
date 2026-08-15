@@ -182,6 +182,23 @@ class Menu extends BaseConfig
                 'link' => '/dashboard',
                 'type' => 'link'
             ],
+            'perumahan' => [
+                'label' => 'Perumahan',
+                'icon' => 'home_work',
+                'type' => 'dropdown',
+                'items' => [
+                    'data_rumah' => [
+                        'label' => 'Data Rumah',
+                        'icon' => 'house',
+                        'link' => '/perumahan/data-rumah'
+                    ],
+                    'rumah_booking' => [
+                        'label' => 'Rumah yang booking',
+                        'icon' => 'bookmark',
+                        'link' => '/perumahan/rumah-booking'
+                    ]
+                ]
+            ],
             'keuangan' => [
                 'label' => 'Keuangan',
                 'icon' => 'monetization_on',

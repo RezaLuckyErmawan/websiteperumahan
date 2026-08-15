@@ -179,3 +179,9 @@ $routes->post('/pekerjaan-insidentil/update/(:num)', 'PekerjaanInsidentilControl
 $routes->delete('/pekerjaan-insidentil/delete/(:num)', 'PekerjaanInsidentilController::delete/$1');
 
 $routes->get('/perumahan', 'DashboardController::index');
+$routes->get('/perumahan/data-rumah', 'PerumahanCustomerController::dataRumah');
+$routes->get('/perumahan/data-rumah/(:num)', 'PerumahanCustomerController::detailRumah/$1');
+$routes->post('/perumahan/data-rumah/(:num)/checkout', 'PerumahanCustomerController::checkout/$1');
+$routes->get('/perumahan/rumah-booking', 'PerumahanCustomerController::rumahBooking');
+$routes->get('/perumahan/rumah-booking/(:num)/berkas', 'PerumahanCustomerController::formBerkas/$1');
+$routes->post('/perumahan/rumah-booking/(:num)/berkas', 'PerumahanCustomerController::unggahBerkas/$1');

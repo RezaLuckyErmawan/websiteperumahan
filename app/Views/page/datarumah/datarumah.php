@@ -113,6 +113,7 @@
                         <select name="status" class="form-control" required>
                             <option value="Tanah">Tanah</option>
                             <option value="Dijual">Dijual</option>
+                            <option value="Booked">Booked</option>
                             <option value="Terjual">Terjual</option>
                             <option value="Proses Pembangunan">Proses Pembangunan</option>
                         </select>

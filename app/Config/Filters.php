@@ -128,6 +128,8 @@ class Filters extends BaseFilters
                 'bahan-pembangunan*',
                 'pembatalan-transaksi*',
                 'pekerjaan-insidentil*',
+                'perumahan/data-rumah*',
+                'perumahan/rumah-booking*',
             ],
         ],
         'role:admin' => [
