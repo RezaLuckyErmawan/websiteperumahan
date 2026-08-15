@@ -58,9 +58,7 @@
         <tr>
             <th>Nama</th>
             <th>Username</th>
-            <th>Email</th>
-            <th>No. Telepon</th>
-            <th>Alamat</th>
+            <th>Status</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -92,23 +90,16 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email">
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Password <span class="text-danger">*</span></label>
                         <input type="password" class="form-control" name="password" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">No. Telepon</label>
-                        <input type="text" class="form-control" name="no_telepon">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Alamat</label>
-                        <textarea class="form-control" name="alamat" rows="3"></textarea>
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status" required>
+                            <option value="aktif">Aktif</option>
+                            <option value="nonaktif">Nonaktif</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -143,23 +134,16 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email">
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Password (kosongkan jika tidak diubah)</label>
                         <input type="password" class="form-control" name="password">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">No. Telepon</label>
-                        <input type="text" class="form-control" name="no_telepon">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Alamat</label>
-                        <textarea class="form-control" name="alamat" rows="3"></textarea>
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status" required>
+                            <option value="aktif">Aktif</option>
+                            <option value="nonaktif">Nonaktif</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -218,11 +202,9 @@ $(document).ready(function() {
         columns: [
             { data: 'nama' },
             { data: 'username' },
-            { data: 'email' },
-            { data: 'no_telepon' },
-            { data: 'alamat' },
+            { data: 'status' },
             {
-                data: 'user_id',
+                data: 'id',
                 render: function (data) {
                     return `
                         <button class="btn btn-sm btn-primary" onclick="editData(${data})">
@@ -255,12 +237,10 @@ function openCreateForm() {
 
 function editData(id) {
     $.get(`/data-mandor/edit/${id}`, function (data) {
-        $('#modalEdit input[name=id]').val(data.user_id);
+        $('#modalEdit input[name=id]').val(data.id);
         $('#modalEdit input[name=nama]').val(data.nama);
         $('#modalEdit input[name=username]').val(data.username);
-        $('#modalEdit input[name=email]').val(data.email || '');
-        $('#modalEdit input[name=no_telepon]').val(data.no_telepon || '');
-        $('#modalEdit textarea[name=alamat]').val(data.alamat || '');
+        $('#modalEdit select[name=status]').val(data.status);
         $('#modalEditLabel').text('Edit Mandor');
         $('#modalEdit').modal('show');
     });

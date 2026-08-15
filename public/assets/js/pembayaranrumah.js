@@ -21,13 +21,21 @@ $(document).ready(function () {
       { data: 'nama_customer' },
       { data: 'kode_rumah' },
       {
-        data: 'tanggal_bayar',
-        render: data => data || '-'
+        data: 'info_tanggal_display',
+        defaultContent: '-',
+        render: function (data, type, row) {
+          const tanggal = data || row.tanggal_bayar || '-';
+          if (row.is_jatuh_tempo) {
+            return `${tanggal}<br><small class="text-muted">Jatuh tempo</small>`;
+          }
+          return tanggal;
+        }
       },
       {
-        data: 'jenis_pembayaran',
-        render: function (data) {
-          return jenisPembayaranLabels[data] || data || '-';
+        data: 'info_jenis',
+        defaultContent: '-',
+        render: function (data, type, row) {
+          return data || jenisPembayaranLabels[row.jenis_pembayaran] || row.jenis_pembayaran || '-';
         }
       },
       {
@@ -116,12 +124,20 @@ function formatRupiah(value) {
   return 'Rp ' + parseInt(value || 0).toLocaleString('id-ID');
 }
 
+function rowDisplayTanggal(data) {
+  const tanggal = data.info_tanggal_display || data.tanggal_bayar || '-';
+  if (data.is_jatuh_tempo) {
+    return `${tanggal}<br><small class="text-muted">Jatuh tempo</small>`;
+  }
+  return tanggal;
+}
+
 function openCreateForm(pembelianId = '') {
   const form = $('#modalForm form');
   form[0].reset();
   form.find('input[name=id]').val('');
   form.find('select[name=pembelian_rumah_id]').prop('disabled', false);
-  form.find('input[name=tanggal_bayar], select[name=jenis_pembayaran]').prop('required', canModifyPayments);
+  form.find('input[name=tanggal_bayar]').prop('required', canModifyPayments);
   $('.admin-payment-field').toggle(canModifyPayments);
   $('#buktiSaatIni').html('');
   $('#modalFormLabel').text(canModifyPayments ? 'Tambah Pembayaran Rumah' : 'Tambah Pengajuan Cicilan');
@@ -147,11 +163,9 @@ function editData(id) {
     form.find('input[name=id]').val(data.id);
     form.find('select[name=pembelian_rumah_id]').val(data.pembelian_rumah_id).prop('disabled', true);
     $('.admin-payment-field').show();
-    form.find('input[name=tanggal_bayar], select[name=jenis_pembayaran]').prop('required', true);
+    form.find('input[name=tanggal_bayar]').prop('required', true);
     form.find('input[name=tanggal_bayar]').val(data.tanggal_bayar);
     form.find('input[name=jumlah_bayar]').val(data.jumlah_bayar);
-    form.find('select[name=jenis_pembayaran]').val(data.jenis_pembayaran);
-    form.find('select[name=metode_bayar]').val(data.metode_bayar);
     form.find('textarea[name=keterangan]').val(data.keterangan);
     form.find('input[name=bukti_bayar]').val('');
     $('#buktiSaatIni').html(
@@ -180,8 +194,10 @@ function detailData(id) {
 
   $('#detailCustomer').text(data.nama_customer || '-');
   $('#detailKodeRumah').text(data.kode_rumah || '-');
-  $('#detailTanggalBayar').text(data.tanggal_bayar || '-');
-  $('#detailJenisPembayaran').text(jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-');
+  $('#detailTanggalBayar').html(
+    rowDisplayTanggal(data)
+  );
+  $('#detailJenisPembayaran').text(data.info_jenis || jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-');
   $('#detailMetodeBayar').text(data.metode_bayar || '-');
   $('#detailJumlahBayar').text(formatRupiah(data.jumlah_bayar));
   $('#detailTotalBayar').text(formatRupiah(data.total_bayar));
@@ -247,6 +263,27 @@ function approveData(id) {
 
 function simpanForm() {
   const form = $('#modalForm form');
+  const buktiInput = form.find('input[name=bukti_bayar]')[0];
+  const hasFile = !!(buktiInput && buktiInput.files && buktiInput.files.length > 0);
+
+  if (!canModifyPayments && !hasFile) {
+    alert('Bukti pembayaran wajib diunggah');
+    return;
+  }
+
+  if (hasFile) {
+    const file = buktiInput.files[0];
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
+      alert('Bukti pembayaran harus berupa JPG, PNG, atau PDF');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran bukti pembayaran maksimal 2 MB. Kompres foto terlebih dahulu.');
+      return;
+    }
+  }
+
   const id = form.find('input[name=id]').val();
   const url = id ? `/pembayaran-rumah/update/${id}` : '/pembayaran-rumah/store';
   const disabled = form.find(':disabled').prop('disabled', false);
@@ -299,29 +336,95 @@ $('#confirmDeleteBtn').on('click', function () {
   });
 });
 
+function formatTanggalId(isoDate) {
+  if (!isoDate) return '-';
+  const parts = String(isoDate).split('-');
+  if (parts.length !== 3) return isoDate;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function applyRingkasanToForm(formSelector, boxSelector, data, excludePaymentId = '') {
+  const form = $(formSelector);
+  const box = $(boxSelector);
+  const currentValue = parseInt(form.find('input[name=jumlah_bayar]').val() || 0);
+  const sisaUntukEdit = parseInt(data.sisa_bayar || 0) + (excludePaymentId ? currentValue : 0);
+  const isCicilanInternal = String(data.metode_pembayaran || '').toLowerCase() === 'cicilan internal';
+  const totalCicilan = parseInt(data.total_cicilan || 0, 10);
+  const cicilanKe = parseInt(data.cicilan_ke || 0, 10);
+  const jumlahCicilan = parseInt(data.jumlah_cicilan || 0, 10);
+  const jatuhTempo = data.jatuh_tempo || '';
+  const sudahBulanIni = !!data.sudah_cicilan_bulan_ini;
+  const isCicilanBayar = isCicilanInternal;
+  const metodeLabel = data.metode_pembayaran || '-';
+  const jenisLabel = jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-';
+
+  let extra = `<div>Metode: ${metodeLabel}</div><div>Jenis: ${jenisLabel}</div>`;
+  if (isCicilanInternal && totalCicilan > 0) {
+    extra += `<div>Sudah cicilan: ${cicilanKe} dari ${totalCicilan}</div>`;
+    extra += `<div>Pengajuan ini: cicilan ke-${Math.min(cicilanKe + 1, totalCicilan)}</div>`;
+    if (jatuhTempo) {
+      extra += `<div>Jatuh tempo: ${formatTanggalId(jatuhTempo)}</div>`;
+    }
+    if (jumlahCicilan > 0) {
+      extra += `<div>Jumlah cicilan bulan ini: ${formatRupiah(jumlahCicilan)}</div>`;
+    }
+    if (sudahBulanIni) {
+      extra += `<div class="text-danger">Cicilan bulan ini sudah diajukan (maks. 1 kali per bulan).</div>`;
+    }
+  }
+
+  box.html(`
+    <div><strong>${data.nama_customer}</strong> - ${data.kode_rumah}</div>
+    <div>Harga: ${formatRupiah(data.harga_beli)}</div>
+    <div>Sudah dibayar: ${formatRupiah(data.total_bayar)}</div>
+    <div>Sisa tagihan: ${formatRupiah(sisaUntukEdit)}</div>
+    ${extra}
+  `);
+
+  const jumlahInput = form.find('input[name=jumlah_bayar]');
+  const tanggalInput = form.find('input[name=tanggal_bayar]');
+  const hint = form.find('.jumlah-bayar-hint');
+
+  if (isCicilanBayar && jumlahCicilan > 0 && !excludePaymentId) {
+    jumlahInput.val(jumlahCicilan).prop('readonly', true);
+    hint.text('Jumlah cicilan terisi otomatis. Cicilan 1 kali tiap bulan.');
+    if (jatuhTempo && tanggalInput.length && canModifyPayments) {
+      tanggalInput.val(jatuhTempo);
+    }
+  } else {
+    jumlahInput.prop('readonly', false);
+    hint.text('Masukkan jumlah pembayaran (tanpa titik atau spasi)');
+    jumlahInput.attr('placeholder', `Maksimal ${formatRupiah(sisaUntukEdit)}`);
+  }
+}
+
 function updateRingkasan(excludePaymentId = '') {
   const pembelianId = $('#modalForm select[name=pembelian_rumah_id]').val();
   const box = $('#ringkasanPembayaran');
 
   if (!pembelianId) {
     box.html('<span class="text-muted">Pilih transaksi rumah untuk melihat sisa tagihan.</span>');
-    $('#modalForm input[name=jumlah_bayar]').attr('placeholder', 'Contoh: 5000000');
+    $('#modalForm input[name=jumlah_bayar]').attr('placeholder', 'Otomatis sesuai cicilan bulan ini').prop('readonly', false).val('');
     return;
   }
 
   $.get(`/pembayaran-rumah/ringkasan/${pembelianId}`, function (response) {
     if (response.status !== 'success') return;
+    applyRingkasanToForm('#modalForm form', '#ringkasanPembayaran', response.data, excludePaymentId);
+  });
+}
 
-    const data = response.data;
-    const currentValue = parseInt($('#modalForm input[name=jumlah_bayar]').val() || 0);
-    const sisaUntukEdit = parseInt(data.sisa_bayar || 0) + (excludePaymentId ? currentValue : 0);
+function updateRingkasanEdit(excludePaymentId = '') {
+  const pembelianId = $('#modalEdit select[name=pembelian_rumah_id]').val();
+  const box = $('#ringkasanPembayaranEdit');
 
-    box.html(`
-      <div><strong>${data.nama_customer}</strong> - ${data.kode_rumah}</div>
-      <div>Harga: ${formatRupiah(data.harga_beli)}</div>
-      <div>Sudah dibayar: ${formatRupiah(data.total_bayar)}</div>
-      <div>Sisa tagihan: ${formatRupiah(sisaUntukEdit)}</div>
-    `);
-    $('#modalForm input[name=jumlah_bayar]').attr('placeholder', `Maksimal ${formatRupiah(sisaUntukEdit)}`);
+  if (!pembelianId) {
+    box.html('<span class="text-muted">Pilih transaksi rumah untuk melihat sisa tagihan.</span>');
+    return;
+  }
+
+  $.get(`/pembayaran-rumah/ringkasan/${pembelianId}`, function (response) {
+    if (response.status !== 'success') return;
+    applyRingkasanToForm('#modalEdit form', '#ringkasanPembayaranEdit', response.data, excludePaymentId || $('#modalEdit input[name=id]').val());
   });
 }

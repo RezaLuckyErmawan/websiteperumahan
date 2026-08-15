@@ -3,33 +3,35 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use CodeIgniter\Database\RawSql;
 use App\Models\PembayaranRumahModel;
 use App\Models\PembelianRumahModel;
+use App\Models\UserModel;
 
 class PembayaranRumahController extends BaseController
 {
     public function pembayaranrumah()
     {
-        $pembelianModel = new PembelianRumahModel();
+        $db = \Config\Database::connect();
 
-        $pembelian = $pembelianModel
-            ->select('pembelian_rumah.*, customer.nama AS nama_customer, perumahan.kode_rumah')
+        $pembelian = $db->table('pembelian_rumah')
+            ->select('pembelian_rumah.id, pembelian_rumah.harga_beli, customer.nama AS nama_customer, perumahan.kode_rumah')
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
-            ->where(new RawSql("LOWER(pembelian_rumah.status_pembelian) != 'batal'"))
+            ->where("LOWER(pembelian_rumah.status_pembelian) != 'batal'", null, false)
             ->orderBy('pembelian_rumah.created_at', 'DESC');
 
         if ($this->isCustomer()) {
-            $this->applyCustomerScope($pembelian, 'customer');
+            $this->applyCustomerScope($pembelian);
         }
 
         return view('page/pembayaranrumah/pembayaran_rumah', [
-            'pembelian' => $pembelian->findAll(),
+            'pembelian' => $pembelian->get()->getResultArray(),
             'selectedPembelianId' => $this->request->getGet('pembelian_id'),
             'canCreatePayments' => true,
             'canModifyPayments' => !$this->isCustomer(),
             'userRole' => session()->get('role'),
+            'useDataTables' => true,
+            'pageTitle' => 'Pembayaran Cicilan Rumah',
         ]);
     }
 
@@ -43,10 +45,26 @@ class PembayaranRumahController extends BaseController
                 pr.*,
                 pembelian_rumah.harga_beli,
                 pembelian_rumah.status_pembelian,
+                pembelian_rumah.tanggal_pembelian,
+                pembelian_rumah.tanggal_cicilan,
                 customer.nama AS nama_customer,
                 perumahan.kode_rumah,
                 COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
-                (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
+                (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar,
+                CASE
+                    WHEN pr.jenis_pembayaran = \'cicilan\' AND pr.status_pengajuan != \'ditolak\' THEN (
+                        SELECT COUNT(*)
+                        FROM pembayaran_rumah p2
+                        WHERE p2.pembelian_rumah_id = pr.pembelian_rumah_id
+                          AND p2.jenis_pembayaran = \'cicilan\'
+                          AND p2.status_pengajuan != \'ditolak\'
+                          AND (
+                            p2.created_at < pr.created_at
+                            OR (p2.created_at = pr.created_at AND p2.id <= pr.id)
+                          )
+                    )
+                    ELSE NULL
+                END AS cicilan_ke
             ')
             ->join('pembelian_rumah', 'pembelian_rumah.id = pr.pembelian_rumah_id')
             ->join('customer', 'customer.id = pembelian_rumah.customer_id')
@@ -58,7 +76,7 @@ class PembayaranRumahController extends BaseController
             );
 
         if ($this->isCustomer()) {
-            $this->applyCustomerScope($builder, 'customer');
+            $this->applyCustomerScope($builder);
         }
 
         $searchValue = $request->getGet('search')['value'] ?? '';
@@ -88,6 +106,16 @@ class PembayaranRumahController extends BaseController
             ->orderBy('pr.created_at', 'DESC')
             ->get($length, $start)
             ->getResultArray();
+
+        foreach ($data as &$row) {
+            $info = PembelianRumahModel::infoTampilanPembayaran(
+                $row,
+                $row['tanggal_cicilan'] ?? null,
+                $row['tanggal_pembelian'] ?? null
+            );
+            $row = array_merge($row, $info);
+        }
+        unset($row);
 
         return $this->response->setJSON([
             'draw' => (int) $request->getGet('draw'),
@@ -212,20 +240,57 @@ class PembayaranRumahController extends BaseController
         return session()->get('role') === 'customer';
     }
 
-    private function applyCustomerScope($builder, string $customerAlias)
+    private function resolveCustomerId(): ?int
     {
-        $customerId = session()->get('customer_id');
-        if ($customerId) {
-            return $builder->where($customerAlias . '.id', $customerId);
+        $userId = session()->get('user_id');
+        if ($userId) {
+            $user = (new UserModel())->find($userId);
+            if (!empty($user['customer_id'])) {
+                return (int) $user['customer_id'];
+            }
         }
 
-        $name = (string) session()->get('nama');
-        $username = (string) session()->get('username');
+        $sessionCustomerId = session()->get('customer_id');
+        return $sessionCustomerId ? (int) $sessionCustomerId : null;
+    }
 
-        return $builder->groupStart()
-            ->where($customerAlias . '.nama', $name)
-            ->orWhere($customerAlias . '.nama', $username)
-            ->groupEnd();
+    private function applyCustomerScope($builder, string $customerAlias = 'customer')
+    {
+        $customerId = $this->resolveCustomerId();
+        $name = trim((string) session()->get('nama'));
+        $username = trim((string) session()->get('username'));
+
+        $builder->groupStart();
+
+        $hasCondition = false;
+        if ($customerId) {
+            $builder->where('pembelian_rumah.customer_id', $customerId);
+            $hasCondition = true;
+        }
+
+        if ($name !== '') {
+            if ($hasCondition) {
+                $builder->orWhere($customerAlias . '.nama', $name);
+            } else {
+                $builder->where($customerAlias . '.nama', $name);
+                $hasCondition = true;
+            }
+        }
+
+        if ($username !== '' && strcasecmp($username, $name) !== 0) {
+            if ($hasCondition) {
+                $builder->orWhere($customerAlias . '.nama', $username);
+            } else {
+                $builder->where($customerAlias . '.nama', $username);
+                $hasCondition = true;
+            }
+        }
+
+        if (!$hasCondition) {
+            $builder->where('pembelian_rumah.id', 0);
+        }
+
+        return $builder->groupEnd();
     }
 
     private function savePembayaran(?int $id = null)
@@ -236,24 +301,10 @@ class PembayaranRumahController extends BaseController
         $pembelianId = (int) $this->request->getPost('pembelian_rumah_id');
         $jumlahBayar = (int) $this->request->getPost('jumlah_bayar');
         $tanggalBayar = $this->isCustomer() ? null : $this->request->getPost('tanggal_bayar');
-        $jenis = $this->isCustomer() ? 'cicilan' : $this->request->getPost('jenis_pembayaran');
-        $metode = $this->request->getPost('metode_bayar');
-        $allowedJenis = ['booking_fee', 'dp', 'cicilan', 'pelunasan'];
-        $allowedMetode = ['Cash', 'Transfer Bank', 'Cicilan Internal'];
 
-        if ($pembelianId <= 0 || $jumlahBayar <= 0 || (!$this->isCustomer() && empty($tanggalBayar)) || empty($jenis) || empty($metode)) {
+        if ($pembelianId <= 0 || $jumlahBayar <= 0 || (!$this->isCustomer() && empty($tanggalBayar))) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Data pembayaran belum lengkap']);
-        }
-
-        if (!in_array($jenis, $allowedJenis, true)) {
-            return $this->response->setStatusCode(400)
-                ->setJSON(['status' => 'error', 'message' => 'Jenis pembayaran tidak valid']);
-        }
-
-        if (!in_array($metode, $allowedMetode, true)) {
-            return $this->response->setStatusCode(400)
-                ->setJSON(['status' => 'error', 'message' => 'Metode bayar tidak valid']);
         }
 
         if (!$this->isCustomer() && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalBayar)) {
@@ -276,9 +327,27 @@ class PembayaranRumahController extends BaseController
                 ->setJSON(['status' => 'error', 'message' => 'Data pembelian tidak ditemukan']);
         }
 
+        $jenis = (string) ($summary['jenis_pembayaran'] ?? '');
+        $metode = (string) ($summary['metode_pembayaran'] ?? '');
+        $allowedJenis = ['booking_fee', 'dp', 'cicilan', 'pelunasan'];
+        $allowedMetode = ['Cash', 'Transfer Bank', 'Cicilan Internal'];
+
+        if (!in_array($jenis, $allowedJenis, true) || !in_array($metode, $allowedMetode, true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Metode pembayaran transaksi rumah tidak valid']);
+        }
+
         if (strtolower((string) $summary['status_pembelian']) === 'batal') {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Pembelian yang sudah batal tidak bisa menerima pembayaran']);
+        }
+
+        if (strtolower((string) $jenis) === 'cicilan') {
+            $bulanRef = $tanggalBayar ?: date('Y-m-d');
+            if ($this->sudahAdaCicilanBulanIni($pembelianId, $bulanRef, $id)) {
+                return $this->response->setStatusCode(400)
+                    ->setJSON(['status' => 'error', 'message' => 'Cicilan hanya dapat dibayar 1 kali setiap bulan.']);
+            }
         }
 
         if ($jumlahBayar > $summary['sisa_bayar']) {
@@ -371,7 +440,7 @@ class PembayaranRumahController extends BaseController
             ->where('pembelian_rumah.id', $pembelianId);
 
         if ($this->isCustomer()) {
-            $this->applyCustomerScope($pembelian, 'customer');
+            $this->applyCustomerScope($pembelian);
         }
 
         $pembelian = $pembelian->first();
@@ -390,6 +459,9 @@ class PembayaranRumahController extends BaseController
         $sum = $query->selectSum('jumlah_bayar')->first();
         $totalBayar = (int) ($sum['jumlah_bayar'] ?? 0);
         $hargaBeli = (int) $pembelian['harga_beli'];
+        $sisaBayar = max($hargaBeli - $totalBayar, 0);
+        $cicilanKe = $this->hitungCicilanKe($pembelianId, $excludePaymentId);
+        $cicilanInfo = $this->hitungInfoCicilan($pembelian, $sisaBayar, $cicilanKe, $pembelianId, $excludePaymentId);
 
         return [
             'pembelian_id' => (int) $pembelian['id'],
@@ -397,9 +469,81 @@ class PembayaranRumahController extends BaseController
             'kode_rumah' => $pembelian['kode_rumah'],
             'harga_beli' => $hargaBeli,
             'total_bayar' => $totalBayar,
-            'sisa_bayar' => max($hargaBeli - $totalBayar, 0),
+            'sisa_bayar' => $sisaBayar,
             'status_pembelian' => $pembelian['status_pembelian'],
+            'metode_pembayaran' => $pembelian['metode_pembayaran'] ?? '',
+            'jenis_pembayaran' => strtolower((string) ($pembelian['metode_pembayaran'] ?? '')) === 'cicilan internal' ? 'cicilan' : 'pelunasan',
+            'lama_cicilan_tahun' => (int) ($pembelian['lama_cicilan_tahun'] ?? 0),
+            'cicilan_ke' => $cicilanKe,
+            'total_cicilan' => $cicilanInfo['total_cicilan'],
+            'jumlah_cicilan' => $cicilanInfo['jumlah_cicilan'],
+            'jatuh_tempo' => $cicilanInfo['jatuh_tempo'],
+            'sudah_cicilan_bulan_ini' => $cicilanInfo['sudah_cicilan_bulan_ini'],
         ];
+    }
+
+    private function hitungCicilanKe(int $pembelianId, ?int $excludePaymentId = null): int
+    {
+        $query = (new PembayaranRumahModel())
+            ->where('pembelian_rumah_id', $pembelianId)
+            ->where('jenis_pembayaran', 'cicilan')
+            ->where('status_pengajuan', 'disetujui');
+        if ($excludePaymentId) {
+            $query->where('id !=', $excludePaymentId);
+        }
+
+        return (int) $query->countAllResults();
+    }
+
+    private function hitungInfoCicilan(array $pembelian, int $sisaBayar, int $cicilanKe, int $pembelianId, ?int $excludePaymentId = null): array
+    {
+        $tahun = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
+        $totalCicilan = $tahun > 0 ? $tahun * 12 : 0;
+        $metode = strtolower((string) ($pembelian['metode_pembayaran'] ?? ''));
+        $hargaBeli = (int) ($pembelian['harga_beli'] ?? 0);
+        $jumlahCicilan = 0;
+        $jatuhTempo = null;
+
+        if ($metode === 'cicilan internal' && $totalCicilan > 0 && $sisaBayar > 0) {
+            $nominalTetap = (int) ceil($hargaBeli / $totalCicilan);
+            $jumlahCicilan = ($cicilanKe + 1 >= $totalCicilan)
+                ? $sisaBayar
+                : min($nominalTetap, $sisaBayar);
+
+            $jatuhTempo = PembelianRumahModel::jatuhTempoCicilan(
+                $pembelian['tanggal_cicilan'] ?? null,
+                $pembelian['tanggal_pembelian'] ?? null,
+                $cicilanKe
+            );
+        }
+
+        return [
+            'total_cicilan' => $totalCicilan,
+            'jumlah_cicilan' => $jumlahCicilan,
+            'jatuh_tempo' => $jatuhTempo,
+            'sudah_cicilan_bulan_ini' => $this->sudahAdaCicilanBulanIni($pembelianId, date('Y-m-d'), $excludePaymentId),
+        ];
+    }
+
+    private function sudahAdaCicilanBulanIni(int $pembelianId, string $tanggal, ?int $excludeId = null): bool
+    {
+        $bulan = substr($tanggal, 0, 7);
+        if (!preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+            return false;
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('pembayaran_rumah')
+            ->where('pembelian_rumah_id', $pembelianId)
+            ->where('jenis_pembayaran', 'cicilan')
+            ->whereIn('status_pengajuan', ['pending', 'disetujui'])
+            ->where("DATE_FORMAT(COALESCE(tanggal_bayar, created_at), '%Y-%m') = " . $db->escape($bulan), null, false);
+
+        if ($excludeId) {
+            $builder->where('id !=', $excludeId);
+        }
+
+        return $builder->countAllResults() > 0;
     }
 
     private function updateStatusPembelian(int $pembelianId): void
@@ -427,15 +571,24 @@ class PembayaranRumahController extends BaseController
         $file = $this->request->getFile('bukti_bayar');
 
         if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            if ($this->isCustomer()) {
+                return ['status' => 'error', 'message' => 'Bukti pembayaran wajib diunggah'];
+            }
+
             return null;
         }
 
-        if (!$file->isValid()) {
-            return ['status' => 'error', 'message' => 'Upload bukti pembayaran gagal'];
+        $error = $file->getError();
+        if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            return ['status' => 'error', 'message' => 'Ukuran bukti pembayaran terlalu besar. Maksimal 2 MB.'];
+        }
+
+        if ($error !== UPLOAD_ERR_OK) {
+            return ['status' => 'error', 'message' => $this->uploadErrorMessage($error)];
         }
 
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
-        $extension = strtolower($file->getClientExtension());
+        $extension = strtolower((string) ($file->getClientExtension() ?: pathinfo((string) $file->getName(), PATHINFO_EXTENSION)));
 
         if (!in_array($extension, $allowedExtensions, true)) {
             return ['status' => 'error', 'message' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF'];
@@ -446,14 +599,48 @@ class PembayaranRumahController extends BaseController
         }
 
         $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'bukti_pembayaran';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0775, true);
+        if (!is_dir($uploadPath) && !@mkdir($uploadPath, 0777, true) && !is_dir($uploadPath)) {
+            return ['status' => 'error', 'message' => 'Folder upload bukti pembayaran tidak dapat dibuat'];
         }
 
-        $newName = $file->getRandomName();
-        $file->move($uploadPath, $newName);
+        if (!is_writable($uploadPath)) {
+            @chmod($uploadPath, 0777);
+            if (!is_writable($uploadPath)) {
+                return ['status' => 'error', 'message' => 'Folder upload bukti pembayaran tidak dapat ditulisi'];
+            }
+        }
+
+        $newName = bin2hex(random_bytes(8)) . '_' . time() . '.' . $extension;
+        $destination = $uploadPath . DIRECTORY_SEPARATOR . $newName;
+
+        try {
+            if ($file->isValid() && !$file->hasMoved()) {
+                $file->move($uploadPath, $newName);
+            } else {
+                $tmpName = $file->getTempName();
+                if (!$tmpName || !is_file($tmpName) || !@copy($tmpName, $destination)) {
+                    return ['status' => 'error', 'message' => 'Upload bukti pembayaran gagal. Gunakan file JPG, PNG, atau PDF di bawah 2 MB.'];
+                }
+            }
+        } catch (\Throwable $e) {
+            $tmpName = $file->getTempName();
+            if (!$tmpName || !is_file($tmpName) || !@copy($tmpName, $destination)) {
+                return ['status' => 'error', 'message' => 'Gagal menyimpan bukti pembayaran'];
+            }
+        }
 
         return 'uploads/bukti_pembayaran/' . $newName;
+    }
+
+    private function uploadErrorMessage(int $error): string
+    {
+        return match ($error) {
+            UPLOAD_ERR_PARTIAL => 'File bukti pembayaran hanya terunggah sebagian. Coba lagi.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Folder sementara upload tidak ditemukan.',
+            UPLOAD_ERR_CANT_WRITE => 'File bukti pembayaran gagal ditulis ke server.',
+            UPLOAD_ERR_EXTENSION => 'Upload bukti pembayaran diblokir ekstensi PHP.',
+            default => 'Upload bukti pembayaran gagal.',
+        };
     }
 
     private function deleteBuktiBayar(?string $path): void

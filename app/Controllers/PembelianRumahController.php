@@ -8,12 +8,13 @@ use App\Models\PembatalanModel;
 use App\Models\PembayaranRumahModel;
 use App\Models\PembelianRumahModel;
 use App\Models\PerumahanModel;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class PembelianRumahController extends BaseController
 {
     public function pembelianrumah()
-{   
+{
     $modal = new PembelianRumahModel();
     $perumahan = new PerumahanModel();
     $customerModel = new CustomerModel();
@@ -25,6 +26,9 @@ class PembelianRumahController extends BaseController
         $modal->select('perumahan_id')->findAll(),
         'perumahan_id'
     );
+
+    $data['useDataTables'] = true;
+    $data['pageTitle'] = 'Penjualan Rumah';
 
     return view('page/pembelianrumah/pembelian_rumah', $data);
 }
@@ -67,6 +71,7 @@ class PembelianRumahController extends BaseController
         'pageTitle' => 'Detail Pembelian Rumah',
         'pembelian' => $pembelian,
         'userRole' => session()->get('role'),
+        'useDataTables' => true,
     ];
 
     return view('page/pembelianrumah/detail_pembelian_list', $data);
@@ -105,13 +110,19 @@ class PembelianRumahController extends BaseController
             customer.nama AS customer_nama, 
             perumahan.kode_rumah,
             COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
-            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
+            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar,
+            COALESCE(cicilan_count.cicilan_ke, 0) AS cicilan_ke
         ');
         $builder->join('customer', 'customer.id = pembelian_rumah.customer_id');
         $builder->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id');
         $builder->join(
-            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah WHERE status_pengajuan = \'disetujui\' GROUP BY pembelian_rumah_id) total_bayar',
             'total_bayar.pembelian_rumah_id = pembelian_rumah.id',
+            'left'
+        );
+        $builder->join(
+            "(SELECT pembelian_rumah_id, COUNT(*) AS cicilan_ke FROM pembayaran_rumah WHERE jenis_pembayaran = 'cicilan' AND status_pengajuan = 'disetujui' GROUP BY pembelian_rumah_id) cicilan_count",
+            'cicilan_count.pembelian_rumah_id = pembelian_rumah.id',
             'left'
         );
 
@@ -139,6 +150,7 @@ class PembelianRumahController extends BaseController
         $builder->orderBy('pembelian_rumah.created_at', 'DESC');
 
         $data = $builder->get()->getResultArray();
+        $data = array_map(fn(array $row) => $this->appendCicilanInfo($row), $data);
 
         return $this->response->setJSON([
             'draw' => $draw,
@@ -161,6 +173,18 @@ class PembelianRumahController extends BaseController
     $statusPembelian = $request->getPost('status_pembelian');
     $metodePembayaran = $request->getPost('metode_pembayaran');
     $statusDokumen = $request->getPost('status_dokumen');
+    $lamaCicilan = $this->resolveLamaCicilan($metodePembayaran, $request->getPost('lama_cicilan_tahun'));
+    $tanggalCicilan = $this->resolveTanggalCicilan($metodePembayaran, $request->getPost('tanggal_cicilan'));
+
+    if ($lamaCicilan === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Lama cicilan wajib diisi 1-30 tahun untuk Cicilan Internal']);
+    }
+
+    if ($tanggalCicilan === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Tanggal cicilan wajib diisi untuk Cicilan Internal']);
+    }
 
     if (
         !$request->getPost('customer_id') ||
@@ -196,6 +220,8 @@ class PembelianRumahController extends BaseController
         'harga_beli'        => $perumahan['harga'], // AMAN
         'status_pembelian'  => $statusPembelian,
         'metode_pembayaran' => $metodePembayaran,
+        'lama_cicilan_tahun' => $lamaCicilan,
+        'tanggal_cicilan'   => $tanggalCicilan,
         'status_dokumen'    => $statusDokumen,
         'request_khusus'    => $request->getPost('request_khusus'),
         'catatan_marketing' => $request->getPost('catatan_marketing'),
@@ -229,18 +255,26 @@ class PembelianRumahController extends BaseController
             customer.nama as nama_customer,
             perumahan.kode_rumah,
             COALESCE(total_bayar.total_bayar, 0) AS total_bayar,
-            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar
+            (pembelian_rumah.harga_beli - COALESCE(total_bayar.total_bayar, 0)) AS sisa_bayar,
+            COALESCE(cicilan_count.cicilan_ke, 0) AS cicilan_ke
         ')
         ->join('customer', 'customer.id = pembelian_rumah.customer_id')
         ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
         ->join(
-            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah GROUP BY pembelian_rumah_id) total_bayar',
+            '(SELECT pembelian_rumah_id, SUM(jumlah_bayar) AS total_bayar FROM pembayaran_rumah WHERE status_pengajuan = \'disetujui\' GROUP BY pembelian_rumah_id) total_bayar',
             'total_bayar.pembelian_rumah_id = pembelian_rumah.id',
             'left'
         )
+        ->join(
+            "(SELECT pembelian_rumah_id, COUNT(*) AS cicilan_ke FROM pembayaran_rumah WHERE jenis_pembayaran = 'cicilan' AND status_pengajuan = 'disetujui' GROUP BY pembelian_rumah_id) cicilan_count",
+            'cicilan_count.pembelian_rumah_id = pembelian_rumah.id',
+            'left'
+        )
         ->find($id);
-     
+
     if ($data) {
+        $data = $this->appendCicilanInfo($data);
+
         return $this->response->setJSON([
             'status' => true,
             'data' => $data
@@ -278,6 +312,18 @@ class PembelianRumahController extends BaseController
     $metodePembayaran = $request->getPost('metode_pembayaran');
     $statusDokumen = $request->getPost('status_dokumen');
     $perumahanId = $request->getPost('perumahan_id') ?: $dataLama['perumahan_id'];
+    $lamaCicilan = $this->resolveLamaCicilan($metodePembayaran, $request->getPost('lama_cicilan_tahun'));
+    $tanggalCicilan = $this->resolveTanggalCicilan($metodePembayaran, $request->getPost('tanggal_cicilan'));
+
+    if ($lamaCicilan === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Lama cicilan wajib diisi 1-30 tahun untuk Cicilan Internal']);
+    }
+
+    if ($tanggalCicilan === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Tanggal cicilan wajib diisi untuk Cicilan Internal']);
+    }
 
     if (
         !$request->getPost('customer_id') ||
@@ -299,6 +345,8 @@ class PembelianRumahController extends BaseController
         'harga_beli'        => $request->getPost('harga_beli'),
         'status_pembelian'  => $statusPembelian,
         'metode_pembayaran' => $metodePembayaran,
+        'lama_cicilan_tahun' => $lamaCicilan,
+        'tanggal_cicilan'   => $tanggalCicilan,
         'status_dokumen'    => $statusDokumen,
         'request_khusus'    => $request->getPost('request_khusus'),
         'catatan_marketing' => $request->getPost('catatan_marketing'),
@@ -372,7 +420,10 @@ class PembelianRumahController extends BaseController
                 perumahan.tipe as tipe_rumah,
                 perumahan.luas_tanah,
                 perumahan.luas_bangunan,
-                perumahan.lokasi as lokasi_rumah
+                perumahan.lokasi as lokasi_rumah,
+                perumahan.gambar as gambar_rumah,
+                perumahan.dokumen as dokumen_rumah,
+                perumahan.deskripsi as deskripsi_rumah
             ')
             ->join('customer', 'customer.id = pr.customer_id')
             ->join('perumahan', 'perumahan.id = pr.perumahan_id')
@@ -392,8 +443,9 @@ class PembelianRumahController extends BaseController
         // Get payment history for this purchase
         $pembayaran = $pembayaranModel
             ->where('pembelian_rumah_id', $id)
-            ->orderBy('tanggal_bayar', 'DESC')
+            ->orderBy('created_at', 'DESC')
             ->findAll();
+        $pembayaran = PembelianRumahModel::annotatePembayaranCicilan($pembayaran, $pembelian);
 
         $totalDibayar = 0;
         foreach ($pembayaran as $p) {
@@ -483,20 +535,148 @@ class PembelianRumahController extends BaseController
         return session()->get('role') === 'customer';
     }
 
-    private function applyCustomerScope($builder, string $customerAlias)
+    private function resolveCustomerId(): ?int
     {
-        $customerId = session()->get('customer_id');
-        if ($customerId) {
-            return $builder->where($customerAlias . '.id', $customerId);
+        $userId = session()->get('user_id');
+        if ($userId) {
+            $user = (new UserModel())->find($userId);
+            if (!empty($user['customer_id'])) {
+                return (int) $user['customer_id'];
+            }
         }
 
-        $name = (string) session()->get('nama');
-        $username = (string) session()->get('username');
+        $sessionCustomerId = session()->get('customer_id');
+        return $sessionCustomerId ? (int) $sessionCustomerId : null;
+    }
 
-        return $builder->groupStart()
-            ->where($customerAlias . '.nama', $name)
-            ->orWhere($customerAlias . '.nama', $username)
-            ->groupEnd();
+    private function applyCustomerScope($builder, string $customerAlias)
+    {
+        $customerId = $this->resolveCustomerId();
+        $name = trim((string) session()->get('nama'));
+        $username = trim((string) session()->get('username'));
+
+        $builder->groupStart();
+
+        $hasCondition = false;
+        if ($customerId) {
+            $builder->where($customerAlias . '.id', $customerId);
+            $hasCondition = true;
+        }
+
+        if ($name !== '') {
+            if ($hasCondition) {
+                $builder->orWhere($customerAlias . '.nama', $name);
+            } else {
+                $builder->where($customerAlias . '.nama', $name);
+                $hasCondition = true;
+            }
+        }
+
+        if ($username !== '' && strcasecmp($username, $name) !== 0) {
+            if ($hasCondition) {
+                $builder->orWhere($customerAlias . '.nama', $username);
+            } else {
+                $builder->where($customerAlias . '.nama', $username);
+                $hasCondition = true;
+            }
+        }
+
+        if (!$hasCondition) {
+            $builder->where($customerAlias . '.id', 0);
+        }
+
+        return $builder->groupEnd();
+    }
+
+    /**
+     * @return int|null|false
+     */
+    private function resolveLamaCicilan(?string $metodePembayaran, $lamaCicilan)
+    {
+        if (strtolower((string) $metodePembayaran) !== 'cicilan internal') {
+            return null;
+        }
+
+        $tahun = (int) $lamaCicilan;
+        if ($tahun < 1 || $tahun > 30) {
+            return false;
+        }
+
+        return $tahun;
+    }
+
+    /**
+     * @return string|null|false
+     */
+    private function resolveTanggalCicilan(?string $metodePembayaran, $tanggalCicilan)
+    {
+        if (strtolower((string) $metodePembayaran) !== 'cicilan internal') {
+            return null;
+        }
+
+        $tanggal = trim((string) $tanggalCicilan);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return false;
+        }
+
+        return $tanggal;
+    }
+
+    private function appendCicilanInfo(array $row): array
+    {
+        $metode = strtolower((string) ($row['metode_pembayaran'] ?? ''));
+        $tahun = (int) ($row['lama_cicilan_tahun'] ?? 0);
+        $cicilanKe = (int) ($row['cicilan_ke'] ?? 0);
+        $status = strtolower((string) ($row['status_pembelian'] ?? ''));
+        $sisa = (int) ($row['sisa_bayar'] ?? 0);
+        $harga = (int) ($row['harga_beli'] ?? 0);
+
+        $row['info_cicilan_tahun'] = $tahun > 0 ? $tahun . ' tahun' : '-';
+        $row['info_cicilan_ke'] = '-';
+        $row['info_cicilan_berikutnya'] = '-';
+
+        if ($metode !== 'cicilan internal') {
+            return $row;
+        }
+
+        $totalCicilan = $tahun > 0 ? $tahun * 12 : 0;
+        $row['info_cicilan_ke'] = $totalCicilan > 0
+            ? $cicilanKe . ' dari ' . $totalCicilan
+            : (string) $cicilanKe;
+
+        if ($status === 'batal') {
+            $row['info_cicilan_berikutnya'] = '-';
+            return $row;
+        }
+
+        if ($status === 'lunas' || ($totalCicilan > 0 && $cicilanKe >= $totalCicilan) || ($sisa <= 0 && $cicilanKe > 0)) {
+            $row['info_cicilan_berikutnya'] = 'Lunas';
+            return $row;
+        }
+
+        $jatuhTempoIso = PembelianRumahModel::jatuhTempoCicilan(
+            $row['tanggal_cicilan'] ?? null,
+            $row['tanggal_pembelian'] ?? null,
+            $cicilanKe
+        );
+        $jatuhTempo = '-';
+        if ($jatuhTempoIso) {
+            $due = date_create($jatuhTempoIso);
+            $jatuhTempo = $due ? $due->format('d/m/Y') : $jatuhTempoIso;
+        }
+
+        $nominalText = '';
+        if ($totalCicilan > 0 && $sisa > 0) {
+            $nominalTetap = (int) ceil($harga / $totalCicilan);
+            $nominal = ($cicilanKe + 1 >= $totalCicilan)
+                ? $sisa
+                : min($nominalTetap, $sisa);
+            $nominalText = ' • Rp ' . number_format($nominal, 0, ',', '.');
+        }
+
+        $row['info_cicilan_berikutnya'] = $jatuhTempo . $nominalText;
+
+        return $row;
     }
 
 }

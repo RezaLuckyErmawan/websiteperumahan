@@ -56,9 +56,9 @@
 <table id="userTable" class="display table table-striped table-bordered w-100">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Username</th>
             <th>Nama</th>
-            <th>Email</th>
             <th>Role</th>
             <th>Aksi</th>
         </tr>
@@ -88,11 +88,6 @@
                     <div class="mb-3">
                         <label class="form-label">Nama <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="nama" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email">
                     </div>
 
                     <div class="mb-3">
@@ -139,11 +134,6 @@
                     <div class="mb-3">
                         <label class="form-label">Nama <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="nama" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email">
                     </div>
 
                     <div class="mb-3">
@@ -215,9 +205,9 @@ $(document).ready(function() {
         lengthMenu: [5, 10, 25, 50],
         ajax: '/data-user/json',
         columns: [
+            { data: 'id' },
             { data: 'username' },
             { data: 'nama' },
-            { data: 'email' },
             {
                 data: 'role',
                 render: function (data) {
@@ -268,7 +258,6 @@ function editData(id) {
         $('#modalEdit input[name=id]').val(data.id);
         $('#modalEdit input[name=username]').val(data.username);
         $('#modalEdit input[name=nama]').val(data.nama);
-        $('#modalEdit input[name=email]').val(data.email || '');
         $('#modalEdit select[name=role]').val(data.role);
         $('#modalEditLabel').text('Edit User');
         $('#modalEdit').modal('show');

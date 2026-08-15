@@ -120,11 +120,6 @@ class Menu extends BaseConfig
                         'icon' => 'real_estate_agent',
                         'link' => '/pembelian-rumah'
                     ],
-                    'detail_pembelian_rumah' => [
-                        'label' => 'Detail Pembelian Rumah',
-                        'icon' => 'person',
-                        'link' => '/detail-pembelian-list'
-                    ],
                     'pembayaran_rumah' => [
                         'label' => 'Pembayaran Cicilan Rumah',
                         'icon' => 'payments',

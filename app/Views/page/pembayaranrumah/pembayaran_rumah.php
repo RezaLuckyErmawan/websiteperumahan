@@ -1,10 +1,5 @@
 <?= $this->extend('layouts/main') ?>
 
-<?php
-$useDataTables = true;
-$pageTitle = 'Pembayaran Cicilan Rumah';
-?>
-
 <?= $this->section('styles') ?>
 <style>
     #pembayaranRumahTable thead th {
@@ -210,7 +205,7 @@ $pageTitle = 'Pembayaran Cicilan Rumah';
                 <h5 class="modal-title" id="modalFormLabel">Tambah Pembayaran Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="event.preventDefault(); simpanForm();">
+            <form onsubmit="event.preventDefault(); simpanForm();" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" name="id">
 
@@ -238,25 +233,9 @@ $pageTitle = 'Pembayaran Cicilan Rumah';
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Jenis Pembayaran <span class="text-danger">*</span></label>
-                        <select class="form-control" name="jenis_pembayaran" required>
-                            <option value="cicilan">Cicilan</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Metode Bayar <span class="text-danger">*</span></label>
-                        <select class="form-control" name="metode_bayar" required>
-                            <option value="Cash">Cash</option>
-                            <option value="Transfer Bank">Transfer Bank</option>
-                            <option value="Cicilan Internal">Cicilan Internal</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Jumlah Bayar <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Contoh: 5000000" required>
-                        <small class="text-muted">Masukkan jumlah pembayaran (tanpa titik atau spasi)</small>
+                        <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Otomatis sesuai cicilan bulan ini" required>
+                        <small class="text-muted jumlah-bayar-hint">Jumlah cicilan terisi otomatis. Cicilan 1 kali tiap bulan.</small>
                     </div>
 
                     <div class="mb-3">
@@ -287,7 +266,7 @@ $pageTitle = 'Pembayaran Cicilan Rumah';
                 <h5 class="modal-title" id="modalEditLabel">Edit Pembayaran Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="event.preventDefault(); updateForm();">
+            <form onsubmit="event.preventDefault(); updateForm();" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" name="id">
 
@@ -315,28 +294,9 @@ $pageTitle = 'Pembayaran Cicilan Rumah';
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Jenis Pembayaran <span class="text-danger">*</span></label>
-                        <select class="form-control" name="jenis_pembayaran" required>
-                            <option value="booking_fee">Booking Fee</option>
-                            <option value="dp">DP</option>
-                            <option value="cicilan">Cicilan</option>
-                            <option value="pelunasan">Pelunasan</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Metode Bayar <span class="text-danger">*</span></label>
-                        <select class="form-control" name="metode_bayar" required>
-                            <option value="Cash">Cash</option>
-                            <option value="Transfer Bank">Transfer Bank</option>
-                            <option value="Cicilan Internal">Cicilan Internal</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Jumlah Bayar <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Contoh: 5000000" required>
-                        <small class="text-muted">Masukkan jumlah pembayaran (tanpa titik atau spasi)</small>
+                        <input type="number" class="form-control" name="jumlah_bayar" min="1" placeholder="Otomatis sesuai cicilan bulan ini" required>
+                        <small class="text-muted jumlah-bayar-hint">Jumlah cicilan terisi otomatis. Cicilan 1 kali tiap bulan.</small>
                     </div>
 
                     <div class="mb-3">

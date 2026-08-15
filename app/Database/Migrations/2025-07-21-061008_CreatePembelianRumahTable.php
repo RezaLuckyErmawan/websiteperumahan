@@ -40,6 +40,15 @@ class CreatePembelianRumahTable extends Migration
                 'constraint' => 50,
                 'null'       => true,
             ],
+            'lama_cicilan_tahun' => [
+                'type'       => 'INT',
+                'unsigned'   => true,
+                'null'       => true,
+            ],
+            'tanggal_cicilan' => [
+                'type' => 'DATE',
+                'null' => true,
+            ],
             'status_dokumen' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,

@@ -119,6 +119,7 @@ class PembayaranRumahSeeder extends Seeder
                     'harga_beli'          => 150000000,
                     'status_pembelian'    => 'DP',
                     'metode_pembayaran'   => 'KPR',
+                    'lama_cicilan_tahun'  => 10,
                     'status_dokumen'      => 'Lengkap',
                     'created_at'          => $now,
                 ],
@@ -129,6 +130,7 @@ class PembayaranRumahSeeder extends Seeder
                     'harga_beli'          => 200000000,
                     'status_pembelian'    => 'Cicil',
                     'metode_pembayaran'   => 'KPR',
+                    'lama_cicilan_tahun'  => 10,
                     'status_dokumen'      => 'Lengkap',
                     'created_at'          => $now,
                 ],
@@ -139,6 +141,7 @@ class PembayaranRumahSeeder extends Seeder
                     'harga_beli'          => 155000000,
                     'status_pembelian'    => 'DP',
                     'metode_pembayaran'   => 'Tunai',
+                    'lama_cicilan_tahun'  => null,
                     'status_dokumen'      => 'Pending',
                     'created_at'          => $now,
                 ],
@@ -149,6 +152,7 @@ class PembayaranRumahSeeder extends Seeder
                     'harga_beli'          => 280000000,
                     'status_pembelian'    => 'Proses',
                     'metode_pembayaran'   => 'KPR',
+                    'lama_cicilan_tahun'  => 15,
                     'status_dokumen'      => 'Lengkap',
                     'created_at'          => $now,
                 ],
@@ -158,9 +162,13 @@ class PembayaranRumahSeeder extends Seeder
         }
 
         if ($this->db->table('pembayaran_rumah')->countAllResults() === 0) {
-            $pembayaranData = [
+            $pembelianIds = array_column(
+                $this->db->table('pembelian_rumah')->select('id')->orderBy('id', 'ASC')->get()->getResultArray(),
+                'id'
+            );
+
+            $pembayaranTemplates = [
                 [
-                    'pembelian_rumah_id' => 1,
                     'tanggal_bayar' => '2025-01-20',
                     'jumlah_bayar' => 30000000,
                     'jenis_pembayaran' => 'dp',
@@ -169,37 +177,28 @@ class PembayaranRumahSeeder extends Seeder
                     'status_pengajuan' => 'disetujui',
                     'approved_at' => '2025-01-21 10:00:00',
                     'approved_by' => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
                 ],
                 [
-                    'pembelian_rumah_id' => 2,
                     'tanggal_bayar' => '2025-02-15',
                     'jumlah_bayar' => 25000000,
                     'jenis_pembayaran' => 'cicilan',
                     'metode_bayar' => 'Cash',
-                    'keterangan' => 'Cicilan ke-1 rumah RH002',
+                    'keterangan' => 'Cicilan ke-1',
                     'status_pengajuan' => 'disetujui',
                     'approved_at' => '2025-02-16 09:00:00',
                     'approved_by' => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
                 ],
                 [
-                    'pembelian_rumah_id' => 3,
                     'tanggal_bayar' => '2025-03-07',
                     'jumlah_bayar' => 20000000,
                     'jenis_pembayaran' => 'booking_fee',
                     'metode_bayar' => 'Transfer Bank',
-                    'keterangan' => 'Booking fee untuk rumah RH003',
+                    'keterangan' => 'Booking fee',
                     'status_pengajuan' => 'pending',
                     'approved_at' => null,
                     'approved_by' => null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
                 ],
                 [
-                    'pembelian_rumah_id' => 4,
                     'tanggal_bayar' => '2025-04-25',
                     'jumlah_bayar' => 50000000,
                     'jenis_pembayaran' => 'cicilan',
@@ -208,12 +207,25 @@ class PembayaranRumahSeeder extends Seeder
                     'status_pengajuan' => 'disetujui',
                     'approved_at' => '2025-04-26 11:30:00',
                     'approved_by' => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
                 ],
             ];
 
-            $this->db->table('pembayaran_rumah')->insertBatch($pembayaranData);
+            $pembayaranData = [];
+            foreach ($pembelianIds as $index => $pembelianId) {
+                if (!isset($pembayaranTemplates[$index])) {
+                    break;
+                }
+
+                $pembayaranData[] = array_merge($pembayaranTemplates[$index], [
+                    'pembelian_rumah_id' => (int) $pembelianId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+
+            if ($pembayaranData !== []) {
+                $this->db->table('pembayaran_rumah')->insertBatch($pembayaranData);
+            }
         }
     }
 }

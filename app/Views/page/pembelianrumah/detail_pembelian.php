@@ -140,6 +140,73 @@
   .amount-paid { color: #059669; font-weight: 700; }
   .amount-remain { color: #dc2626; font-weight: 700; }
 
+  .media-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .media-item {
+    border: 1px solid #e4e8ef;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f8fafc;
+  }
+
+  .media-item .media-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #647084;
+    margin-bottom: 8px;
+  }
+
+  .media-item .media-content {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+  }
+
+  .media-item img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+  }
+
+  .media-item .document-preview {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .media-item .document-preview .material-icons {
+    font-size: 48px;
+    color: #647084;
+  }
+
+  .description-box {
+    background: #f8fafc;
+    border: 1px solid #e4e8ef;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+
+  .description-box .description-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #647084;
+    margin-bottom: 8px;
+  }
+
+  .description-box .description-content {
+    font-size: 14px;
+    color: #172033;
+    line-height: 1.6;
+  }
+
   .empty-state {
     text-align: center;
     padding: 36px 16px;
@@ -222,27 +289,6 @@
     <i class="fas fa-arrow-left"></i> Kembali
   </a>
 </div>
-
-<div class="payment-summary">
-  <div class="payment-summary-item">
-    <span>Total Harga</span>
-    <strong>Rp <?= number_format((float) ($pembelian['harga_beli'] ?? 0), 0, ',', '.') ?></strong>
-  </div>
-  <div class="payment-summary-item">
-    <span>Sudah Dibayar</span>
-    <strong class="amount-paid">Rp <?= number_format((float) $total_dibayar, 0, ',', '.') ?></strong>
-  </div>
-  <div class="payment-summary-item">
-    <span>Sisa Tagihan</span>
-    <strong class="amount-remain">Rp <?= number_format((float) $sisa_tagihan, 0, ',', '.') ?></strong>
-  </div>
-</div>
-
-<?php if ($sisa_tagihan <= 0): ?>
-  <div class="lunas-banner">
-    <span class="status-pill status-success">Lunas</span>
-  </div>
-<?php endif; ?>
 
 <div class="detail-section">
   <div class="detail-section-header">
@@ -333,7 +379,42 @@
       <div class="payment-detail-label">Harga Beli</div>
       <div class="payment-detail-value amount-paid">Rp <?= number_format((float) ($pembelian['harga_beli'] ?? 0), 0, ',', '.') ?></div>
     </div>
+    <div class="payment-detail-item full">
+      <div class="payment-detail-label">Deskripsi Rumah</div>
+      <div class="payment-detail-value">
+        <?= !empty($pembelian['deskripsi_rumah']) ? nl2br(esc($pembelian['deskripsi_rumah'])) : '-' ?>
+      </div>
+    </div>
   </div>
+
+  <!-- Media Section: Gambar dan Dokumen -->
+  <?php if (!empty($pembelian['gambar_rumah']) || !empty($pembelian['dokumen_rumah'])): ?>
+  <div class="media-section" style="margin-top: 18px;">
+    <?php if (!empty($pembelian['gambar_rumah'])): ?>
+    <div class="media-item">
+      <div class="media-label">Gambar Properti</div>
+      <div class="media-content">
+        <img src="/<?= esc($pembelian['gambar_rumah']) ?>" alt="Gambar <?= esc($pembelian['kode_rumah']) ?>">
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($pembelian['dokumen_rumah'])): ?>
+    <div class="media-item">
+      <div class="media-label">Dokumen Properti</div>
+      <div class="media-content">
+        <div class="document-preview">
+          <span class="material-icons">description</span>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #647084;"><?= basename($pembelian['dokumen_rumah']) ?></p>
+          <a href="/<?= esc($pembelian['dokumen_rumah']) ?>" target="_blank" class="btn btn-sm btn-primary" style="margin-top: 8px;">
+            <i class="fas fa-download"></i> Download
+          </a>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
 </div>
 
 <div class="detail-section">
@@ -370,8 +451,13 @@
             $jenis = (string) ($bayar['jenis_pembayaran'] ?? '');
           ?>
           <tr>
-            <td><?= !empty($bayar['tanggal_bayar']) ? date('d-m-Y', strtotime($bayar['tanggal_bayar'])) : '-' ?></td>
-            <td><?= esc($jenisLabels[$jenis] ?? ucfirst($jenis)) ?></td>
+            <td>
+              <?= esc($bayar['info_tanggal_display'] ?? '-') ?>
+              <?php if (!empty($bayar['is_jatuh_tempo'])): ?>
+                <br><small class="text-muted">Jatuh tempo</small>
+              <?php endif; ?>
+            </td>
+            <td><?= esc($bayar['info_jenis'] ?? ($jenisLabels[$jenis] ?? ucfirst($jenis))) ?></td>
             <td class="amount-paid">Rp <?= number_format((float) ($bayar['jumlah_bayar'] ?? 0), 0, ',', '.') ?></td>
             <td><?= esc(ucfirst((string) ($bayar['metode_bayar'] ?? '-'))) ?></td>
             <td><span class="status-pill <?= $statusBayarClass ?>"><?= esc(ucfirst((string) ($bayar['status_pengajuan'] ?? '-'))) ?></span></td>

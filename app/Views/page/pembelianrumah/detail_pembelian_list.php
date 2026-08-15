@@ -1,38 +1,8 @@
-<?= $this->extend('layouts/main') ?>
+﻿<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('styles') ?>
-<!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-
 <style>
-    .purchase-summary {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 18px;
-    }
-
-    .purchase-summary-item {
-        padding: 14px;
-        border: 1px solid #e4e8ef;
-        border-radius: 8px;
-        background: #f8fafc;
-    }
-
-    .purchase-summary-item span {
-        display: block;
-        margin-bottom: 6px;
-        color: #647084;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .purchase-summary-item strong {
-        color: #172033;
-        font-size: 16px;
-        font-weight: 800;
-    }
-
     #pembelianListTable thead th {
         background-color: #eef6f8;
         color: #203246;
@@ -135,18 +105,6 @@
         height: 32px;
         padding: 0;
     }
-
-    @media (max-width: 992px) {
-        .purchase-summary {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 576px) {
-        .purchase-summary {
-            grid-template-columns: 1fr;
-        }
-    }
 </style>
 <?= $this->endSection() ?>
 
@@ -160,38 +118,14 @@
 if (!isset($pembelian) || !is_array($pembelian)) {
     $pembelian = [];
 }
-
-$totalPembelian = count($pembelian);
-$totalLunas = count(array_filter($pembelian, static fn($p) => strtolower((string) ($p['status_pembelian'] ?? '')) === 'lunas'));
-$totalCicilan = count(array_filter($pembelian, static fn($p) => in_array(strtolower((string) ($p['status_pembelian'] ?? '')), ['cicil', 'dp'], true)));
-$totalOmzet = array_sum(array_column($pembelian, 'harga_beli'));
 ?>
-
-<div class="purchase-summary">
-    <div class="purchase-summary-item">
-        <span>Total Pembelian</span>
-        <strong><?= $totalPembelian ?></strong>
-    </div>
-    <div class="purchase-summary-item">
-        <span>Total Lunas</span>
-        <strong><?= $totalLunas ?></strong>
-    </div>
-    <div class="purchase-summary-item">
-        <span>Sedang Cicilan</span>
-        <strong><?= $totalCicilan ?></strong>
-    </div>
-    <div class="purchase-summary-item">
-        <span>Total Omzet</span>
-        <strong>Rp <?= number_format($totalOmzet, 0, ',', '.') ?></strong>
-    </div>
-</div>
 
 <table id="pembelianListTable" class="display table table-striped table-bordered w-100">
     <thead>
         <tr>
             <th>No</th>
-            <th>Nama Customer</th>
             <th>Kode Rumah</th>
+            <th>Nama Customer</th>
             <th>Tipe</th>
             <th>Tanggal Pembelian</th>
             <th>Harga Beli</th>
@@ -213,13 +147,13 @@ $totalOmzet = array_sum(array_column($pembelian, 'harga_beli'));
             ?>
             <tr>
                 <td><?= $no++ ?></td>
+                <td><span class="code-pill"><?= esc($p['kode_rumah']) ?></span></td>
                 <td>
                     <div class="customer-cell">
                         <strong><?= esc($p['nama_customer']) ?></strong>
                         <small><?= esc($p['telepon_customer']) ?></small>
                     </div>
                 </td>
-                <td><span class="code-pill"><?= esc($p['kode_rumah']) ?></span></td>
                 <td><?= esc($p['tipe_rumah']) ?></td>
                 <td><?= date('d-m-Y', strtotime($p['tanggal_pembelian'])) ?></td>
                 <td>Rp <?= number_format($p['harga_beli'], 0, ',', '.') ?></td>
@@ -240,16 +174,28 @@ $totalOmzet = array_sum(array_column($pembelian, 'harga_beli'));
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
 <script>
     $(document).ready(function() {
         $('#pembelianListTable').DataTable({
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50],
             language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
+                emptyTable: "Tidak ada data yang tersedia pada tabel ini",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                infoFiltered: "(disaring dari _MAX_ entri keseluruhan)",
+                lengthMenu: "Tampilkan _MENU_ entri",
+                loadingRecords: "Sedang memuat...",
+                processing: "Sedang memproses...",
+                search: "Cari:",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Selanjutnya",
+                    previous: "Sebelumnya"
+                }
             }
         });
     });

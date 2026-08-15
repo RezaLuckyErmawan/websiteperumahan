@@ -1,11 +1,10 @@
 <?php
-$pageTitle = 'Penjualan Rumah';
-$useDataTables = true;
-
-/** @var list<array<string, mixed>> $rumah */
+/** @var list<array<string, mixed>> $perumahan */
 /** @var list<array<string, mixed>> $customer */
-$rumah = is_array($rumah ?? null) ? $rumah : [];
+/** @var list<int> $terjual_ids */
+$rumah = is_array($perumahan ?? null) ? $perumahan : [];
 $customer = is_array($customer ?? null) ? $customer : [];
+$terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
 ?>
 <?= $this->extend('layouts/main') ?>
 
@@ -67,11 +66,15 @@ $customer = is_array($customer ?? null) ? $customer : [];
         <tr>
             <th>Customer</th>
             <th>Kode Rumah</th>
+            <th>Tanggal Pembelian</th>
             <th>Harga Beli</th>
+            <th>Total Dibayar</th>
+            <th>Sisa Tagihan</th>
             <th>Status Pembelian</th>
-            <th>Tagihan</th>
-            <th>Dibayar</th>
-            <th>Sisa</th>
+            <th>Metode Pembayaran</th>
+            <th>Lama Cicilan</th>
+            <th>Cicilan Ke</th>
+            <th>Cicilan Berikutnya</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -123,22 +126,63 @@ $customer = is_array($customer ?? null) ? $customer : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian</label>
-                        <select class="form-control" name="status_pembelian">
-                            <option value="DP">DP</option>
-                            <option value="Cicil">Cicil</option>
-                            <option value="Lunas">Lunas</option>
+                        <label class="form-label">Tanggal Pembelian <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="tanggal_pembelian" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
+                        <select class="form-control" name="metode_pembayaran" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Cicilan Internal">Cicilan Internal</option>
+                        </select>
+                    </div>
+
+                    <div class="cicilan-tahun-field" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="lama_cicilan_tahun" min="1" max="30" placeholder="Contoh: 5">
+                            <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Cicilan <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_cicilan">
+                            <small class="text-muted cicilan-jatuh-tempo-hint">Pilih tanggal, misalnya 15. Cicilan jatuh tempo setiap tanggal 15 tiap bulan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Cicilan / Bulan</label>
+                            <input type="text" class="form-control" name="info_jumlah_cicilan" readonly placeholder="Otomatis dari harga beli">
+                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status Dokumen <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status_dokumen" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Verifikasi">Verifikasi</option>
+                            <option value="Lengkap">Lengkap</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Tanggal Pembelian</label>
-                        <input type="date" class="form-control" name="tanggal_pembelian">
+                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status_pembelian" required>
+                            <option value="DP">DP</option>
+                            <option value="Cicil">Cicil</option>
+                            <option value="Lunas">Lunas</option>
+                            <option value="Batal">Batal</option>
+                        </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Keterangan</label>
-                        <textarea class="form-control" name="keterangan" rows="3"></textarea>
+                        <label class="form-label">Request Khusus</label>
+                        <textarea class="form-control" name="request_khusus" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Catatan Marketing</label>
+                        <textarea class="form-control" name="catatan_marketing" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -192,8 +236,48 @@ $customer = is_array($customer ?? null) ? $customer : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian</label>
-                        <select class="form-control" name="status_pembelian">
+                        <label class="form-label">Tanggal Pembelian <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="tanggal_pembelian" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
+                        <select class="form-control" name="metode_pembayaran" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Cicilan Internal">Cicilan Internal</option>
+                        </select>
+                    </div>
+
+                    <div class="cicilan-tahun-field" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="lama_cicilan_tahun" min="1" max="30" placeholder="Contoh: 5">
+                            <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Cicilan <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_cicilan">
+                            <small class="text-muted cicilan-jatuh-tempo-hint">Pilih tanggal, misalnya 15. Cicilan jatuh tempo setiap tanggal 15 tiap bulan.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Cicilan / Bulan</label>
+                            <input type="text" class="form-control" name="info_jumlah_cicilan" readonly placeholder="Otomatis dari harga beli">
+                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status Dokumen <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status_dokumen" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Verifikasi">Verifikasi</option>
+                            <option value="Lengkap">Lengkap</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <select class="form-control" name="status_pembelian" required>
                             <option value="DP">DP</option>
                             <option value="Cicil">Cicil</option>
                             <option value="Lunas">Lunas</option>
@@ -202,13 +286,13 @@ $customer = is_array($customer ?? null) ? $customer : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Tanggal Pembelian</label>
-                        <input type="date" class="form-control" name="tanggal_pembelian">
+                        <label class="form-label">Request Khusus</label>
+                        <textarea class="form-control" name="request_khusus" rows="2"></textarea>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Keterangan</label>
-                        <textarea class="form-control" name="keterangan" rows="3"></textarea>
+                        <label class="form-label">Catatan Marketing</label>
+                        <textarea class="form-control" name="catatan_marketing" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -15,6 +15,8 @@ class UserController extends BaseController
         $customerModel = new CustomerModel();
         $data['user'] = $userModel->findAll();
         $data['customers'] = $customerModel->orderBy('nama', 'ASC')->findAll();
+        $data['useDataTables'] = true;
+        $data['pageTitle'] = 'Data User';
         return view('page/user/user', $data);
     }
 

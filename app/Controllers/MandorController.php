@@ -12,6 +12,8 @@ class MandorController extends BaseController
     {
         $userModel = new UserModel();
         $data['user'] = $userModel->where('role', 'mandor')->findAll();
+        $data['useDataTables'] = true;
+        $data['pageTitle'] = 'Data Mandor';
 
         return view('page/user/mandor', $data);
     }
