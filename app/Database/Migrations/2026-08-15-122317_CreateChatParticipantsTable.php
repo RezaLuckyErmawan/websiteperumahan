@@ -8,6 +8,10 @@ class CreateChatParticipantsTable extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('chat_participants')) {
+            return;
+        }
+
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -81,6 +85,7 @@ class CreateChatParticipantsTable extends Migration
             ],
             'joined_at' => [
                 'type' => 'DATETIME',
+                'null' => true,
                 'comment' => 'When participant joined the room',
             ],
             'left_at' => [
@@ -104,26 +109,18 @@ class CreateChatParticipantsTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addUniqueKey(['chat_room', 'user_id'], 'unique_chat_user');
-        $this->forge->addUniqueKey(['chat_room', 'customer_id'], 'unique_chat_customer');
         $this->forge->addKey('chat_room');
         $this->forge->addKey('user_id');
         $this->forge->addKey('customer_id');
         $this->forge->addKey('is_online');
+        $this->forge->addKey('last_seen');
+        $this->forge->addKey(['chat_room', 'is_online']);
 
-        // Create table
-        $this->forge->createTable('chat_participants');
-
-        // Create indexes for efficient queries
-        // Note: Partial indexes not supported in MySQL, using regular index instead
-        $this->db->query('CREATE INDEX idx_chat_online ON chat_participants(chat_room, is_online)');
-        $this->db->query('CREATE INDEX idx_last_seen ON chat_participants(last_seen DESC)');
+        $this->forge->createTable('chat_participants', true);
     }
 
     public function down()
     {
-        $this->db->query('DROP INDEX IF EXISTS idx_chat_online ON chat_participants');
-        $this->db->query('DROP INDEX IF EXISTS idx_last_seen ON chat_participants');
         $this->forge->dropTable('chat_participants', true);
     }
 }

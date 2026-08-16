@@ -56,22 +56,17 @@ class ChatController extends ResourceController
         $replyToId = $this->request->getPost('reply_to_id');
         $attachmentUrl = $this->request->getPost('attachment_url');
 
-        // Get current user info
-        $userId = session()->get('user_id');
-        $customerId = session()->get('customer_id');
-        $username = session()->get('username') ?? 'Customer';
-        $userRole = session()->get('role') ?? 'customer';
+        $identity = $this->currentChatIdentity();
 
-        // Prepare message data
         $messageData = [
             'chat_room' => $chatRoom,
-            'user_id' => $userId,
-            'customer_id' => $customerId,
+            'user_id' => $identity['user_id'],
+            'customer_id' => $identity['customer_id'],
             'message' => $message,
             'message_type' => $messageType,
             'attachment_url' => $attachmentUrl,
-            'sender_name' => $username,
-            'sender_role' => $userRole,
+            'sender_name' => $identity['name'],
+            'sender_role' => $identity['role'],
             'reply_to_id' => $replyToId,
         ];
 
@@ -80,19 +75,18 @@ class ChatController extends ResourceController
 
         if ($messageId) {
             // Add/update participant if not exists
-            $participantData = [
+            $this->participantModel->addParticipant([
                 'chat_room' => $chatRoom,
-                'user_id' => $userId,
-                'customer_id' => $customerId,
-                'participant_name' => $username,
-                'participant_type' => $customerId ? 'customer' : 'user',
-                'role' => $userRole,
+                'user_id' => $identity['user_id'],
+                'customer_id' => $identity['customer_id'],
+                'participant_name' => $identity['name'],
+                'participant_type' => $identity['participant_type'],
+                'role' => $identity['role'],
                 'is_online' => true,
                 'last_seen' => date('Y-m-d H:i:s'),
                 'last_message_id' => $messageId,
-            ];
-
-            $this->participantModel->addParticipant($participantData);
+            ]);
+            $this->ensureCustomerRoomParticipant($chatRoom);
 
             // Prepare data for Pusher
             $pusherData = [
@@ -101,9 +95,9 @@ class ChatController extends ResourceController
                 'message' => $message,
                 'message_type' => $messageType,
                 'attachment_url' => $attachmentUrl,
-                'user_id' => $userId,
-                'sender_name' => $username,
-                'sender_role' => $userRole,
+                'user_id' => $identity['user_id'],
+                'sender_name' => $identity['name'],
+                'sender_role' => $identity['role'],
                 'reply_to_id' => $replyToId,
                 'timestamp' => time(),
                 'created_at' => date('Y-m-d H:i:s'),
@@ -130,6 +124,64 @@ class ChatController extends ResourceController
      * Get message history for a chat room
      * GET /chat/history/{room}
      */
+    /**
+     * Upload an attachment for a chat message
+     * POST /chat/upload
+     */
+    public function upload()
+    {
+        $file = $this->request->getFile('file');
+
+        if (!$file || !$file->isValid() || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Tidak ada file yang dikirim atau file tidak valid.',
+            ], 400);
+        }
+
+        $allowedMime = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+
+        $mimeType = $file->getMimeType();
+        if (!in_array($mimeType, $allowedMime, true)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Tipe file tidak diizinkan.',
+            ], 400);
+        }
+
+        $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'chat';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0775, true);
+        }
+
+        $storedName = $file->getRandomName();
+        $file->move($uploadPath, $storedName);
+
+        $attachmentType = str_starts_with($mimeType, 'image/') ? 'image' : 'file';
+        $originalName = $file->getName();
+        $url = base_url('uploads/chat/' . $storedName);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => [
+                'filename' => $storedName,
+                'original_name' => $originalName,
+                'type' => $attachmentType,
+                'url' => $url,
+                'mime_type' => $mimeType,
+            ],
+        ]);
+    }
+
     public function history($room = null)
     {
         if (!$room) {
@@ -143,7 +195,11 @@ class ChatController extends ResourceController
         $offset = $this->request->getVar('offset') ?? 0;
 
         $messages = $this->messageModel->getMessagesByRoom($room, $limit, $offset);
-        $unreadCount = $this->messageModel->getUnreadCount($room, session()->get('user_id'));
+        $unreadCount = $this->messageModel->getUnreadCount(
+            $room,
+            session()->get('user_id'),
+            session()->get('customer_id')
+        );
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -161,8 +217,7 @@ class ChatController extends ResourceController
     public function markAsRead()
     {
         $chatRoom = $this->request->getPost('chat_room');
-        $lastMessageId = $this->request->getPost('last_message_id');
-        $userId = session()->get('user_id');
+        $identity = $this->currentChatIdentity();
 
         if (!$chatRoom) {
             return $this->response->setJSON([
@@ -171,12 +226,26 @@ class ChatController extends ResourceController
             ], 400);
         }
 
-        $updated = $this->messageModel->markAsRead($chatRoom, $userId, $lastMessageId);
+        $lastMessage = $this->messageModel
+            ->where('chat_room', $chatRoom)
+            ->where('deleted_at', null)
+            ->orderBy('id', 'DESC')
+            ->first();
 
-        // Update participant's last message
-        if ($lastMessageId) {
-            $this->participantModel->updateLastMessage($chatRoom, $userId, null, $lastMessageId);
+        $lastMessageId = $lastMessage['id'] ?? $this->request->getPost('last_message_id');
+        if (!$lastMessageId) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'updated' => 0,
+            ]);
         }
+
+        $updated = $this->participantModel->updateLastMessage(
+            $chatRoom,
+            $identity['user_id'],
+            $identity['customer_id'],
+            (int) $lastMessageId
+        );
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -192,6 +261,7 @@ class ChatController extends ResourceController
     {
         $chatRoom = $this->request->getVar('chat_room');
         $userId = session()->get('user_id');
+        $customerId = session()->get('customer_id');
 
         if (!$chatRoom) {
             return $this->response->setJSON([
@@ -200,7 +270,7 @@ class ChatController extends ResourceController
             ], 400);
         }
 
-        $count = $this->messageModel->getUnreadCount($chatRoom, $userId);
+        $count = $this->messageModel->getUnreadCount($chatRoom, $userId, $customerId);
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -215,10 +285,7 @@ class ChatController extends ResourceController
     public function join()
     {
         $chatRoom = $this->request->getPost('chat_room');
-        $userId = session()->get('user_id');
-        $customerId = session()->get('customer_id');
-        $username = session()->get('username') ?? 'Customer';
-        $userRole = session()->get('role') ?? 'customer';
+        $identity = $this->currentChatIdentity();
 
         if (!$chatRoom) {
             return $this->response->setJSON([
@@ -227,25 +294,37 @@ class ChatController extends ResourceController
             ], 400);
         }
 
-        $participantData = [
+        $participantId = $this->participantModel->addParticipant([
             'chat_room' => $chatRoom,
-            'user_id' => $userId,
-            'customer_id' => $customerId,
-            'participant_name' => $username,
-            'participant_type' => $customerId ? 'customer' : 'user',
-            'role' => $userRole,
+            'user_id' => $identity['user_id'],
+            'customer_id' => $identity['customer_id'],
+            'participant_name' => $identity['name'],
+            'participant_type' => $identity['participant_type'],
+            'role' => $identity['role'],
             'is_online' => true,
             'last_seen' => date('Y-m-d H:i:s'),
-        ];
+        ]);
+        $this->ensureCustomerRoomParticipant($chatRoom);
 
-        $participantId = $this->participantModel->addParticipant($participantData);
+        $lastMessage = $this->messageModel
+            ->where('chat_room', $chatRoom)
+            ->where('deleted_at', null)
+            ->orderBy('id', 'DESC')
+            ->first();
+        if (!empty($lastMessage['id'])) {
+            $this->participantModel->updateLastMessage(
+                $chatRoom,
+                $identity['user_id'],
+                $identity['customer_id'],
+                (int) $lastMessage['id']
+            );
+        }
 
-        // Notify others in room
         $pusherData = [
             'chat_room' => $chatRoom,
-            'participant_name' => $username,
-            'participant_type' => $customerId ? 'customer' : 'user',
-            'role' => $userRole,
+            'participant_name' => $identity['name'],
+            'participant_type' => $identity['participant_type'],
+            'role' => $identity['role'],
             'timestamp' => time(),
         ];
 
@@ -308,9 +387,9 @@ class ChatController extends ResourceController
     public function typing()
     {
         $chatRoom = $this->request->getPost('chat_room');
-        $isTyping = $this->request->getPost('is_typing') == 'true';
-        $userId = session()->get('user_id');
-        $customerId = session()->get('customer_id');
+        $isTypingRaw = $this->request->getPost('is_typing');
+        $isTyping = $isTypingRaw === true || $isTypingRaw === 1 || $isTypingRaw === '1' || $isTypingRaw === 'true';
+        $identity = $this->currentChatIdentity();
 
         if (!$chatRoom) {
             return $this->response->setJSON([
@@ -319,18 +398,20 @@ class ChatController extends ResourceController
             ], 400);
         }
 
-        $updated = $this->participantModel->updateTypingStatus($chatRoom, $userId, $customerId, $isTyping);
+        $updated = $this->participantModel->updateTypingStatus(
+            $chatRoom,
+            $identity['user_id'],
+            $identity['customer_id'],
+            $isTyping
+        );
 
         if ($updated && $isTyping) {
-            // Notify others about typing status
-            $username = session()->get('username') ?? 'Customer';
-            $pusherData = [
+            $this->sendToPusher($chatRoom, 'typing-indicator', [
                 'chat_room' => $chatRoom,
-                'user_name' => $username,
+                'user_id' => $identity['user_id'],
+                'user_name' => $identity['name'],
                 'timestamp' => time(),
-            ];
-
-            $this->sendToPusher($chatRoom, 'typing-indicator', $pusherData);
+            ]);
         }
 
         return $this->response->setJSON([
@@ -366,10 +447,15 @@ class ChatController extends ResourceController
      */
     public function conversations()
     {
-        $userId = session()->get('user_id');
-        $limit = $this->request->getVar('limit') ?? 10;
+        $identity = $this->currentChatIdentity();
+        $limit = $this->request->getVar('limit') ?? (in_array($identity['role'], ['admin', 'owner', 'mandor', 'spv'], true) ? 50 : 10);
 
-        $conversations = $this->messageModel->getRecentConversations($userId, $limit);
+        $conversations = $this->messageModel->getRecentConversations(
+            $identity['user_id'],
+            $identity['customer_id'],
+            (int) $limit,
+            $identity['role']
+        );
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -477,6 +563,50 @@ class ChatController extends ResourceController
     }
 
     /**
+     * @return array{user_id: int|null, customer_id: int|null, name: string, role: string, participant_type: string}
+     */
+    private function currentChatIdentity(): array
+    {
+        $role = (string) (session()->get('role') ?? 'user');
+        $isCustomer = $role === 'customer';
+        $customerId = $isCustomer ? session()->get('customer_id') : null;
+
+        return [
+            'user_id' => session()->get('user_id') ? (int) session()->get('user_id') : null,
+            'customer_id' => $customerId ? (int) $customerId : null,
+            'name' => (string) (session()->get('nama') ?: session()->get('username') ?: 'User'),
+            'role' => $role,
+            'participant_type' => $isCustomer ? 'customer' : 'user',
+        ];
+    }
+
+    private function ensureCustomerRoomParticipant(string $chatRoom): void
+    {
+        if (!preg_match('/^customer-(\d+)$/', $chatRoom, $matches)) {
+            return;
+        }
+
+        $customerId = (int) $matches[1];
+        $customer = (new \App\Models\CustomerModel())->find($customerId);
+        if (!$customer) {
+            return;
+        }
+
+        $linkedUser = (new \App\Models\UserModel())->where('customer_id', $customerId)->first();
+
+        $this->participantModel->addParticipant([
+            'chat_room' => $chatRoom,
+            'user_id' => $linkedUser['id'] ?? null,
+            'customer_id' => $customerId,
+            'participant_name' => $customer['nama'],
+            'participant_type' => 'customer',
+            'role' => 'customer',
+            'is_online' => false,
+            'last_seen' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /**
      * Send data via Pusher
      *
      * @param string $channel Channel name
@@ -487,6 +617,11 @@ class ChatController extends ResourceController
     private function sendToPusher(string $channel, string $event, array $data): bool
     {
         try {
+            if (!class_exists('\\Pusher\\Pusher')) {
+                log_message('warning', 'Pusher PHP SDK is not installed. Skipping real-time notification.');
+                return false;
+            }
+
             // Check if Pusher is configured
             $pusherConfig = config('Pusher')->config;
 
@@ -501,14 +636,18 @@ class ChatController extends ResourceController
                 $pusherConfig['secret'],
                 $pusherConfig['app_id'],
                 [
-                    'cluster' => $pusherConfig['cluster'],
-                    'useTLS' => $pusherConfig['use_tls'],
-                    'timeout' => $pusherConfig['timeout'] ?? 30,
+                    'cluster' => $pusherConfig['cluster'] ?? 'mt1',
+                    'useTLS' => (bool) ($pusherConfig['use_tls'] ?? true),
+                    'timeout' => (int) ($pusherConfig['timeout'] ?? 30),
                 ]
             );
 
             // Trigger event
-            $pusher->trigger($channel, $event, $data);
+            $pusher->trigger(
+                str_starts_with($channel, 'chat-') ? $channel : 'chat-' . $channel,
+                $event,
+                $data
+            );
 
             log_message('info', "Pusher event sent: {$event} to {$channel}");
             return true;

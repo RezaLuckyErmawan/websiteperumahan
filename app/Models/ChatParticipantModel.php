@@ -38,6 +38,99 @@ class ChatParticipantModel extends Model
         'participant_type' => 'required|in_list[user,customer]',
     ];
 
+    protected function initialize()
+    {
+        if ($this->db->tableExists($this->table)) {
+            return;
+        }
+
+        $forge = \Config\Database::forge();
+        $forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'auto_increment' => true,
+            ],
+            'chat_room' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+            ],
+            'user_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'customer_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'participant_name' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+            ],
+            'participant_type' => [
+                'type' => 'ENUM',
+                'constraint' => ['user', 'customer'],
+                'default' => 'user',
+            ],
+            'role' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => true,
+            ],
+            'is_online' => [
+                'type' => 'BOOLEAN',
+                'default' => false,
+            ],
+            'last_seen' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'last_message_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'typing_status' => [
+                'type' => 'ENUM',
+                'constraint' => ['idle', 'typing'],
+                'default' => 'idle',
+            ],
+            'typing_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'joined_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'left_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'metadata' => [
+                'type' => 'JSON',
+                'null' => true,
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+        $forge->addKey('id', true);
+        $forge->addKey('chat_room');
+        $forge->createTable($this->table, true);
+    }
+
     /**
      * Add participant to chat room
      *
@@ -76,18 +169,33 @@ class ChatParticipantModel extends Model
      */
     public function removeParticipant(string $chatRoom, ?int $userId = null, ?int $customerId = null): bool
     {
-        $builder = $this->where('chat_room', $chatRoom);
-
-        if ($userId !== null) {
-            $builder->where('user_id', $userId);
-        } elseif ($customerId !== null) {
-            $builder->where('customer_id', $customerId);
+        if ($userId === null && $customerId === null) {
+            return false;
         }
 
-        return $builder->update([
+        $db = $this->db;
+        $query = $db->table($this->table)
+            ->where('chat_room', $chatRoom);
+
+        if ($userId !== null && $customerId !== null) {
+            $query->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $query->where('user_id', $userId);
+        } elseif ($customerId !== null) {
+            $query->where('customer_id', $customerId);
+        }
+
+        if ($query->get()->getRowArray() === null) {
+            return false;
+        }
+
+        return $query->set([
             'is_online' => false,
             'left_at' => date('Y-m-d H:i:s'),
-        ]);
+        ])->update() !== false;
     }
 
     /**
@@ -100,9 +208,18 @@ class ChatParticipantModel extends Model
      */
     public function getParticipant(string $chatRoom, ?int $userId = null, ?int $customerId = null): ?array
     {
+        if ($userId === null && $customerId === null) {
+            return null;
+        }
+
         $builder = $this->where('chat_room', $chatRoom);
 
-        if ($userId !== null) {
+        if ($userId !== null && $customerId !== null) {
+            $builder->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
             $builder->where('user_id', $userId);
         } elseif ($customerId !== null) {
             $builder->where('customer_id', $customerId);
@@ -142,20 +259,33 @@ class ChatParticipantModel extends Model
      */
     public function updateOnlineStatus(string $chatRoom, ?int $userId, ?int $customerId, bool $isOnline): bool
     {
-        $data = [
-            'is_online' => $isOnline,
-            'last_seen' => date('Y-m-d H:i:s'),
-        ];
-
-        $builder = $this->where('chat_room', $chatRoom);
-
-        if ($userId !== null) {
-            $builder->where('user_id', $userId);
-        } elseif ($customerId !== null) {
-            $builder->where('customer_id', $customerId);
+        if ($userId === null && $customerId === null) {
+            return false;
         }
 
-        return $builder->update($data);
+        $db = $this->db;
+        $query = $db->table($this->table)
+            ->where('chat_room', $chatRoom);
+
+        if ($userId !== null && $customerId !== null) {
+            $query->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $query->where('user_id', $userId);
+        } elseif ($customerId !== null) {
+            $query->where('customer_id', $customerId);
+        }
+
+        if ($query->get()->getRowArray() === null) {
+            return false;
+        }
+
+        return $query->set([
+            'is_online' => $isOnline,
+            'last_seen' => date('Y-m-d H:i:s'),
+        ])->update();
     }
 
     /**
@@ -169,20 +299,36 @@ class ChatParticipantModel extends Model
      */
     public function updateTypingStatus(string $chatRoom, ?int $userId, ?int $customerId, bool $isTyping): bool
     {
-        $data = [
-            'typing_status' => $isTyping ? 'typing' : 'idle',
-            'typing_at' => date('Y-m-d H:i:s'),
-        ];
-
-        $builder = $this->where('chat_room', $chatRoom);
-
-        if ($userId !== null) {
-            $builder->where('user_id', $userId);
-        } elseif ($customerId !== null) {
-            $builder->where('customer_id', $customerId);
+        if ($userId === null && $customerId === null) {
+            return false;
         }
 
-        return $builder->update($data);
+        $db = $this->db;
+        $query = $db->table($this->table)
+            ->where('chat_room', $chatRoom);
+
+        if ($userId !== null && $customerId !== null) {
+            $query->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $query->where('user_id', $userId);
+        } elseif ($customerId !== null) {
+            $query->where('customer_id', $customerId);
+        }
+
+        $row = $query->get()->getRowArray();
+        if ($row === null) {
+            return false;
+        }
+
+        return $db->table($this->table)
+            ->where('id', $row['id'])
+            ->update([
+                'typing_status' => $isTyping ? 'typing' : 'idle',
+                'typing_at' => date('Y-m-d H:i:s'),
+            ]) !== false;
     }
 
     /**
@@ -196,17 +342,33 @@ class ChatParticipantModel extends Model
      */
     public function updateLastMessage(string $chatRoom, ?int $userId, ?int $customerId, int $messageId): bool
     {
-        $data = ['last_message_id' => $messageId];
-
-        $builder = $this->where('chat_room', $chatRoom);
-
-        if ($userId !== null) {
-            $builder->where('user_id', $userId);
-        } elseif ($customerId !== null) {
-            $builder->where('customer_id', $customerId);
+        if ($userId === null && $customerId === null) {
+            return false;
         }
 
-        return $builder->update($data);
+        $db = $this->db;
+        $query = $db->table($this->table)
+            ->where('chat_room', $chatRoom);
+
+        if ($userId !== null && $customerId !== null) {
+            $query->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $query->where('user_id', $userId);
+        } elseif ($customerId !== null) {
+            $query->where('customer_id', $customerId);
+        }
+
+        $row = $query->get()->getRowArray();
+        if ($row === null) {
+            return false;
+        }
+
+        return $db->table($this->table)
+            ->where('id', $row['id'])
+            ->update(['last_message_id' => $messageId]) !== false;
     }
 
     /**
@@ -260,11 +422,20 @@ class ChatParticipantModel extends Model
      */
     public function getParticipantRooms(?int $userId = null, ?int $customerId = null): array
     {
+        if ($userId === null && $customerId === null) {
+            return [];
+        }
+
         $builder = $this->select('chat_room')
             ->distinct()
             ->where('left_at', null);
 
-        if ($userId !== null) {
+        if ($userId !== null && $customerId !== null) {
+            $builder->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
             $builder->where('user_id', $userId);
         } elseif ($customerId !== null) {
             $builder->where('customer_id', $customerId);

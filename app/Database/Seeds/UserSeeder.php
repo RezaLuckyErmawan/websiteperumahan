@@ -8,92 +8,109 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
+        $now = date('Y-m-d H:i:s');
+
         $data = [
             [
-                'nama'         => 'Rika',
-                'username'     => 'Rika',
-                'password'     => password_hash('password123', PASSWORD_DEFAULT),
-                'role'         => 'owner',
-                'customer_id'  => null,
-                'status'       => 'aktif'
+                'nama'        => 'Admin Sistem',
+                'username'    => 'admin1',
+                'password'    => password_hash('admin123', PASSWORD_DEFAULT),
+                'role'        => 'admin',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'El Gato',
-                'username'     => 'ElGato',
-                'password'     => password_hash('password123', PASSWORD_DEFAULT),
-                'role'         => 'owner',
-                'customer_id'  => null,
-                'status'       => 'aktif'
+                'nama'        => 'Admin Kedua',
+                'username'    => 'admin2',
+                'password'    => password_hash('admin123', PASSWORD_DEFAULT),
+                'role'        => 'admin',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'UjangRambo',
-                'username'     => 'UjangRambo',
-                'password'     => password_hash('password123', PASSWORD_DEFAULT),
-                'role'         => 'mandor',
-                'customer_id'  => null,
-                'status'       => 'aktif'
+                'nama'        => 'Owner Utama',
+                'username'    => 'owner1',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'owner',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Admin Sistem',
-                'username'     => 'admin1',
-                'password'     => password_hash('admin123', PASSWORD_DEFAULT),
-                'role'         => 'admin',
-                'customer_id'  => null,
-                'status'       => 'aktif'
-            ],
-            // User Customer
-            [
-                'nama'         => 'Ahmad Subagyo',
-                'username'     => 'customer_ahmad',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 1,
-                'status'       => 'aktif'
+                'nama'        => 'Owner Kedua',
+                'username'    => 'owner2',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'owner',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Siti Mariam',
-                'username'     => 'customer_siti',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 2,
-                'status'       => 'aktif'
+                'nama'        => 'Mandor Utama',
+                'username'    => 'mandor1',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'mandor',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Budi Santoso',
-                'username'     => 'customer_budi',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 3,
-                'status'       => 'aktif'
+                'nama'        => 'Mandor Kedua',
+                'username'    => 'mandor2',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'mandor',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Dewi Lestari',
-                'username'     => 'customer_dewi',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 4,
-                'status'       => 'aktif'
+                'nama'        => 'Supervisor Utama',
+                'username'    => 'spv1',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'spv',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Rudi Hermawan',
-                'username'     => 'customer_rudi',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 5,
-                'status'       => 'aktif'
+                'nama'        => 'Supervisor Kedua',
+                'username'    => 'spv2',
+                'password'    => password_hash('password123', PASSWORD_DEFAULT),
+                'role'        => 'spv',
+                'customer_id' => null,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
             [
-                'nama'         => 'Sari Wulandari',
-                'username'     => 'customer_sari',
-                'password'     => password_hash('customer123', PASSWORD_DEFAULT),
-                'role'         => 'customer',
-                'customer_id'  => 6,
-                'status'       => 'aktif'
+                'nama'        => 'Dewi Lestari',
+                'username'    => 'customer_dewi',
+                'password'    => password_hash('customer123', PASSWORD_DEFAULT),
+                'role'        => 'customer',
+                'customer_id' => 1,
+                'status'      => 'aktif',
+                'created_at'  => $now,
+            ],
+            [
+                'nama'        => 'Budi Santoso',
+                'username'    => 'customer_budi',
+                'password'    => password_hash('customer123', PASSWORD_DEFAULT),
+                'role'        => 'customer',
+                'customer_id' => 2,
+                'status'      => 'aktif',
+                'created_at'  => $now,
             ],
         ];
 
-        // Insert ke tabel user
-        $this->db->table('user')->insertBatch($data);
-    
+        foreach ($data as $user) {
+            $exists = $this->db->table('user')
+                ->where('username', $user['username'])
+                ->countAllResults();
+
+            if ($exists === 0) {
+                $this->db->table('user')->insert($user);
+            }
+        }
     }
 }

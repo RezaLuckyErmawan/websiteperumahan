@@ -161,11 +161,12 @@
     // Initialize chat when document is ready
     $(document).ready(function() {
         ChatApp.init({
-            pusherKey: 'YOUR_PUSHER_KEY', // This should come from config
-            pusherCluster: 'YOUR_PUSHER_CLUSTER', // This should come from config
-            currentUserId: '<?php echo session()->get('user_id'); ?>',
-            currentUserName: '<?php echo session()->get('username'); ?>',
-            currentUserRole: '<?php echo session()->get('role'); ?>',
+            pusherKey: <?= json_encode(config('Pusher')->config['key'] ?? '') ?>,
+            pusherCluster: <?= json_encode(config('Pusher')->config['cluster'] ?? 'mt1') ?>,
+            currentUserId: <?= json_encode(session()->get('user_id')) ?>,
+            currentUserName: <?= json_encode(session()->get('nama') ?: session()->get('username')) ?>,
+            currentUserRole: <?= json_encode(session()->get('role')) ?>,
+            customerId: <?= json_encode(session()->get('customer_id')) ?>,
         });
     });
 </script>

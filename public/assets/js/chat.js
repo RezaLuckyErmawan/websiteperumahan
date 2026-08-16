@@ -11,6 +11,7 @@ const ChatApp = {
         currentUserId: null,
         currentUserName: '',
         currentUserRole: '',
+        customerId: null,
         apiBaseUrl: '/chat',
     },
 
@@ -25,63 +26,56 @@ const ChatApp = {
         typingTimer: null,
         reconnectAttempts: 0,
         maxReconnectAttempts: 5,
+        customerNames: {},
+        pollTimer: null,
     },
 
-    // Initialize chat application
     init: function(options) {
-        // Merge options with config
         Object.assign(this.config, options);
+        this.initializePusher();
+        this.setupEventListeners();
+        this.resetChatUI();
 
-        // Check if Pusher is available
-        if (typeof Pusher === 'undefined') {
-            console.error('Pusher library not loaded');
-            this.showError('Chat service unavailable. Please refresh the page.');
+        if (this.config.currentUserRole !== 'customer' && this.config.currentUserRole) {
+            this.loadCustomersForChat();
+        }
+
+        if (this.config.customerId && this.config.currentUserName) {
+            this.state.customerNames[this.config.customerId] = this.config.currentUserName;
+        }
+
+        this.loadConversations();
+        this.startRealtimeSync();
+    },
+
+    initializePusher: function() {
+        const key = this.config.pusherKey;
+        if (!key || key === 'YOUR_PUSHER_KEY' || typeof Pusher === 'undefined') {
+            this.state.isConnected = false;
             return;
         }
 
-        // Initialize Pusher
-        this.initializePusher();
-
-        // Setup event listeners
-        this.setupEventListeners();
-
-        // Load initial conversations
-        this.loadConversations();
-
-        console.log('ChatApp initialized');
-    },
-
-    // Initialize Pusher
-    initializePusher: function() {
         try {
-            this.state.pusher = new Pusher(this.config.pusherKey, {
+            this.state.pusher = new Pusher(key, {
                 cluster: this.config.pusherCluster,
                 encrypted: true,
-                authEndpoint: '/chat/auth', // Endpoint for private channels
             });
 
-            // Handle connection state
             this.state.pusher.connection.bind('connected', () => {
-                console.log('Pusher connected');
                 this.state.isConnected = true;
                 this.state.reconnectAttempts = 0;
-                this.showConnectionStatus();
             });
 
             this.state.pusher.connection.bind('disconnected', () => {
-                console.log('Pusher disconnected');
                 this.state.isConnected = false;
-                this.showConnectionStatus();
             });
 
-            this.state.pusher.connection.bind('error', (err) => {
-                console.error('Pusher error:', err);
-                this.handleConnectionError();
+            this.state.pusher.connection.bind('error', () => {
+                this.state.isConnected = false;
             });
-
         } catch (error) {
             console.error('Failed to initialize Pusher:', error);
-            this.showError('Failed to initialize chat service');
+            this.state.isConnected = false;
         }
     },
 
@@ -102,9 +96,49 @@ const ChatApp = {
             self.sendMessage();
         });
 
+        // Emoji picker
+        $('#emojiBtn').on('click', function(e) {
+            e.preventDefault();
+
+            const $picker = $('#emojiPicker');
+            if ($picker.length) {
+                $picker.toggle();
+                return;
+            }
+
+            const emojis = ['😀', '😊', '😂', '😍', '🤔', '👍', '🎉', '🔥', '❤️', '👏', '😎', '😢'];
+            const $container = $('<div id="emojiPicker" style="position:absolute; right:12px; bottom:68px; background:#fff; border:1px solid #dfe3e8; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:10px; display:flex; flex-wrap:wrap; gap:8px; z-index:20; max-width:220px;"></div>');
+
+            emojis.forEach(function(emoji) {
+                const $btn = $('<button type="button" style="border:none; background:#f8f9fa; border-radius:8px; width:34px; height:34px; font-size:18px; cursor:pointer;">' + emoji + '</button>');
+                $btn.on('click', function() {
+                    const $input = $('#messageInput');
+                    const value = $input.val();
+                    const cursorPos = $input[0].selectionStart || value.length;
+                    const newValue = value.slice(0, cursorPos) + emoji + value.slice(cursorPos);
+                    $input.val(newValue);
+                    $input.focus();
+                    const newCursor = cursorPos + emoji.length;
+                    $input[0].setSelectionRange(newCursor, newCursor);
+                    $('#emojiPicker').remove();
+                });
+                $container.append($btn);
+            });
+
+            $('#chatInputArea').append($container);
+        });
+
         // Typing indicator
         $('#messageInput').on('input', function() {
-            self.sendTypingIndicator(true);
+            const hasText = $(this).val().trim().length > 0;
+
+            if (hasText && !self.state.isTyping) {
+                self.state.isTyping = true;
+                self.sendTypingIndicator(true);
+            } else if (!hasText && self.state.isTyping) {
+                self.state.isTyping = false;
+                self.sendTypingIndicator(false);
+            }
 
             // Clear previous timer
             if (self.state.typingTimer) {
@@ -113,7 +147,10 @@ const ChatApp = {
 
             // Set new timer to stop typing after 2 seconds of inactivity
             self.state.typingTimer = setTimeout(function() {
-                self.sendTypingIndicator(false);
+                if (self.state.isTyping) {
+                    self.state.isTyping = false;
+                    self.sendTypingIndicator(false);
+                }
             }, 2000);
         });
 
@@ -203,8 +240,56 @@ const ChatApp = {
         });
     },
 
+    startRealtimeSync: function() {
+        const self = this;
+        if (this.state.pollTimer) {
+            clearInterval(this.state.pollTimer);
+        }
+        this.state.pollTimer = setInterval(function() {
+            self.pollUpdates();
+        }, 2000);
+    },
+
+    pollUpdates: function() {
+        const self = this;
+        if (this.state.currentRoom) {
+            this.pollRoomMessages(this.state.currentRoom, function() {
+                self.pollTypingUsers(self.state.currentRoom);
+                self.markMessagesAsRead(function() {
+                    self.loadConversations();
+                });
+            });
+            return;
+        }
+        this.loadConversations();
+    },
+
+    pollRoomMessages: function(room, done) {
+        const self = this;
+        $.ajax({
+            url: this.config.apiBaseUrl + '/history/' + encodeURIComponent(room),
+            method: 'GET',
+            success: function(response) {
+                if (response.status === 'success' && room === self.state.currentRoom) {
+                    (response.data || []).forEach(function(message) {
+                        self.addMessageToUI(message);
+                    });
+                }
+                if (typeof done === 'function') {
+                    done();
+                }
+            },
+            error: function() {
+                if (typeof done === 'function') {
+                    done();
+                }
+            }
+        });
+    },
+
     // Render conversations list
     renderConversations: function(conversations) {
+        const self = this;
         const $list = $('#conversationsList');
         $list.empty();
 
@@ -219,22 +304,26 @@ const ChatApp = {
         }
 
         conversations.forEach(function(conv) {
-            const unreadBadge = conv.unread_count > 0
+            const isOwnLast = conv.last_message && String(conv.last_message_user_id) === String(self.config.currentUserId);
+            const previewText = conv.last_message
+                ? (isOwnLast ? ('Anda: ' + conv.last_message) : conv.last_message)
+                : 'No messages yet';
+            const showUnread = Number(conv.unread_count) > 0 && conv.chat_room !== self.state.currentRoom;
+            const unreadBadge = showUnread
                 ? `<span class="unread-badge-conversation">${conv.unread_count}</span>`
                 : '';
 
-            const lastMessage = conv.last_message
-                ? `<div class="conversation-last-message">${conv.last_message}</div>`
-                : '<div class="conversation-last-message">No messages yet</div>';
+            const lastMessage = `<div class="conversation-last-message">${self.escapeHtml(previewText)}</div>`;
 
+            const displayName = self.getDisplayRoomName(conv.chat_room);
             const item = `
                 <div class="conversation-item" data-room="${conv.chat_room}">
                     <div class="conversation-avatar">
-                        ${conv.chat_room.charAt(0).toUpperCase()}
+                        ${displayName.charAt(0).toUpperCase()}
                     </div>
                     <div class="conversation-info">
                         <div class="conversation-name">
-                            ${conv.chat_room}
+                            ${displayName}
                             ${unreadBadge}
                         </div>
                         ${lastMessage}
@@ -247,15 +336,22 @@ const ChatApp = {
 
             $list.append(item);
         });
+
+        if (this.state.currentRoom) {
+            $(`.conversation-item[data-room="${this.state.currentRoom}"]`).addClass('active');
+        }
     },
 
     // Join a chat room
     joinChatRoom: function(room) {
         const self = this;
 
-        // Leave current room if any
-        if (this.state.currentRoom && this.state.channel) {
-            this.leaveChatRoom();
+        // Keep room state consistent before any async callback can fire.
+        if (this.state.currentRoom && this.state.currentRoom !== room && this.state.channel) {
+            if (this.state.pusher && this.state.channel) {
+                this.state.pusher.unsubscribe(this.state.channel.name);
+            }
+            this.state.channel = null;
         }
 
         // Show loading state
@@ -264,6 +360,9 @@ const ChatApp = {
         $.ajax({
             url: this.config.apiBaseUrl + '/join',
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            },
             data: {
                 chat_room: room,
             },
@@ -277,7 +376,7 @@ const ChatApp = {
                     // Update UI
                     self.updateChatRoomUI(room, response.data);
 
-                    // Enable input
+                    // Force input on whenever this room is active.
                     self.enableChatInput();
 
                     // Mark as read
@@ -286,8 +385,10 @@ const ChatApp = {
                     console.log('Joined room:', room);
                 }
             },
-            error: function() {
-                self.showError('Failed to join chat room');
+            error: function(xhr, status, error) {
+                console.error('Join chat room error:', xhr.responseText || error);
+                self.showError('Failed to join chat room: ' + (xhr.responseJSON?.message || error));
+                self.enableChatInput();
             }
         });
     },
@@ -296,15 +397,16 @@ const ChatApp = {
     subscribeToChannel: function(room) {
         const self = this;
 
-        // Unsubscribe from previous channel
+        if (!this.state.pusher) {
+            return;
+        }
+
         if (this.state.channel) {
             this.state.pusher.unsubscribe(this.state.channel.name);
         }
 
-        // Subscribe to new channel
         this.state.channel = this.state.pusher.subscribe(`chat-${room}`);
 
-        // Bind to events
         this.state.channel.bind('new-message', function(data) {
             self.handleNewMessage(data);
         });
@@ -320,8 +422,6 @@ const ChatApp = {
         this.state.channel.bind('user-left', function(data) {
             self.handleUserLeft(data);
         });
-
-        console.log('Subscribed to channel:', `chat-${room}`);
     },
 
     // Send a message
@@ -336,6 +436,9 @@ const ChatApp = {
         $.ajax({
             url: this.config.apiBaseUrl + '/send',
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            },
             data: {
                 chat_room: this.state.currentRoom,
                 message: message,
@@ -344,6 +447,12 @@ const ChatApp = {
             success: function(response) {
                 if (response.status === 'success') {
                     $('#messageInput').val('');
+
+                    // Show the sent message immediately in the active room, without waiting for reload.
+                    if (response.data && self.state.currentRoom) {
+                        self.addMessageToUI(response.data);
+                        self.loadConversations();
+                    }
 
                     // Remove reply indicator if present
                     $('.message.reply-to').removeClass('reply-to');
@@ -359,24 +468,35 @@ const ChatApp = {
 
     // Handle new message from Pusher
     handleNewMessage: function(data) {
-        // Don't add own messages (they're added immediately when sent)
-        if (data.user_id === this.config.currentUserId) return;
-
-        // Add message to UI
-        this.addMessageToUI(data);
-
-        // Update unread count if not in current room
-        if (data.chat_room !== this.state.currentRoom) {
-            this.updateUnreadCount(1);
+        if (data.chat_room && data.chat_room !== this.state.currentRoom) {
+            this.loadConversations();
+            return;
         }
+        if (String(data.user_id) === String(this.config.currentUserId)) {
+            return;
+        }
+        this.addMessageToUI(data);
+        this.loadConversations();
     },
 
     // Add message to UI
     addMessageToUI: function(messageData) {
-        const isSent = messageData.user_id === this.config.currentUserId;
-        const messageClass = isSent ? 'message sent' : 'message';
+        if (!messageData || !messageData.id) {
+            return;
+        }
 
-        const avatar = messageData.sender_name.charAt(0).toUpperCase();
+        const messageId = String(messageData.id);
+        if ($(`#chatMessages .message[data-message-id="${messageId}"]`).length) {
+            return;
+        }
+
+        const isSent = String(messageData.user_id) === String(this.config.currentUserId);
+        const messageClass = isSent ? 'message sent' : 'message';
+        const senderName = isSent
+            ? (this.config.currentUserName || messageData.sender_name || 'Anda')
+            : (messageData.sender_name || this.getDisplayRoomName(this.state.currentRoom) || 'User');
+
+        const avatar = senderName.charAt(0).toUpperCase();
 
         let contentHtml = '';
 
@@ -388,12 +508,12 @@ const ChatApp = {
                 <div class="message-text">${this.escapeHtml(messageData.message)}</div>
             `;
         } else if (messageData.message_type === 'file' && messageData.attachment_url) {
+            const fileLabel = messageData.message || messageData.original_name || 'View File';
             contentHtml = `
                 <div class="message-file">
                     <i class="fas fa-file"></i>
-                    <a href="${messageData.attachment_url}" target="_blank">View File</a>
+                    <a href="${messageData.attachment_url}" target="_blank">${this.escapeHtml(fileLabel)}</a>
                 </div>
-                <div class="message-text">${this.escapeHtml(messageData.message)}</div>
             `;
         }
 
@@ -401,7 +521,7 @@ const ChatApp = {
             <div class="${messageClass}" data-message-id="${messageData.id}">
                 <div class="message-avatar">${avatar}</div>
                 <div class="message-content">
-                    <div class="message-sender">${messageData.sender_name}</div>
+                    <div class="message-sender">${this.escapeHtml(senderName)}</div>
                     ${contentHtml}
                     <div class="message-meta">
                         ${this.formatTimestamp(messageData.created_at)}
@@ -421,6 +541,9 @@ const ChatApp = {
         $.ajax({
             url: this.config.apiBaseUrl + '/typing',
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            },
             data: {
                 chat_room: this.state.currentRoom,
                 is_typing: isTyping,
@@ -433,25 +556,48 @@ const ChatApp = {
 
     // Handle typing indicator from Pusher
     handleTypingIndicator: function(data) {
+        if (String(data.user_id) === String(this.config.currentUserId)) return;
         if (data.user_name === this.config.currentUserName) return;
+        this.showTypingIndicator(data.user_name);
+    },
 
+    showTypingIndicator: function(name) {
         const $indicator = $('#typingIndicator');
         const $text = $indicator.find('.typing-text');
-
-        $text.text(`${data.user_name} is typing...`);
+        $text.text((name || 'Seseorang') + ' sedang mengetik...');
         $indicator.show();
+    },
 
-        // Hide after 3 seconds
-        setTimeout(function() {
-            $indicator.hide();
-        }, 3000);
+    hideTypingIndicator: function() {
+        $('#typingIndicator').hide();
+    },
+
+    pollTypingUsers: function(room) {
+        const self = this;
+        $.ajax({
+            url: this.config.apiBaseUrl + '/typing-users/' + encodeURIComponent(room),
+            method: 'GET',
+            success: function(response) {
+                if (response.status !== 'success' || room !== self.state.currentRoom) {
+                    return;
+                }
+
+                const others = (response.data || []).filter(function(user) {
+                    return String(user.user_id) !== String(self.config.currentUserId);
+                });
+
+                if (others.length === 0) {
+                    self.hideTypingIndicator();
+                    return;
+                }
+
+                self.showTypingIndicator(others[0].participant_name);
+            }
+        });
     },
 
     // Handle user joined event
-    handleUserJoined: function(data) {
-        if (data.participant_name === this.config.currentUserName) return;
-
-        this.showSystemMessage(`${data.participant_name} joined the chat`);
+    handleUserJoined: function() {
         this.loadParticipants();
     },
 
@@ -469,24 +615,31 @@ const ChatApp = {
 
         if (!this.state.currentRoom) return;
 
+        const roomToLeave = this.state.currentRoom;
+
         $.ajax({
             url: this.config.apiBaseUrl + '/leave',
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            },
             data: {
-                chat_room: this.state.currentRoom,
+                chat_room: roomToLeave,
             },
             success: function(response) {
                 if (response.status === 'success') {
-                    // Unsubscribe from channel
-                    if (self.state.channel) {
-                        self.state.pusher.unsubscribe(`chat-${self.state.currentRoom}`);
+                    if (self.state.currentRoom === roomToLeave) {
+                        self.state.currentRoom = null;
+                    }
+
+                    if (self.state.channel && self.state.channel.name === `chat-${roomToLeave}`) {
+                        self.state.pusher.unsubscribe(`chat-${roomToLeave}`);
                         self.state.channel = null;
                     }
 
-                    self.state.currentRoom = null;
-
-                    // Reset UI
-                    self.resetChatUI();
+                    if (self.state.currentRoom === null) {
+                        self.resetChatUI();
+                    }
 
                     console.log('Left chat room');
                 }
@@ -498,18 +651,26 @@ const ChatApp = {
     },
 
     // Mark messages as read
-    markMessagesAsRead: function() {
-        if (!this.state.currentRoom) return;
+    markMessagesAsRead: function(done) {
+        if (!this.state.currentRoom) {
+            if (typeof done === 'function') {
+                done();
+            }
+            return;
+        }
 
         $.ajax({
             url: this.config.apiBaseUrl + '/read',
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            },
             data: {
                 chat_room: this.state.currentRoom,
             },
-            success: function(response) {
-                if (response.status === 'success') {
-                    console.log('Messages marked as read');
+            complete: function() {
+                if (typeof done === 'function') {
+                    done();
                 }
             }
         });
@@ -536,6 +697,7 @@ const ChatApp = {
 
     // Render search results
     renderSearchResults: function(results) {
+        const self = this;
         const $results = $('#searchResults');
         $results.empty();
 
@@ -578,7 +740,13 @@ const ChatApp = {
         const $list = $('#participantsList');
         $list.empty();
 
-        data.participants.forEach(function(participant) {
+        const payload = data && data.participants ? data : { participants: Array.isArray(data) ? data : [], counts: { online_participants: 0 } };
+        const participants = payload.participants || [];
+        const onlineCount = participants.filter(function(participant) {
+            return participant && participant.is_online;
+        }).length;
+
+        participants.forEach(function(participant) {
             const onlineDot = participant.is_online
                 ? '<span class="online-dot"></span>'
                 : '';
@@ -604,7 +772,8 @@ const ChatApp = {
         });
 
         // Update counts
-        $('#chatRoomParticipants').text(`${data.counts.online_participants} online`);
+        const counts = payload.counts || { online_participants: onlineCount };
+        $('#chatRoomParticipants').text(`${counts.online_participants ?? onlineCount} online`);
     },
 
     // Toggle chat info panel
@@ -662,8 +831,10 @@ const ChatApp = {
 
     // Update chat room UI
     updateChatRoomUI: function(room, data) {
-        $('#chatRoomTitle').text(room);
+        $('#chatRoomTitle').text(this.getDisplayRoomName(room));
         $('#leaveChatBtn').show();
+        $('#chatInputArea').show();
+        this.hideLoadingState();
 
         // Clear empty state
         $('#chatMessages').find('.empty-state').remove();
@@ -694,8 +865,12 @@ const ChatApp = {
                         self.addMessageToUI(message);
                     });
 
+                    self.hideLoadingState();
                     self.scrollToBottom();
                 }
+            },
+            error: function() {
+                self.hideLoadingState();
             }
         });
     },
@@ -705,6 +880,7 @@ const ChatApp = {
         $('#chatRoomTitle').text('Select a conversation');
         $('#chatRoomParticipants').text('');
         $('#leaveChatBtn').hide();
+        $('#chatInputArea').hide();
         $('#chatMessages').html(`
             <div class="empty-state">
                 <i class="fas fa-comments fa-3x text-muted"></i>
@@ -716,14 +892,19 @@ const ChatApp = {
 
     // Enable chat input
     enableChatInput: function() {
-        $('#messageInput').prop('disabled', false).focus();
+        $('#messageInput').prop('disabled', false);
         $('#sendMessageBtn').prop('disabled', false);
+        $('#chatInputArea').show();
+        $('#messageInput').focus();
     },
 
     // Disable chat input
     disableChatInput: function() {
-        $('#messageInput').prop('disabled', true);
-        $('#sendMessageBtn').prop('disabled', true);
+        if (!this.state.currentRoom) {
+            $('#messageInput').prop('disabled', true);
+            $('#sendMessageBtn').prop('disabled', true);
+            $('#chatInputArea').hide();
+        }
     },
 
     // Handle file upload
@@ -735,6 +916,7 @@ const ChatApp = {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('chat_room', this.state.currentRoom);
+        formData.append('csrf_test_name', this.getCsrfToken());
 
         this.showLoadingState();
 
@@ -746,25 +928,39 @@ const ChatApp = {
             contentType: false,
             success: function(response) {
                 if (response.status === 'success') {
-                    // Send message with attachment
+                    const displayName = response.data.original_name || response.data.filename || file.name;
+
+                    // Send message with attachment using original file name for display
                     $.ajax({
                         url: self.config.apiBaseUrl + '/send',
                         method: 'POST',
                         data: {
                             chat_room: self.state.currentRoom,
-                            message: response.data.filename,
+                            message: displayName,
                             message_type: response.data.type,
                             attachment_url: response.data.url,
                         },
                         success: function(sendResponse) {
                             if (sendResponse.status === 'success') {
+                                self.hideLoadingState();
+
+                                if (self.state.currentRoom) {
+                                    self.loadMessageHistory(self.state.currentRoom);
+                                    self.loadConversations();
+                                }
+
                                 console.log('File sent successfully');
                             }
+                        },
+                        error: function() {
+                            self.hideLoadingState();
+                            self.showError('Failed to send uploaded file');
                         }
                     });
                 }
             },
             error: function() {
+                self.hideLoadingState();
                 self.showError('Failed to upload file');
             },
             complete: function() {
@@ -830,6 +1026,10 @@ const ChatApp = {
         `);
     },
 
+    hideLoadingState: function() {
+        $('#chatMessages').find('.loading-spinner').remove();
+    },
+
     // Show error message
     showError: function(message) {
         // Simple alert for now, could be enhanced with toast notifications
@@ -848,12 +1048,217 @@ const ChatApp = {
         this.scrollToBottom();
     },
 
-    // Show new chat dialog (placeholder)
+    // Show new chat dialog with better UX
     showNewChatDialog: function() {
-        const room = prompt('Enter chat room name:');
-        if (room) {
-            this.joinChatRoom(room);
+        const self = this;
+        const userRole = this.config.currentUserRole || 'user';
+
+        // Create modal dialog for new chat options
+        const modalHtml = `
+            <div class="modal fade" id="newChatModal" tabindex="-1" aria-labelledby="newChatModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="newChatModalLabel">Create New Chat</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="chat-options">
+                                ${self.getChatOptions(userRole)}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if present
+        $('#newChatModal').remove();
+
+        // Add modal to body
+        $('body').append(modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('newChatModal'));
+        modal.show();
+
+        // Handle chat option clicks
+        $(document).on('click', '.chat-option-btn', function() {
+            const roomType = $(this).data('room-type');
+            const roomId = $(this).data('room-id');
+
+            let chatRoom = '';
+
+            // Admin join role-specific room
+            if (roomType === 'role-chat') {
+                const targetRole = $('#targetRoleSelect').val();
+                if (!targetRole) {
+                    alert('Please select a target role first');
+                    return;
+                }
+
+                if (targetRole === 'customer') {
+                    const customerId = $('#customerSelect').val();
+                    if (!customerId) {
+                        alert('Please select a customer first');
+                        return;
+                    }
+                    chatRoom = `customer-${customerId}`;
+                } else {
+                    chatRoom = `role-${targetRole}`;
+                }
+            }
+            // Customer specific chat
+            else if (roomType === 'customer-chat') {
+                const customerId = $('#customerSelect').val();
+                if (!customerId) {
+                    alert('Please select a customer first');
+                    return;
+                }
+                chatRoom = `customer-${customerId}`;
+            }
+            // Team chat
+            else if (roomType === 'team' && roomId) {
+                chatRoom = `team-${roomId}`;
+            }
+            // Customer chat with sales agent (booking chat)
+            else if (roomType === 'booking' && roomId === 'my') {
+                // Use current customer ID from session
+                const customerId = self.config.customerId;
+                if (customerId) {
+                    chatRoom = `customer-${customerId}`;
+                } else {
+                    alert('Customer ID not found. Please login again.');
+                    return;
+                }
+            }
+
+            if (chatRoom) {
+                modal.hide();
+                self.joinChatRoom(chatRoom);
+            }
+        });
+
+        // Enable/disable role chat button based on selection
+        $(document).on('change', '#targetRoleSelect', function() {
+            $('#joinRoleRoomBtn').prop('disabled', !$(this).val());
+        });
+
+        // Enable/disable customer chat button based on selection
+        $(document).on('change', '#customerSelect', function() {
+            $('#chatWithCustomerBtn').prop('disabled', !$(this).val());
+        });
+
+        // Load customers for admin and staff
+        if (userRole === 'admin' || ['owner', 'mandor', 'spv'].includes(userRole)) {
+            self.loadCustomersForChat();
         }
+
+        // Clean up modal when hidden
+        $('#newChatModal').on('hidden.bs.modal', function() {
+            $(this).remove();
+            $(document).off('click', '.chat-option-btn');
+        });
+    },
+
+    // Get chat options based on user role
+    getChatOptions: function(userRole) {
+        let options = '';
+
+        // ADMIN: Bisa akses semua room
+        if (userRole === 'admin') {
+            options += `
+                <div class="chat-option">
+                    <h6>👥 Chat dengan Role</h6>
+                    <p>Admin bisa join ke room role siapa saja</p>
+                    <div class="input-group">
+                        <select id="targetRoleSelect" class="form-select">
+                            <option value="">Pilih Role...</option>
+                            <option value="admin">👑 Admin Team</option>
+                            <option value="owner">🏢 Owner Team</option>
+                            <option value="mandor">👷 Mandor Team</option>
+                            <option value="spv">📋 Supervisor Team</option>
+                            <option value="customer">👤 Customer</option>
+                        </select>
+                        <button class="btn btn-primary chat-option-btn ms-2" data-room-type="role-chat" disabled id="joinRoleRoomBtn">
+                            <i class="fas fa-comments"></i> Chat
+                        </button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="chat-option">
+                    <h6>👤 Chat dengan Customer</h6>
+                    <p>Chat dengan customer tertentu</p>
+                    <div class="input-group">
+                        <select id="customerSelect" class="form-select">
+                            <option value="">Pilih Customer...</option>
+                        </select>
+                        <button class="btn btn-success chat-option-btn ms-2" data-room-type="customer-chat" disabled id="chatWithCustomerBtn">
+                            <i class="fas fa-comments"></i> Chat
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // OWNER/MANDOR/SPV: Internal team + customer chat
+        else if (['owner', 'mandor', 'spv'].includes(userRole)) {
+            options += `
+                <div class="chat-option">
+                    <h6>👥 Internal Team Chat</h6>
+                    <p>Chat dengan internal team</p>
+                    <div class="team-options">
+                        <button class="btn btn-outline-primary chat-option-btn me-2" data-room-type="team" data-room-id="management">
+                            <i class="fas fa-briefcase"></i> Management
+                        </button>
+                        <button class="btn btn-outline-primary chat-option-btn me-2" data-room-type="team" data-room-id="sales">
+                            <i class="fas fa-users"></i> Sales Team
+                        </button>
+                        <button class="btn btn-outline-primary chat-option-btn me-2" data-room-type="team" data-room-id="finance">
+                            <i class="fas fa-calculator"></i> Finance
+                        </button>
+                        <button class="btn btn-outline-primary chat-option-btn" data-room-type="team" data-room-id="construction">
+                            <i class="fas fa-hard-hat"></i> Construction
+                        </button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="chat-option">
+                    <h6>👤 Chat dengan Customer</h6>
+                    <p>Chat dengan customer tertentu</p>
+                    <div class="input-group">
+                        <select id="customerSelect" class="form-select">
+                            <option value="">Pilih Customer...</option>
+                        </select>
+                        <button class="btn btn-success chat-option-btn ms-2" data-room-type="customer-chat" disabled id="chatWithCustomerBtn">
+                            <i class="fas fa-comments"></i> Chat
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // CUSTOMER: Sales agent chat
+        else if (userRole === 'customer') {
+            options += `
+                <div class="chat-option">
+                    <h6>🏠 Chat Sales Agent</h6>
+                    <p>Chat dengan sales agent tentang pembelian rumah Anda</p>
+                    <button class="btn btn-success chat-option-btn" data-room-type="booking" data-room-id="my">
+                        <i class="fas fa-home"></i> Chat Sales Agent
+                    </button>
+                </div>
+            `;
+        }
+
+        return options;
     },
 
     // Scroll to bottom of messages
@@ -864,7 +1269,21 @@ const ChatApp = {
 
     // Format timestamp
     formatTimestamp: function(timestamp) {
-        const date = new Date(timestamp);
+        if (!timestamp) {
+            return 'Just now';
+        }
+
+        let date = new Date(timestamp);
+
+        if (isNaN(date.getTime())) {
+            const normalized = String(timestamp).replace(' ', 'T');
+            date = new Date(normalized + 'Z');
+        }
+
+        if (isNaN(date.getTime())) {
+            return 'Just now';
+        }
+
         const now = new Date();
         const diff = now - date;
 
@@ -892,6 +1311,102 @@ const ChatApp = {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    },
+
+    // Get CSRF token from cookie
+    getCsrfToken: function() {
+        const cookieName = 'csrf_cookie_name';
+        const name = cookieName + '=';
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i];
+            while (cookie.charAt(0) === ' ') {
+                cookie = cookie.substring(1);
+            }
+            if (cookie.indexOf(name) === 0) {
+                return cookie.substring(name.length, cookie.length);
+            }
+        }
+        return '';
+    },
+
+    // Get friendly display name for chat room
+    getDisplayRoomName: function(room) {
+        if (!room) return 'Chat';
+
+        if (room.startsWith('customer-')) {
+            const customerId = room.replace('customer-', '');
+            const customerName = this.state.customerNames[customerId];
+
+            if (customerName) {
+                return customerName;
+            }
+
+            if (this.config.customerId && String(this.config.customerId) === String(customerId) && this.config.currentUserName) {
+                return this.config.currentUserName;
+            }
+
+            return `Customer ${customerId}`;
+        }
+
+        if (room.startsWith('role-')) {
+            const roleName = room.replace('role-', '');
+            const labels = {
+                admin: 'Admin Team',
+                owner: 'Owner Team',
+                mandor: 'Mandor Team',
+                spv: 'Supervisor Team',
+                customer: 'Customer Team',
+            };
+            return labels[roleName] || roleName.charAt(0).toUpperCase() + roleName.slice(1);
+        }
+
+        if (room.startsWith('team-')) {
+            const teamName = room.replace('team-', '');
+            return teamName.charAt(0).toUpperCase() + teamName.slice(1);
+        }
+
+        return room;
+    },
+
+    // Load customers for admin chat
+    loadCustomersForChat: function() {
+        const self = this;
+
+        $.ajax({
+            url: '/data-customer/json',
+            method: 'GET',
+            success: function(response) {
+                const $select = $('#customerSelect');
+                $select.empty();
+
+                // Handle DataTables format response
+                const customers = response.data || response;
+                self.state.customerNames = {};
+
+                if (customers && customers.length > 0) {
+                    $select.append('<option value="">Pilih Customer...</option>');
+
+                    customers.forEach(function(customer) {
+                        self.state.customerNames[customer.id] = customer.nama;
+                        $select.append(`<option value="${customer.id}">${customer.nama} (${customer.email || customer.telepon || 'No contact'})</option>`);
+                    });
+
+                    // Enable chat button when customer selected
+                    $select.on('change', function() {
+                        $('#chatWithCustomerBtn').prop('disabled', !$(this).val());
+                    });
+                } else {
+                    $select.append('<option value="">No customers available</option>');
+                }
+            },
+            error: function() {
+                const $select = $('#customerSelect');
+                $select.empty();
+                $select.append('<option value="">Error loading customers</option>');
+            }
+        });
     },
 };
 

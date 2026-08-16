@@ -12,25 +12,30 @@ class Pusher
     /**
      * Pusher configuration array
      */
-    public array $config = [
-        'app_id' => env('PUSHER_APP_ID', ''),
-        'key' => env('PUSHER_KEY', ''),
-        'secret' => env('PUSHER_SECRET', ''),
-        'cluster' => env('PUSHER_CLUSTER', 'mt1'),
-        'use_tls' => true,
+    public array $config = [];
 
-        // Optional encryption
-        'encryption_master_key' => env('PUSHER_ENCRYPTION_KEY', ''),
+    public function __construct()
+    {
+        $this->config = [
+            'app_id' => env('PUSHER_APP_ID', ''),
+            'key' => env('PUSHER_KEY', ''),
+            'secret' => env('PUSHER_SECRET', ''),
+            'cluster' => env('PUSHER_CLUSTER', 'mt1'),
+            'use_tls' => true,
 
-        // Timeout settings
-        'timeout' => 30,
+            // Optional encryption
+            'encryption_master_key' => env('PUSHER_ENCRYPTION_KEY', ''),
 
-        // Notification host (optional)
-        'notification_host' => env('PUSHER_NOTIFICATION_HOST', ''),
+            // Timeout settings
+            'timeout' => 30,
 
-        // Debug mode (set to true in development)
-        'debug' => env('PUSHER_DEBUG', false),
-    ];
+            // Notification host (optional)
+            'notification_host' => env('PUSHER_NOTIFICATION_HOST', ''),
+
+            // Debug mode (set to true in development)
+            'debug' => env('PUSHER_DEBUG', false),
+        ];
+    }
 
     /**
      * Get Pusher configuration for a specific chat type

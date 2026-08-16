@@ -106,24 +106,14 @@ class CreateMessagesTable extends Migration
         $this->forge->addKey('is_read');
         $this->forge->addKey('created_at');
         $this->forge->addKey('reply_to_id');
+        $this->forge->addKey(['chat_room', 'created_at']);
+        $this->forge->addKey(['chat_room', 'is_read']);
 
-        // Add foreign key constraints if tables exist
-        // Note: These should be added after users and customers tables are created
-        // $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'SET NULL');
-        // $this->forge->addForeignKey('customer_id', 'customer', 'id', 'CASCADE', 'SET NULL');
-
-        $this->forge->createTable('messages');
-
-        // Create index for efficient queries
-        $this->db->query('CREATE INDEX idx_chat_room_created ON messages(chat_room, created_at DESC)');
-        // Note: Partial indexes not supported in MySQL, using regular index instead
-        $this->db->query('CREATE INDEX idx_unread_messages ON messages(chat_room, is_read)');
+        $this->forge->createTable('messages', true);
     }
 
     public function down()
     {
-        $this->db->query('DROP INDEX IF EXISTS idx_chat_room_created ON messages');
-        $this->db->query('DROP INDEX IF EXISTS idx_unread_messages ON messages');
         $this->forge->dropTable('messages', true);
     }
 }

@@ -192,6 +192,7 @@ $routes->post('/perumahan/rumah-booking/(:num)/berkas', 'PerumahanCustomerContro
 // Chat Routes
 $routes->get('/chat', 'ChatController::index');
 $routes->post('/chat/send', 'ChatController::send');
+$routes->post('/chat/upload', 'ChatController::upload');
 $routes->get('/chat/history/(:any)', 'ChatController::history/$1');
 $routes->post('/chat/read', 'ChatController::markAsRead');
 $routes->get('/chat/unread', 'ChatController::unread');

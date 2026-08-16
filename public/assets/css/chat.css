@@ -498,3 +498,116 @@
 .conversations-list::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* New Chat Modal Styles */
+#newChatModal .modal-dialog {
+    margin-top: 100px;
+    max-width: 600px;
+}
+
+.chat-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chat-option {
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.chat-option h6 {
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-option p {
+    margin-bottom: 15px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.team-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.role-selection {
+    margin-bottom: 15px;
+}
+
+.role-selection label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #495057;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.chat-option-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.chat-option-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chat-option-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chat-option-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.chat-option-btn i {
+    font-size: 1rem;
+}
+
+/* Input group styling */
+.input-group {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.input-group .form-select {
+    flex: 1;
+}
+
+/* Different color schemes for chat options */
+.chat-option:nth-child(1) {
+    border-left: 4px solid #667eea;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.chat-option:nth-child(2) {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.chat-option {
+    transition: all 0.3s ease;
+}
+
+.chat-option:hover {
+    transform: translateX(2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}

@@ -111,48 +111,33 @@ class PembayaranRumahSeeder extends Seeder
         }
 
         if ($this->db->table('pembelian_rumah')->countAllResults() === 0) {
+            $dewiId = $this->customerIdByNama('Dewi Lestari');
+            $budiId = $this->customerIdByNama('Budi Santoso');
+
+            if ($dewiId === null || $budiId === null) {
+                return;
+            }
+
             $pembelianData = [
                 [
-                    'customer_id'         => 1,
-                    'perumahan_id'        => 1,
-                    'tanggal_pembelian'   => '2025-01-15',
-                    'harga_beli'          => 150000000,
-                    'status_pembelian'    => 'DP',
-                    'metode_pembayaran'   => 'KPR',
-                    'lama_cicilan_tahun'  => 10,
-                    'status_dokumen'      => 'Lengkap',
-                    'created_at'          => $now,
-                ],
-                [
-                    'customer_id'         => 2,
-                    'perumahan_id'        => 2,
-                    'tanggal_pembelian'   => '2025-02-10',
-                    'harga_beli'          => 200000000,
-                    'status_pembelian'    => 'Cicil',
-                    'metode_pembayaran'   => 'KPR',
-                    'lama_cicilan_tahun'  => 10,
-                    'status_dokumen'      => 'Lengkap',
-                    'created_at'          => $now,
-                ],
-                [
-                    'customer_id'         => 3,
+                    'customer_id'         => $dewiId,
                     'perumahan_id'        => 3,
-                    'tanggal_pembelian'   => '2025-03-05',
-                    'harga_beli'          => 155000000,
+                    'tanggal_pembelian'   => '2025-03-20',
+                    'harga_beli'          => 650000000,
                     'status_pembelian'    => 'DP',
-                    'metode_pembayaran'   => 'Tunai',
+                    'metode_pembayaran'   => 'Cash',
                     'lama_cicilan_tahun'  => null,
                     'status_dokumen'      => 'Pending',
                     'created_at'          => $now,
                 ],
                 [
-                    'customer_id'         => 4,
-                    'perumahan_id'        => 4,
-                    'tanggal_pembelian'   => '2025-04-20',
-                    'harga_beli'          => 280000000,
-                    'status_pembelian'    => 'Proses',
-                    'metode_pembayaran'   => 'KPR',
-                    'lama_cicilan_tahun'  => 15,
+                    'customer_id'         => $budiId,
+                    'perumahan_id'        => 1,
+                    'tanggal_pembelian'   => '2025-02-15',
+                    'harga_beli'          => 350000000,
+                    'status_pembelian'    => 'Cicil',
+                    'metode_pembayaran'   => 'Cicilan Internal',
+                    'lama_cicilan_tahun'  => 5,
                     'status_dokumen'      => 'Lengkap',
                     'created_at'          => $now,
                 ],
@@ -162,6 +147,8 @@ class PembayaranRumahSeeder extends Seeder
         }
 
         if ($this->db->table('pembayaran_rumah')->countAllResults() === 0) {
+            $this->ensureApprovalColumns();
+
             $pembelianIds = array_column(
                 $this->db->table('pembelian_rumah')->select('id')->orderBy('id', 'ASC')->get()->getResultArray(),
                 'id'
@@ -226,6 +213,48 @@ class PembayaranRumahSeeder extends Seeder
             if ($pembayaranData !== []) {
                 $this->db->table('pembayaran_rumah')->insertBatch($pembayaranData);
             }
+        }
+    }
+
+    private function customerIdByNama(string $nama): ?int
+    {
+        $row = $this->db->table('customer')->select('id')->where('nama', $nama)->get()->getRowArray();
+
+        return $row ? (int) $row['id'] : null;
+    }
+
+    private function ensureApprovalColumns(): void
+    {
+        $forge = \Config\Database::forge();
+        $fields = $this->db->getFieldNames('pembayaran_rumah');
+
+        if (!in_array('status_pengajuan', $fields, true)) {
+            $forge->addColumn('pembayaran_rumah', [
+                'status_pengajuan' => [
+                    'type'       => 'ENUM',
+                    'constraint' => ['pending', 'disetujui', 'ditolak'],
+                    'default'    => 'disetujui',
+                ],
+            ]);
+        }
+
+        if (!in_array('approved_at', $fields, true)) {
+            $forge->addColumn('pembayaran_rumah', [
+                'approved_at' => [
+                    'type' => 'DATETIME',
+                    'null' => true,
+                ],
+            ]);
+        }
+
+        if (!in_array('approved_by', $fields, true)) {
+            $forge->addColumn('pembayaran_rumah', [
+                'approved_by' => [
+                    'type'     => 'INT',
+                    'unsigned' => true,
+                    'null'     => true,
+                ],
+            ]);
         }
     }
 }

@@ -38,6 +38,95 @@ class MessageModel extends Model
         'message_type' => 'permit_empty|in_list[text,image,file]',
     ];
 
+    protected function initialize()
+    {
+        if ($this->db->tableExists($this->table)) {
+            return;
+        }
+
+        $forge = \Config\Database::forge();
+        $forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'auto_increment' => true,
+            ],
+            'chat_room' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+            ],
+            'user_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'customer_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'message' => [
+                'type' => 'TEXT',
+            ],
+            'message_type' => [
+                'type' => 'ENUM',
+                'constraint' => ['text', 'image', 'file'],
+                'default' => 'text',
+            ],
+            'attachment_url' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => true,
+            ],
+            'is_read' => [
+                'type' => 'BOOLEAN',
+                'default' => false,
+            ],
+            'read_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'sender_name' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+                'null' => true,
+            ],
+            'sender_role' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => true,
+            ],
+            'reply_to_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true,
+            ],
+            'metadata' => [
+                'type' => 'JSON',
+                'null' => true,
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'deleted_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+        $forge->addKey('id', true);
+        $forge->addKey('chat_room');
+        $forge->createTable($this->table, true);
+    }
+
     protected $validationMessages = [
         'chat_room' => [
             'required' => 'Chat room identifier is required',
@@ -73,13 +162,46 @@ class MessageModel extends Model
      * @param int|null $userId User ID (optional)
      * @return int Unread count
      */
-    public function getUnreadCount(string $chatRoom, ?int $userId = null): int
+    public function getUnreadCount(string $chatRoom, ?int $userId = null, ?int $customerId = null): int
     {
+        if ($userId === null && $customerId === null) {
+            return 0;
+        }
+
+        $participant = db_connect()->table('chat_participants')
+            ->where('chat_room', $chatRoom)
+            ->where('left_at', null);
+
+        if ($userId !== null && $customerId !== null) {
+            $participant->groupStart()
+                ->where('user_id', $userId)
+                ->orWhere('customer_id', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $participant->where('user_id', $userId);
+        } else {
+            $participant->where('customer_id', $customerId);
+        }
+
+        $row = $participant->get()->getRowArray();
+        $lastReadId = (int) ($row['last_message_id'] ?? 0);
+
         $builder = $this->where('chat_room', $chatRoom)
-            ->where('is_read', false);
+            ->where('deleted_at', null)
+            ->where('id >', $lastReadId);
 
         if ($userId !== null) {
-            $builder->where('user_id !=', $userId);
+            $builder->groupStart()
+                ->where('user_id !=', $userId)
+                ->orWhere('user_id', null)
+                ->groupEnd();
+        }
+
+        if ($customerId !== null) {
+            $builder->groupStart()
+                ->where('customer_id !=', $customerId)
+                ->orWhere('customer_id', null)
+                ->groupEnd();
         }
 
         return $builder->countAllResults();
@@ -93,22 +215,48 @@ class MessageModel extends Model
      * @param int|null $lastMessageId Last message ID to mark up to
      * @return bool Success status
      */
-    public function markAsRead(string $chatRoom, int $userId, ?int $lastMessageId = null): bool
+    public function markAsRead(string $chatRoom, ?int $userId = null, ?int $customerId = null, ?int $lastMessageId = null): bool
     {
-        $data = [
-            'is_read' => true,
-            'read_at' => date('Y-m-d H:i:s'),
-        ];
-
-        $builder = $this->where('chat_room', $chatRoom)
-            ->where('user_id !=', $userId)
-            ->where('is_read', false);
-
-        if ($lastMessageId !== null) {
-            $builder->where('id <=', $lastMessageId);
+        if ($userId === null && $customerId === null) {
+            return false;
         }
 
-        return $builder->update($data);
+        $db = $this->db;
+        $query = $db->table($this->table)
+            ->where('chat_room', $chatRoom)
+            ->where('is_read', false);
+
+        if ($userId !== null && $customerId !== null) {
+            $query->groupStart()
+                ->where('user_id !=', $userId)
+                ->orWhere('customer_id !=', $userId)
+                ->orWhere('user_id !=', $customerId)
+                ->orWhere('customer_id !=', $customerId)
+                ->groupEnd();
+        } elseif ($userId !== null) {
+            $query->groupStart()
+                ->where('user_id !=', $userId)
+                ->orWhere('customer_id !=', $userId)
+                ->groupEnd();
+        } elseif ($customerId !== null) {
+            $query->groupStart()
+                ->where('user_id !=', $customerId)
+                ->orWhere('customer_id !=', $customerId)
+                ->groupEnd();
+        }
+
+        if ($lastMessageId !== null) {
+            $query->where('id <=', $lastMessageId);
+        }
+
+        if ($query->get()->getRowArray() === null) {
+            return false;
+        }
+
+        return $query->set([
+            'is_read' => true,
+            'read_at' => date('Y-m-d H:i:s'),
+        ])->update();
     }
 
     /**
@@ -118,35 +266,83 @@ class MessageModel extends Model
      * @param int $limit Number of conversations
      * @return array Recent conversations
      */
-    public function getRecentConversations(int $userId, int $limit = 10): array
+    public function getRecentConversations(?int $userId = null, ?int $customerId = null, int $limit = 10, string $role = ''): array
     {
+        if ($userId === null && $customerId === null && !in_array($role, ['admin', 'owner', 'mandor', 'spv'], true)) {
+            return [];
+        }
+
         $db = \Config\Database::connect();
 
-        $query = $db->query("
+        $conditions = [];
+        $params = [];
+
+        if ($userId !== null) {
+            $conditions[] = 'cp.user_id = ?';
+            $params[] = $userId;
+        }
+
+        if ($customerId !== null) {
+            $conditions[] = 'cp.customer_id = ?';
+            $params[] = $customerId;
+            $conditions[] = 'cp.chat_room = ?';
+            $params[] = 'customer-' . $customerId;
+        }
+
+        if (in_array($role, ['admin', 'owner', 'mandor', 'spv'], true)) {
+            $conditions[] = 'cp.role = ?';
+            $params[] = $role;
+        }
+
+        if ($role === 'admin') {
+            $conditions[] = "cp.chat_room LIKE 'customer-%'";
+        }
+
+        if (empty($conditions)) {
+            return [];
+        }
+
+        $whereSql = '(' . implode(' OR ', $conditions) . ')';
+
+        $query = $db->query(
+            "
             SELECT
-                m.chat_room,
+                cp.chat_room,
                 MAX(m.created_at) as last_message_at,
-                COUNT(CASE WHEN m.is_read = 0 AND m.user_id != ? THEN 1 END) as unread_count,
-                (SELECT message FROM {$this->table} m2
-                 WHERE m2.chat_room = m.chat_room
-                 AND m2.deleted_at IS NULL
-                 ORDER BY m2.created_at DESC
-                 LIMIT 1) as last_message
-            FROM {$this->table} m
-            INNER JOIN (
-                SELECT DISTINCT chat_room
-                FROM {$this->table}
-                WHERE user_id = ? OR customer_id IN (
-                    SELECT id FROM customer WHERE user_id = ?
-                )
-            ) distinct_rooms ON m.chat_room = distinct_rooms.chat_room
-            WHERE m.deleted_at IS NULL
-            GROUP BY m.chat_room
+                (
+                    SELECT m2.message
+                    FROM {$this->table} m2
+                    WHERE m2.chat_room = cp.chat_room
+                    AND m2.deleted_at IS NULL
+                    ORDER BY m2.created_at DESC, m2.id DESC
+                    LIMIT 1
+                ) as last_message,
+                (
+                    SELECT m2.user_id
+                    FROM {$this->table} m2
+                    WHERE m2.chat_room = cp.chat_room
+                    AND m2.deleted_at IS NULL
+                    ORDER BY m2.created_at DESC, m2.id DESC
+                    LIMIT 1
+                ) as last_message_user_id
+            FROM chat_participants cp
+            LEFT JOIN {$this->table} m ON m.chat_room = cp.chat_room AND m.deleted_at IS NULL
+            WHERE cp.left_at IS NULL
+            AND {$whereSql}
+            GROUP BY cp.chat_room
             ORDER BY last_message_at DESC
             LIMIT ?
-        ", [$userId, $userId, $userId, $limit]);
+            ",
+            array_merge($params, [$limit])
+        );
 
-        return $query->getResultArray();
+        $rows = $query->getResultArray();
+
+        foreach ($rows as &$row) {
+            $row['unread_count'] = $this->getUnreadCount($row['chat_room'], $userId, $customerId);
+        }
+
+        return $rows;
     }
 
     /**
@@ -204,7 +400,8 @@ class MessageModel extends Model
         $query = $db->query("
             SELECT DISTINCT
                 cp.participant_name,
-                cp.user_id
+                cp.user_id,
+                cp.customer_id
             FROM chat_participants cp
             WHERE cp.chat_room = ?
             AND cp.typing_status = 'typing'
