@@ -11,17 +11,18 @@ class PembelianbahanController extends BaseController
     public function datapembelian()
     {
         $model = new PembelianBahanModel();
-        $data['pembelianbahan'] = $model->findAll();
+        $data['pembelianbahan'] = $model->orderBy('created_at', 'DESC')->findAll();
         $data['pageTitle'] = 'Pembelian Bahan';
         $data['useDataTables'] = true;
-        return view ('page/pembelianbahan/data_pembelian_bahan', $data);
+        return view('page/pembelianbahan/data_pembelian_bahan', $data);
     }
 
     public function json() {
         $request = service('request');
         $model = new PembelianBahanModel();
 
-        $searchValue = $request->getGet('search')['value'] ?? '';
+        $search = $request->getGet('search');
+        $searchValue = is_array($search) ? (string) ($search['value'] ?? '') : '';
         $start = $request->getGet('start') ?? 0;
         $length = $request->getGet('length') ?? 10;
 
@@ -29,18 +30,17 @@ class PembelianbahanController extends BaseController
 
         if ($searchValue) {
             $model->groupStart()
-            ->like('nomor_nota', $searchValue)
-            ->orLike('tanggal', $searchValue)
-            ->orLike('tanggal', $searchValue)
-            ->orLike('supplier', $searchValue)
-            ->orlike('total_harga', $searchValue)
-            ->groupEnd();
+                ->like('nomor_nota', $searchValue)
+                ->orLike('tanggal', $searchValue)
+                ->orLike('supplier', $searchValue)
+                ->orLike('total_harga', $searchValue)
+                ->groupEnd();
         }
 
         $filteredRecords = $model->countAllResults(false);
 
         $data = $model->orderBy('created_at', 'DESC')
-        ->findAll($length, $start);
+            ->findAll($length, $start);
 
         return $this->response->setJSON([
             'draw' => (int) $request->getGet('draw'),
@@ -52,7 +52,7 @@ class PembelianbahanController extends BaseController
     }
 
     public function create() {
-        return view('page/pembelianbahan/create');
+        return redirect()->to('/data-pembelian-bahan');
     }
 
    public function update($id) {

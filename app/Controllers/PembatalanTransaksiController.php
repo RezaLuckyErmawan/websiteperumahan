@@ -3,56 +3,63 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\PembatalanModel;
-use App\Models\PembelianRumahModel;
-use App\Models\PerumahanModel;
-use CodeIgniter\HTTP\ResponseInterface;
 
 class PembatalanTransaksiController extends BaseController
 {
     public function pembatalan()
     {
-        $pembatalan = new PembatalanModel();
-        $data['pembatalan_transaksi'] = $pembatalan->orderBy('Created_at', 'DESC');
-        return view('page/pembatalan/pembatalan_transaksi', $data);
+        return view('page/pembatalan/pembatalan_transaksi', [
+            'pageTitle' => 'Pembatalan Transaksi',
+            'useDataTables' => true,
+        ]);
     }
 
-    public function json() {
+    public function json()
+    {
         $request = service('request');
+        $db = db_connect();
 
-        $pembatalan = new PembatalanModel();
-        $perumahan = new PerumahanModel();
-        $pembelian = new PembelianRumahModel();
+        $search = $request->getGet('search');
+        $searchValue = is_array($search) ? trim((string) ($search['value'] ?? '')) : '';
+        $start = max(0, (int) ($request->getGet('start') ?? 0));
+        $length = (int) ($request->getGet('length') ?? 10);
+        $length = $length > 0 ? $length : 10;
 
-        $searchValue = $request->getGet('search')['value'] ?? '';
-        $start = $request->getGet('start') ?? 0;
-        $length = $request->getGet('length') ?? 0;
+        $baseBuilder = $db->table('pembatalan_transaksi');
+        $totalRecords = (clone $baseBuilder)->countAllResults();
 
-        $builder = $pembatalan
-        ->select('pembatalan_transaksi.*, perumahan.kode_rumah, customer.nama, pembelian_rumah.harga_beli, pembelian_rumah.tanggal_pembelian')
-        ->join('perumahan', 'perumahan.id = pembatalan_transaksi.perumahan_id')
-        ->join('customer', 'customer.id = pembatalan_transaksi.customer_id')
-        ->join('pembelian_rumah', 'pembelian_rumah.id = pembatalan_transaksi.pembelian_id')
-        ;
+        $builder = $db->table('pembatalan_transaksi pt')
+            ->select('
+                pt.*,
+                perumahan.kode_rumah,
+                customer.nama,
+                pembelian_rumah.harga_beli,
+                pembelian_rumah.tanggal_pembelian
+            ')
+            ->join('perumahan', 'perumahan.id = pt.perumahan_id')
+            ->join('customer', 'customer.id = pt.customer_id')
+            ->join('pembelian_rumah', 'pembelian_rumah.id = pt.pembelian_id');
 
-        if($searchValue) {
-            $builder = $builder->groupStart()
-            ->like('kode_rumah', $searchValue)
-            ->orLike('nama', $searchValue)
-            ->orLike('harga_beli', $searchValue)
-            ->orLike('keterangan_pembatalan', $searchValue)
-            ->groupEnd();
+        if ($searchValue !== '') {
+            $builder->groupStart()
+                ->like('perumahan.kode_rumah', $searchValue)
+                ->orLike('customer.nama', $searchValue)
+                ->orLike('pembelian_rumah.harga_beli', $searchValue)
+                ->orLike('pt.keterangan_pembatalan', $searchValue)
+                ->groupEnd();
         }
 
-        $data = $builder->orderBy('created_at', 'DESC')
-        ->findAll($length, $start);
-        $total = $pembatalan->countAll();
-        $filtered = $searchValue ? count($data) : $total;
+        $filteredRecords = (clone $builder)->countAllResults();
+        $data = $builder
+            ->orderBy('pt.created_at', 'DESC')
+            ->limit($length, $start)
+            ->get()
+            ->getResultArray();
 
         return $this->response->setJSON([
             'draw' => (int) $request->getGet('draw'),
-            'recordsTotal' => $total,
-            'recordsFiltered' => $filtered,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
             'data' => $data,
         ]);
     }

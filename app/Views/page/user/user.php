@@ -97,11 +97,23 @@
 
                     <div class="mb-3">
                         <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select class="form-control" name="role" required>
+                        <select class="form-control" name="role" required onchange="toggleCustomerField(this.value)">
                             <option value="admin">Admin</option>
                             <option value="mandor">Mandor</option>
                             <option value="spv">SPV</option>
                             <option value="customer">Customer</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="customerField" style="display:none;">
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select class="form-control" name="customer_id">
+                            <option value="">Pilih Customer</option>
+                            <?php foreach (($customers ?? []) as $customer): ?>
+                                <option value="<?= esc($customer['id']) ?>">
+                                    <?= esc($customer['nama']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -148,6 +160,18 @@
                             <option value="mandor">Mandor</option>
                             <option value="spv">SPV</option>
                             <option value="customer">Customer</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="editCustomerField" style="display:none;">
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select class="form-control" name="customer_id">
+                            <option value="">Pilih Customer</option>
+                            <?php foreach (($customers ?? []) as $customer): ?>
+                                <option value="<?= esc($customer['id']) ?>">
+                                    <?= esc($customer['nama']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -197,13 +221,21 @@
 
 <?= $this->section('scripts') ?>
 <script>
+const userUrls = {
+    json: <?= json_encode(site_url('data-user/json')) ?>,
+    store: <?= json_encode(site_url('data-user/store')) ?>,
+    edit: <?= json_encode(site_url('data-user/edit')) ?>,
+    update: <?= json_encode(site_url('data-user/update')) ?>,
+    delete: <?= json_encode(site_url('data-user/delete')) ?>,
+};
+
 $(document).ready(function() {
     $('#userTable').DataTable({
         processing: true,
         serverSide: true,
         pageLength: 5,
         lengthMenu: [5, 10, 25, 50],
-        ajax: '/data-user/json',
+        ajax: userUrls.json,
         columns: [
             { data: 'id' },
             { data: 'username' },
@@ -250,17 +282,37 @@ function openCreateForm() {
     $('#modalForm form')[0].reset();
     $('#modalForm input[name=id]').val('');
     $('#modalFormLabel').text('Tambah User');
-    $('#modalForm').modal('show');
+    toggleCustomerField('', 'customerField');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm')).show();
+}
+
+function toggleCustomerField(role, fieldId = 'customerField') {
+    const isCustomer = String(role).toLowerCase() === 'customer';
+    const customerField = document.getElementById(fieldId);
+    if (!customerField) {
+        return;
+    }
+
+    customerField.style.display = isCustomer ? '' : 'none';
+    const customerSelect = customerField.querySelector('select[name="customer_id"]');
+    if (customerSelect) {
+        customerSelect.required = isCustomer;
+        if (!isCustomer) {
+            customerSelect.value = '';
+        }
+    }
 }
 
 function editData(id) {
-    $.get(`/data-user/edit/${id}`, function (data) {
+    $.get(`${userUrls.edit}/${id}`, function (data) {
         $('#modalEdit input[name=id]').val(data.id);
         $('#modalEdit input[name=username]').val(data.username);
         $('#modalEdit input[name=nama]').val(data.nama);
         $('#modalEdit select[name=role]').val(data.role);
+        $('#modalEdit select[name=customer_id]').val(data.customer_id || '');
         $('#modalEditLabel').text('Edit User');
-        $('#modalEdit').modal('show');
+        toggleCustomerField(data.role, 'editCustomerField');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEdit')).show();
     });
 }
 
@@ -274,7 +326,7 @@ function hapusData(id) {
 $('#confirmDeleteBtn').on('click', function () {
     if (idToDelete) {
         $.ajax({
-            url: `/data-user/delete/${idToDelete}`,
+            url: `${userUrls.delete}/${idToDelete}`,
             type: 'DELETE',
             success: function () {
                 $('#confirmDeleteModal').modal('hide');
@@ -290,17 +342,20 @@ $('#confirmDeleteBtn').on('click', function () {
 
 function simpanForm() {
     let formData = new FormData($('#modalForm form')[0]);
+    let id = $('#modalForm input[name=id]').val();
+    let url = id ? `${userUrls.update}/${id}` : userUrls.store;
+    let successMessage = id ? 'User berhasil diperbarui' : 'User berhasil ditambahkan';
 
     $.ajax({
-        url: '/data-user/store',
+        url: url,
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function () {
-            $('#modalForm').modal('hide');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm')).hide();
             $('#userTable').DataTable().ajax.reload();
-            showSuccess('User berhasil ditambahkan');
+            showSuccess(successMessage);
         },
         error: function (xhr) {
             let errorMessage = 'Terjadi kesalahan';
@@ -317,7 +372,7 @@ function updateForm() {
     let formData = new FormData($('#modalEdit form')[0]);
 
     $.ajax({
-        url: `/data-user/update/${id}`,
+        url: `${userUrls.update}/${id}`,
         type: 'POST',
         data: formData,
         processData: false,

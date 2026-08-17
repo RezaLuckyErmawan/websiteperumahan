@@ -43,10 +43,15 @@ class DashboardController extends BaseController
         'totalpembelian'  => $totalpembelian,
         'stoktotal'       => $stoktotal,
     ]);
-}
+    }
 
     public function landing() {
-        return view('page/landingpage');
+        $perumahan = new PerumahanModel();
+
+        return view('page/landingpage', [
+            'pageTitle' => 'GreenHome.id',
+            'rumah' => $perumahan->orderBy('created_at', 'DESC')->findAll(),
+        ]);
     }
 
 

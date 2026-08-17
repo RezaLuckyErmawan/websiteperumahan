@@ -2,35 +2,8 @@ let idToDelete = null;
 
 $(document).ready(function () {
   const table = $('#detailPembelianTable').DataTable({
-    processing: true,
-    serverSide: true,
     pageLength: 5,
     lengthMenu: [5, 10, 25, 50],
-    ajax: '/detail-pembelian/json',
-    columns: [
-      { data: 'nomor_nota' },
-      { data: 'nama_bahan' },
-      { data: 'jumlah' },
-      {
-        data: 'harga_satuan',
-        render: data => 'Rp ' + parseFloat(data).toLocaleString('id-ID')
-      },
-      {
-        data: 'subtotal',
-        render: data => 'Rp ' + parseFloat(data).toLocaleString('id-ID')
-      },
-      {
-        data: 'id',
-        render: (data) => `
-          <button class="btn btn-sm btn-primary" onclick="editData(${data})">
-          <i class="fas fa-edit"></i> Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="hapusData(${data})">
-          <i class="fas fa-trash"></i> Hapus</button>
-        `,
-        orderable: false,
-        searchable: false
-      }
-    ],
     initComplete: function () {
             $('#detailPembelianTable_length')
         .html(`
@@ -56,18 +29,6 @@ $('#detailPembelianTable_filter input')
         .prepend('<i class="text-primary me-2"></i>');
     }
   });
-  
-
-  $('#formDetailPembelian').submit(function (e) {
-    const id = $('#id').val();
-    const url = id ? `/detail-pembelian-bahan/update/${id}` : `/detail-pembelian-bahan/store`;
-
-    $.post(url, $(this).serialize(), function () {
-      $('#modalDetailForm').modal('hide');
-      table.ajax.reload();
-      showSuccess(id ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
-    });
-  });
 
   $('#btnDeleteConfirm').click(function () {
     if (idToDelete) {
@@ -75,9 +36,9 @@ $('#detailPembelianTable_filter input')
         url: `/detail-pembelian-bahan/delete/${idToDelete}`,
         type: 'GET',
         success: function () {
-          $('#modalConfirmDelete').modal('hide');
-          table.ajax.reload();
+          bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmDeleteModal')).hide();
           showSuccess('Data berhasil dihapus!');
+          setTimeout(() => window.location.reload(), 1200);
         }
       });
     }
@@ -115,12 +76,12 @@ $(document).ready(function () {
       url: url,
       method: 'POST',
       data: form.serialize(),
-      success: function (res) {
-        $('#modalDetailForm').modal('hide');
-        $('#detailPembelianTable').DataTable().ajax.reload();
+      success: function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetailForm')).hide();
         showSuccess(id ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
+        setTimeout(() => window.location.reload(), 1200);
       },
-      error: function (xhr, status, error) {
+      error: function (xhr) {
         console.error(xhr.responseText);
         alert('Gagal menyimpan data!');
       }
@@ -136,11 +97,11 @@ function editData(id) {
     $('#jumlah').val(data.detail.jumlah);
     $('#harga_satuan').val(data.detail.harga_satuan);
     $('#modalDetailLabel').text('Edit Detail Pembelian');
-    $('#modalDetailForm').modal('show');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetailForm')).show();
   });
 }
 
 function hapusData(id) {
   idToDelete = id;
-  $('#modalConfirmDelete').modal('show');
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmDeleteModal')).show();
 }

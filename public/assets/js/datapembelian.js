@@ -2,32 +2,8 @@ let idToDelete = null;
 
 $(document).ready(function () {
   $('#pembelianTable').DataTable({
-    processing: true,
-    serverSide: true,
     pageLength: 5,
     lengthMenu: [5, 10, 15, 20, 25],
-    ajax: '/data-pembelian-bahan/json',
-    columns: [
-      { data: 'nomor_nota' },
-      { data: 'tanggal' },
-      { data: 'supplier' },
-      {
-        data: 'total_harga',
-        render: data => 'Rp ' + parseInt(data).toLocaleString('id-ID')
-      },
-      {
-        data: 'id',
-        render: (data) => `
-        
-          <button class="btn btn-primary btn-sm" onclick="editData(${data})">
-          <i class="fas fa-edit"></i> Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="hapusData(${data})">
-          <i class="fas fa-trash"></i> Hapus</button>
-        `,
-        orderable: false,
-        searchable: false
-      }
-    ],
     initComplete: function () {
             $('#pembelianTable_length')
         .html(`
@@ -78,11 +54,11 @@ function simpanForm() {
   let id = $('#modalForm input[name=id]').val();
   let url = id ? `/data-pembelian-bahan/update/${id}` : `/data-pembelian-bahan/store`;
 
-  $.post(url, $('#modalForm form').serialize(), function () {
-    $('#modalForm').modal('hide');
-    $('#pembelianTable').DataTable().ajax.reload();
-    showSuccess(id ? 'Data berhasil di perbarui !' : 'Data Berhasil ditambahkan!');
-  });
+    $.post(url, $('#modalForm form').serialize(), function () {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm')).hide();
+      showSuccess(id ? 'Data berhasil di perbarui !' : 'Data Berhasil ditambahkan!');
+      setTimeout(() => window.location.reload(), 1200);
+    });
 }
 
 function hapusData(id) {
@@ -92,13 +68,13 @@ function hapusData(id) {
 
 $('#confirmDeleteBtn').on('click', function () {
   if (idToDelete) {
-    $.ajax({
+      $.ajax({
       url: `/data-pembelian-bahan/delete/${idToDelete}`,
       type: 'DELETE',
       success: function () {
-        $('#confirmDeleteModal').modal('hide');
-        $('#pembelianTable').DataTable().ajax.reload();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmDeleteModal')).hide();
         showSuccess('Data berhasil dihapus')
+        setTimeout(() => window.location.reload(), 1200);
       },
       error: function () {
         alert('Gagal menghapus data');

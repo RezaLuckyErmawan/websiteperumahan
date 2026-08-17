@@ -117,11 +117,11 @@ function hapusData(id) {
 
 function showSuccess(msg) {
   $('#successMessage').text(msg);
-  $('#successmodal').modal('show');
+  $('#successModal').modal('show');
   
   // Auto close modal setelah 2.5 detik (opsional)
   setTimeout(() => {
-    $('#successmodal').modal('hide');
+    $('#successModal').modal('hide');
   }, 2500);
 }
 

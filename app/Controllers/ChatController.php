@@ -464,6 +464,52 @@ class ChatController extends ResourceController
     }
 
     /**
+     * Get navbar notification summary.
+     * GET /chat/notifications
+     */
+    public function notifications()
+    {
+        $identity = $this->currentChatIdentity();
+        $limit = (int) ($this->request->getVar('limit') ?? 15);
+        $limit = $limit > 0 ? $limit : 15;
+
+        $conversations = $this->messageModel->getRecentConversations(
+            $identity['user_id'],
+            $identity['customer_id'],
+            $limit,
+            $identity['role']
+        );
+
+        $items = [];
+        $totalUnread = 0;
+
+        foreach ($conversations as $conversation) {
+            $unreadCount = (int) ($conversation['unread_count'] ?? 0);
+            $totalUnread += $unreadCount;
+
+            if ($unreadCount <= 0) {
+                continue;
+            }
+
+            $items[] = [
+                'chat_room' => (string) ($conversation['chat_room'] ?? ''),
+                'room_label' => $this->formatChatRoomLabel((string) ($conversation['chat_room'] ?? '')),
+                'last_message' => (string) ($conversation['last_message'] ?? ''),
+                'last_message_at' => $conversation['last_message_at'] ?? null,
+                'unread_count' => $unreadCount,
+            ];
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => [
+                'unread_count' => $totalUnread,
+                'items' => $items,
+            ],
+        ]);
+    }
+
+    /**
      * Get participants in a room
      * GET /chat/participants/{room}
      */
@@ -604,6 +650,20 @@ class ChatController extends ResourceController
             'is_online' => false,
             'last_seen' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    private function formatChatRoomLabel(string $chatRoom): string
+    {
+        if ($chatRoom === '') {
+            return 'Chat';
+        }
+
+        if (preg_match('/^customer-(\d+)$/', $chatRoom, $matches)) {
+            return 'Customer #' . $matches[1];
+        }
+
+        $label = str_replace(['-', '_'], ' ', $chatRoom);
+        return ucwords(trim($label));
     }
 
     /**

@@ -232,6 +232,9 @@ const ChatApp = {
             success: function(response) {
                 if (response.status === 'success') {
                     self.renderConversations(response.data);
+                    if (typeof window.refreshChatNotifications === 'function') {
+                        window.refreshChatNotifications();
+                    }
                 }
             },
             error: function() {
@@ -452,6 +455,9 @@ const ChatApp = {
                     if (response.data && self.state.currentRoom) {
                         self.addMessageToUI(response.data);
                         self.loadConversations();
+                        if (typeof window.refreshChatNotifications === 'function') {
+                            window.refreshChatNotifications();
+                        }
                     }
 
                     // Remove reply indicator if present
@@ -947,6 +953,9 @@ const ChatApp = {
                                 if (self.state.currentRoom) {
                                     self.loadMessageHistory(self.state.currentRoom);
                                     self.loadConversations();
+                                    if (typeof window.refreshChatNotifications === 'function') {
+                                        window.refreshChatNotifications();
+                                    }
                                 }
 
                                 console.log('File sent successfully');
