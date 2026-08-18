@@ -165,6 +165,16 @@
   <div class="overlay"></div>
   <div class="login-box">
     <h2>Login</h2>
+    <?php if (session()->getFlashdata('error')): ?>
+      <div style="margin-bottom:14px; padding:12px 14px; border-radius:8px; background:#fee2e2; color:#991b1b; font-size:14px; font-weight:700;">
+        <?= esc(session()->getFlashdata('error')) ?>
+      </div>
+    <?php endif; ?>
+    <?php if (session()->getFlashdata('success')): ?>
+      <div style="margin-bottom:14px; padding:12px 14px; border-radius:8px; background:#dcfce7; color:#166534; font-size:14px; font-weight:700;">
+        <?= esc(session()->getFlashdata('success')) ?>
+      </div>
+    <?php endif; ?>
     <form action="/login/auth" method="post">
       <label for="username">Username</label>
       <input type="text" name="username" id="username" placeholder="Masukkan username" required>
@@ -182,8 +192,7 @@
       Kembali ke Beranda
     </a>
     <div class="footer-text">
-      <!-- Belum punya akun? <a href="/register">Daftar</a> <br>
-      <a href="/lupapassword">Lupa Password?</a> -->
+      Belum punya akun? <a href="/register">Daftar</a>
     </div>
   </div>
 </body>

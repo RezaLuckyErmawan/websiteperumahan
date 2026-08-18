@@ -48,9 +48,33 @@ class DashboardController extends BaseController
     public function landing() {
         $perumahan = new PerumahanModel();
 
-        return view('page/landingpage', [
+        return view('page/landingpage/landingpage', [
             'pageTitle' => 'GreenHome.id',
             'rumah' => $perumahan->orderBy('created_at', 'DESC')->findAll(),
+        ]);
+    }
+
+    public function katalog() {
+        $perumahan = new PerumahanModel();
+
+        return view('page/katalogrumah/katalog_rumah', [
+            'pageTitle' => 'Katalog Rumah – GreenHome.id',
+            'rumah' => $perumahan->orderBy('created_at', 'DESC')->findAll(),
+        ]);
+    }
+
+    public function detailRumah($id)
+    {
+        $perumahan = new PerumahanModel();
+        $rumah = $perumahan->find($id);
+
+        if (!$rumah) {
+            return redirect()->to('/katalog-rumah')->with('error', 'Data rumah tidak ditemukan.');
+        }
+
+        return view('page/katalogrumah/detailrumah', [
+            'pageTitle' => 'Detail Rumah – ' . ($rumah['kode_rumah'] ?? 'GreenHome.id'),
+            'rumah' => $rumah,
         ]);
     }
 

@@ -10,6 +10,8 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('/dashboard', 'DashboardController::index');
 $routes->get('/', 'DashboardController::landing');
+$routes->get('/katalog-rumah', 'DashboardController::katalog');
+$routes->get('/detail-rumah/(:num)', 'DashboardController::detailRumah/$1');
 
 
 $routes->get('/data-rumah', 'DatarumahController::datarumah');
@@ -67,7 +69,6 @@ $routes->post('/customer/store', 'CustomerController::store');
 $routes->get('/customer/edit/(:num)', 'CustomerController::edit/$1');
 $routes->post('/customer/update/(:num)', 'CustomerController::update/$1');
 $routes->get('/customer/delete/(:num)', 'CustomerController::delete/$1');
-// $routes->get('/data-customer', 'DashboardController::datacustomer');
 
 $routes->get('/pembelian-rumah', 'PembelianRumahController::pembelianrumah');
 $routes->get('/pembelian-rumah/json', 'PembelianRumahController::json');
@@ -103,6 +104,8 @@ $routes->get('/laporan/pdf-cicilan', 'LaporanController::pdfCicilan');
 
 $routes->get('/login', 'LoginController::loginform');
 $routes->post('/login/auth', 'LoginController::login');
+$routes->get('/register', 'LoginController::registerForm');
+$routes->post('/register', 'LoginController::register');
 $routes->get('/logout', 'LoginController::logout');
 
 $routes->get('/data-user', 'UserController::user');

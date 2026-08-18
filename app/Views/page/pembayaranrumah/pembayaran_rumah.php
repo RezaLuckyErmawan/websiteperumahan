@@ -205,7 +205,7 @@
                 <h5 class="modal-title" id="modalFormLabel">Tambah Pembayaran Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="event.preventDefault(); simpanForm();" enctype="multipart/form-data">
+            <form onsubmit="event.preventDefault(); simpanForm();" enctype="multipart/form-data" novalidate>
                 <div class="modal-body">
                     <input type="hidden" name="id">
 
@@ -266,7 +266,7 @@
                 <h5 class="modal-title" id="modalEditLabel">Edit Pembayaran Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="event.preventDefault(); updateForm();" enctype="multipart/form-data">
+            <form onsubmit="event.preventDefault(); updateForm();" enctype="multipart/form-data" novalidate>
                 <div class="modal-body">
                     <input type="hidden" name="id">
 

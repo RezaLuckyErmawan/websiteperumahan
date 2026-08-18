@@ -1,8 +1,15 @@
 <?php
 $rumah = is_array($rumah ?? null) ? $rumah : [];
+$totalRumah = count($rumah);
+$rumahPerPage = 2;
+$page = (int) ($_GET['page'] ?? 1);
+$totalPages = ceil($totalRumah / $rumahPerPage);
+$page = max(1, min($page, $totalPages));
+$offset = ($page - 1) * $rumahPerPage;
+$rumahPaginated = array_slice($rumah, $offset, $rumahPerPage, true);
 
 $summary = [
-    'total' => count($rumah),
+    'total' => $totalRumah,
     'tersedia' => 0,
     'booked' => 0,
     'terjual' => 0,
@@ -38,7 +45,7 @@ function landing_status_label(string $status): string
         'terjual', 'lunas' => 'Terjual',
         'booked', 'booking' => 'Booked',
         'proses pembangunan' => 'Proses pembangunan',
-        default => 'Info',
+        default => 'Tersedia',
     };
 }
 
@@ -51,6 +58,7 @@ function landing_image_url(?string $path): ?string
 
     return base_url(ltrim($path, '/'));
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -92,29 +100,15 @@ function landing_image_url(?string $path): ?string
 
     a { color: inherit; }
 
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      backdrop-filter: blur(16px);
-      background: rgba(255, 255, 255, 0.78);
-      border-bottom: 1px solid rgba(220, 229, 239, 0.9);
-    }
+    .site-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.88); backdrop-filter: blur(18px); border-bottom: 1px solid var(--border); box-shadow: 0 2px 14px rgba(15,23,42,0.06); }
 
-    .site-header-inner,
+    .site-header-inner { max-width: 1280px; margin: 0 auto; padding: 0 28px; min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+
     .hero-inner,
     .content-inner,
     .footer-inner {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-    }
-
-    .site-header-inner {
-      min-height: 74px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
     }
 
     .brand {
@@ -126,16 +120,10 @@ function landing_image_url(?string $path): ?string
       letter-spacing: -0.02em;
     }
 
-    .brand-mark {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      color: #fff;
-      box-shadow: var(--shadow-soft);
+    .brand-mark { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), #0ea5e9); color: #fff; box-shadow: var(--shadow-soft); }
+
+    .brand-mark .material-icons {
+      font-size: 20px;
     }
 
     .brand-name {
@@ -159,6 +147,31 @@ function landing_image_url(?string $path): ?string
 
     .header-nav a:hover { color: var(--primary); }
 
+    .header-nav a.active {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .footer-nav {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .footer-nav a {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover,
+    .footer-nav a.active {
+      color: var(--primary);
+    }
+
     .btn-link {
       display: inline-flex;
       align-items: center;
@@ -167,17 +180,38 @@ function landing_image_url(?string $path): ?string
       min-height: 42px;
       padding: 0 16px;
       border-radius: 999px;
-      border: 1px solid rgba(37, 99, 235, 0.16);
-      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(29,78,216,0.16);
+      background: rgba(255,255,255,0.92);
       text-decoration: none;
       color: var(--primary);
       font-weight: 800;
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+      box-shadow: 0 8px 20px rgba(29,78,216,0.08);
     }
 
     .btn-link-primary {
       border-color: rgba(37, 99, 235, 0.18);
       background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      color: #fff;
+    }
+
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(29,78,216,0.16);
+      background: rgba(255,255,255,0.92);
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(29,78,216,0.08);
+    }
+
+    .btn-login:hover {
+      background: var(--primary);
       color: #fff;
     }
 
@@ -521,6 +555,60 @@ function landing_image_url(?string $path): ?string
       box-shadow: var(--shadow-soft);
     }
 
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .page-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      min-width: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+    }
+
+    .page-link:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .page-link.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .page-link.active {
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .pagination-info {
+      flex-basis: 100%;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
     .site-footer {
       padding: 24px 0 30px;
       color: var(--muted);
@@ -572,19 +660,7 @@ function landing_image_url(?string $path): ?string
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="brand" href="/">
-        <span class="brand-mark"><span class="material-icons">home</span></span>
-        <span class="brand-name">GreenHome.id</span>
-      </a>
-      <nav class="header-nav">
-        <a href="/">Beranda</a>
-        <a href="/perumahan/data-rumah">Katalog Rumah</a>
-        <a href="/login" class="btn-link">Login</a>
-      </nav>
-    </div>
-  </header>
+  <?= $this->include('page/navbar') ?>
 
   <section class="hero">
     <div class="hero-inner">
@@ -597,12 +673,6 @@ function landing_image_url(?string $path): ?string
               Jelajahi daftar rumah dari sistem perumahan kami dalam tampilan katalog yang rapi, modern, dan mudah dibandingkan.
               Setiap kartu menampilkan detail penting seperti kode rumah, lokasi, tipe, luas, harga, status, dan deskripsi.
             </p>
-            <div class="hero-actions">
-              <a href="/" class="btn-link btn-link-primary">
-                <span class="material-icons" style="font-size:18px;">home</span>
-                Kembali ke Beranda
-              </a>
-            </div>
           </div>
 
           <div class="search-panel">
@@ -641,7 +711,7 @@ function landing_image_url(?string $path): ?string
       <div class="section-head">
         <div>
           <h2>Daftar Rumah</h2>
-          <p>Card layout bergaya e-commerce untuk melihat detail perumahan dengan cepat.</p>
+          <p>Pilihan yang terbaik untuk keluarga anda.</p>
         </div>
         <div class="results-count" id="resultsCount"><?= count($rumah) ?> hasil ditemukan</div>
       </div>
@@ -652,7 +722,7 @@ function landing_image_url(?string $path): ?string
         </div>
       <?php else: ?>
         <div class="catalog-grid" id="catalogGrid">
-          <?php foreach ($rumah as $item): ?>
+          <?php foreach ($rumahPaginated as $item): ?>
             <?php
               $status = (string) ($item['status'] ?? '-');
               $statusClass = landing_status_class($status);
@@ -719,23 +789,51 @@ function landing_image_url(?string $path): ?string
                   </div>
                 </div>
 
-                <a class="card-link" href="/perumahan/data-rumah/<?= (int) ($item['id'] ?? 0) ?>">
+                <a class="card-link" href="/detail-rumah/<?= (int) ($item['id'] ?? 0) ?>">
                   <span class="material-icons" style="font-size:18px;">visibility</span>
-                  <?= $isAvailable ? 'Booking Sekarang' : 'Lihat Detail' ?>
+                  Lihat Detail
                 </a>
               </div>
             </article>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+
+      <?php if ($totalPages > 1): ?>
+        <nav class="pagination" aria-label="Pagination daftar rumah">
+          <a
+            class="page-link <?= $page <= 1 ? 'disabled' : '' ?>"
+            href="<?= $page > 1 ? '?page=' . ($page - 1) : '#' ?>"
+            <?= $page <= 1 ? 'aria-disabled="true"' : '' ?>
+          >
+            <span class="material-icons" style="font-size:16px;">chevron_left</span>
+            Sebelumnya
+          </a>
+
+          <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?page=<?= $i ?>" <?= $i === $page ? 'aria-current="page"' : '' ?>>
+              <?= $i ?>
+            </a>
+          <?php endfor; ?>
+
+          <a
+            class="page-link <?= $page >= $totalPages ? 'disabled' : '' ?>"
+            href="<?= $page < $totalPages ? '?page=' . ($page + 1) : '#' ?>"
+            <?= $page >= $totalPages ? 'aria-disabled="true"' : '' ?>
+          >
+            Selanjutnya
+            <span class="material-icons" style="font-size:16px;">chevron_right</span>
+          </a>
+
+          <div class="pagination-info">
+            Menampilkan <?= count($rumahPaginated) ?> dari <?= $totalRumah ?> rumah (halaman <?= $page ?> dari <?= $totalPages ?>)
+          </div>
+        </nav>
+      <?php endif; ?>
     </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <strong>GreenHome.id</strong> &copy; <?= date('Y') ?> Sistem Manajemen Perumahan.
-    </div>
-  </footer>
+  <?= $this->include('page/footer') ?>
 
   <script>
     (function () {
