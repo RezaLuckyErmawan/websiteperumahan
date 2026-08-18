@@ -175,6 +175,19 @@ function landing_image_url(?string $path): ?string
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
     }
 
+    .btn-link-primary {
+      border-color: rgba(37, 99, 235, 0.18);
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      color: #fff;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
     .hero {
       padding: 30px 0 18px;
     }
@@ -584,6 +597,12 @@ function landing_image_url(?string $path): ?string
               Jelajahi daftar rumah dari sistem perumahan kami dalam tampilan katalog yang rapi, modern, dan mudah dibandingkan.
               Setiap kartu menampilkan detail penting seperti kode rumah, lokasi, tipe, luas, harga, status, dan deskripsi.
             </p>
+            <div class="hero-actions">
+              <a href="/" class="btn-link btn-link-primary">
+                <span class="material-icons" style="font-size:18px;">home</span>
+                Kembali ke Beranda
+              </a>
+            </div>
           </div>
 
           <div class="search-panel">
