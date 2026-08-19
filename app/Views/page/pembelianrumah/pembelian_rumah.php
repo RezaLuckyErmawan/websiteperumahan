@@ -92,6 +92,32 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
     .user-popover-logout:hover {
         color: #b91c1c;
     }
+
+    #modalConfirmVerifikasi {
+        z-index: 1065;
+    }
+
+    #modalConfirmVerifikasi .modal-content {
+        border: 1px solid #e4e8ef;
+        border-radius: 8px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    #modalConfirmVerifikasi .modal-header {
+        border-bottom: 1px solid #e4e8ef;
+    }
+
+    #modalConfirmVerifikasi .modal-title {
+        color: #172033;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    #modalConfirmVerifikasi .modal-body {
+        color: #334155;
+        font-size: 14px;
+        font-weight: 600;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -432,6 +458,24 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" onclick="verifikasiBooking('tolak')">Tolak</button>
                 <button type="button" class="btn btn-success" onclick="verifikasiBooking('setujui')">Setujui</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmVerifikasi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmVerifikasiTitle">Konfirmasi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="confirmVerifikasiMessage">Setujui booking ini?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success btn-sm" id="confirmVerifikasiBtn">Setujui</button>
             </div>
         </div>
     </div>

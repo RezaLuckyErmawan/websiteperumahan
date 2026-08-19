@@ -546,7 +546,29 @@ function verifikasiBooking(aksi) {
     payload.tanggal_cicilan = tanggal;
   }
 
-  if (!confirm(aksi === 'setujui' ? 'Setujui booking ini?' : 'Tolak booking ini?')) return;
+  pendingVerifikasi = { payload: payload, id: id };
+
+  const isSetujui = aksi === 'setujui';
+  $('#confirmVerifikasiTitle').text(isSetujui ? 'Konfirmasi Setujui' : 'Konfirmasi Tolak');
+  $('#confirmVerifikasiMessage').text(isSetujui ? 'Setujui booking ini?' : 'Tolak booking ini?');
+  $('#confirmVerifikasiBtn')
+    .prop('disabled', false)
+    .text(isSetujui ? 'Setujui' : 'Tolak')
+    .removeClass('btn-success btn-danger')
+    .addClass(isSetujui ? 'btn-success' : 'btn-danger');
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirmVerifikasi')).show();
+}
+
+let pendingVerifikasi = null;
+
+function kirimVerifikasiBooking() {
+  if (!pendingVerifikasi) return;
+  const { payload, id } = pendingVerifikasi;
+  if (!id) return;
+
+  const btn = $('#confirmVerifikasiBtn');
+  btn.prop('disabled', true);
 
   $.ajax({
     url: '/pembelian-rumah/booking/' + id + '/verifikasi',
@@ -554,16 +576,31 @@ function verifikasiBooking(aksi) {
     data: payload,
     success: function (res) {
       if (res.status === 'success') {
-        bootstrap.Modal.getInstance(document.getElementById('modalVerifikasiBooking')).hide();
+        pendingVerifikasi = null;
+        bootstrap.Modal.getInstance(document.getElementById('modalConfirmVerifikasi'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('modalVerifikasiBooking'))?.hide();
         $('#pembelianRumahTable').DataTable().ajax.reload();
         showSuccess(res.message);
       } else {
+        btn.prop('disabled', false);
         alert(res.message || 'Verifikasi gagal.');
       }
     },
     error: function (xhr) {
+      btn.prop('disabled', false);
       const msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Verifikasi gagal.';
       alert(msg);
     }
   });
 }
+
+$('#confirmVerifikasiBtn').on('click', function () {
+  kirimVerifikasiBooking();
+});
+
+document.getElementById('modalConfirmVerifikasi')?.addEventListener('shown.bs.modal', function () {
+  const backdrops = document.querySelectorAll('.modal-backdrop');
+  if (backdrops.length) {
+    backdrops[backdrops.length - 1].style.zIndex = '1060';
+  }
+});
