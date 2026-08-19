@@ -9,158 +9,240 @@
         font-weight: 800;
     }
 
-    .rumah-panel {
-        margin-bottom: 22px;
-        padding: 22px 24px 26px;
-        border-radius: 18px;
-        background: #d8efc4;
+    .rumah-panel,
+    .dash-panel {
+        margin-bottom: 18px;
+        padding: 18px;
+        border: 1px solid var(--line, #e4e8ef);
+        border-radius: var(--radius, 8px);
+        background: var(--surface, #ffffff);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
     }
 
-    .rumah-panel h2 {
-        margin: 0 0 16px;
-        font-size: 22px;
-        font-weight: 800;
-        color: #111827;
-    }
-
-    .rumah-split {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-    }
-
-    .galeri-stack {
+    .rumah-panel-head,
+    .dash-head {
         display: flex;
-        align-items: flex-start;
-        gap: 18px;
-        min-height: 160px;
-    }
-
-    .polaroid {
-        width: 120px;
-        height: 148px;
-        padding: 8px 8px 22px;
-        background: #fff;
-        border: 1px solid #dbe3ee;
-        box-shadow: 6px 8px 0 rgba(15, 23, 42, 0.08);
-        transform: rotate(-6deg);
-    }
-
-    .polaroid + .polaroid { transform: rotate(5deg); }
-
-    .polaroid img,
-    .polaroid .no-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        background: #e8f1fb;
-    }
-
-    .polaroid .no-image {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #94a3b8;
-        font-size: 36px;
-    }
-
-    .spec-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 8px;
-    }
-
-    .spec-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #1f2937;
-        font-size: 15px;
-        font-weight: 700;
-    }
-
-    .spec-item input { width: 16px; height: 16px; }
-
-    .berkas-head {
-        margin: 8px 0 6px;
-        font-size: 20px;
-        font-weight: 800;
-        color: #111827;
-    }
-
-    .berkas-head .deadline { color: #ca8a04; }
-    .berkas-head .sisa { color: #dc2626; }
-
-    .berkas-note {
-        margin: 0 0 14px;
-        color: #334155;
-        font-weight: 600;
-    }
-
-    .berkas-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 14px;
-    }
-
-    .berkas-card {
-        min-height: 168px;
-        padding: 16px 12px 14px;
-        border-radius: 18px 18px 10px 10px;
-        display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        text-align: center;
-        color: #0f172a;
-        font-weight: 800;
-        position: relative;
+        gap: 12px;
+        margin-bottom: 16px;
     }
 
-    .berkas-card .status-icon {
+    .rumah-panel-title,
+    .dash-head-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rumah-panel-title .material-icons,
+    .dash-head-title .material-icons {
         width: 34px;
         height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--radius, 8px);
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 20px;
+    }
+
+    .rumah-panel h2,
+    .dash-panel h2 {
+        margin: 0;
+        color: var(--text, #172033);
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .rumah-panel-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .rumah-split {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .galeri-main {
+        overflow: hidden;
+        border-radius: var(--radius, 8px);
+        background: #eef2f7;
+        min-height: 240px;
+    }
+
+    .galeri-main img {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .galeri-main .no-image {
+        height: 280px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--muted, #647084);
+        font-weight: 700;
+    }
+
+    .galeri-main .no-image .material-icons { font-size: 56px; color: #94a3b8; }
+
+    .spec-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .spec-box {
+        min-height: 66px;
+        padding: 13px 14px;
+        border: 1px solid var(--line, #e4e8ef);
+        border-radius: var(--radius, 8px);
+        background: var(--surface, #ffffff);
+    }
+
+    .spec-box.full { grid-column: 1 / -1; }
+
+    .spec-box span {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--muted, #647084);
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .spec-box strong {
+        color: var(--text, #172033);
+        font-size: 14px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .spec-price { color: var(--success, #059669) !important; font-size: 16px !important; font-weight: 800 !important; }
+
+    .spec-box p {
+        margin: 0;
+        color: var(--text, #172033);
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.55;
+        white-space: pre-wrap;
+    }
+
+    .spec-link {
+        color: var(--primary, #2563eb);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .spec-link:hover { text-decoration: underline; }
+
+    .berkas-note {
+        margin: 0 0 14px;
+        color: var(--muted, #647084);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .berkas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .berkas-card {
+        min-height: 148px;
+        padding: 14px 12px;
+        border: 1px solid var(--line, #e4e8ef);
+        border-radius: var(--radius, 8px);
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .berkas-name {
+        color: var(--text, #172033);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .berkas-card .status-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 999px;
-        font-size: 22px;
+        font-size: 18px;
         color: #fff;
         margin-bottom: 8px;
     }
 
-    .berkas-card .status-icon.ok { background: #22c55e; }
-    .berkas-card .status-icon.no { background: #ef4444; }
-    .berkas-card .status-icon.wait { background: #f59e0b; color: #111827; }
+    .berkas-card .status-icon.ok { background: var(--success, #059669); }
+    .berkas-card .status-icon.no { background: var(--danger, #dc2626); }
+    .berkas-card .status-icon.wait { background: var(--warning, #d97706); }
+
+    .berkas-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .berkas-card .lihat-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 6px 14px;
+        border: 1px solid var(--primary, #2563eb);
+        border-radius: var(--radius, 8px);
+        background: #fff;
+        color: var(--primary, #2563eb);
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .berkas-card .lihat-btn:hover {
+        background: #eff6ff;
+        color: var(--primary-dark, #1d4ed8);
+    }
 
     .berkas-card .upload-btn,
     .cicilan-btn {
         min-height: 34px;
-        padding: 6px 16px;
+        padding: 6px 14px;
         border: 0;
-        border-radius: 999px;
-        background: #ffffff;
-        color: #111827;
-        font-weight: 800;
+        border-radius: var(--radius, 8px);
+        background: var(--primary, #2563eb);
+        color: #fff;
+        font-weight: 700;
         cursor: pointer;
     }
 
-    .cicilan-card {
-        margin-top: 8px;
-        padding: 18px 20px 22px;
-        border-radius: 16px;
-        background: #9fe3ea;
-        color: #111827;
-        font-weight: 800;
-        line-height: 1.55;
+    .berkas-card .upload-btn:hover,
+    .cicilan-btn:hover { background: var(--primary-dark, #1d4ed8); }
+
+    .cicilan-summary {
+        margin-bottom: 8px;
     }
 
     .timeline-wrap {
-        margin-top: 18px;
+        margin-top: 8px;
         overflow-x: auto;
-        padding: 28px 8px 70px;
+        padding: 20px 8px 70px;
     }
 
     .timeline {
@@ -178,7 +260,7 @@
         left: 8px;
         right: 8px;
         top: 46px;
-        border-top: 2px dashed #334155;
+        border-top: 2px dashed var(--line, #e4e8ef);
     }
 
     .tl-node {
@@ -199,28 +281,28 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: #111827;
+        background: #94a3b8;
         color: #fff;
         font-size: 16px;
     }
 
-    .tl-icon.ok { background: #22c55e; }
-    .tl-icon.wait { background: #facc15; color: #111827; }
-    .tl-icon.q { background: #111827; }
+    .tl-icon.ok { background: var(--success, #059669); }
+    .tl-icon.wait { background: var(--warning, #d97706); }
+    .tl-icon.q { background: #94a3b8; }
 
     .tl-pill {
         min-width: 42px;
         padding: 4px 10px;
         border-radius: 999px;
-        background: #7dd3e8;
-        color: #0f172a;
+        background: #dbeafe;
+        color: #1d4ed8;
         font-size: 13px;
         font-weight: 800;
         text-align: center;
     }
 
-    .tl-pill.dp { background: #c4b5fd; }
-    .tl-node.current .tl-pill { background: #2dd4bf; transform: scale(1.12); }
+    .tl-pill.dp { background: #e2e8f0; color: #334155; }
+    .tl-node.current .tl-pill { background: var(--primary, #2563eb); color: #fff; transform: scale(1.08); }
 
     .tl-tip {
         position: absolute;
@@ -229,13 +311,14 @@
         transform: translateX(-50%);
         width: 210px;
         padding: 10px 12px;
-        border-radius: 10px;
-        background: #9fe3ea;
-        color: #0f172a;
+        border-radius: var(--radius, 8px);
+        background: #fff;
+        border: 1px solid var(--line, #e4e8ef);
+        color: var(--text, #172033);
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         line-height: 1.4;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
         display: none;
     }
 
@@ -249,7 +332,8 @@
         transform: translateX(-50%);
         border-left: 8px solid transparent;
         border-right: 8px solid transparent;
-        border-bottom: 8px solid #9fe3ea;
+        border-bottom: 8px solid #fff;
+        filter: drop-shadow(0 -1px 0 #e4e8ef);
     }
 
     .cicilan-actions {
@@ -260,10 +344,17 @@
 
     .cicilan-btn.primary {
         min-height: 42px;
-        padding: 8px 22px;
-        background: #5ec8d4;
-        color: #0f172a;
+        padding: 10px 16px;
+        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
     }
+
+    .cicilan-btn.primary:disabled {
+        opacity: 0.65;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .status-danger { background: #fee2e2; color: #b91c1c; }
 
     .rumah-grid {
         display: grid;
@@ -310,6 +401,7 @@
 
     @media (max-width: 768px) {
         .rumah-split { grid-template-columns: 1fr; }
+        .spec-grid { grid-template-columns: 1fr; }
         .cicilan-actions { justify-content: stretch; }
         .cicilan-btn.primary { width: 100%; }
     }
@@ -327,7 +419,6 @@
     $berkasItems = is_array($berkasItems ?? null) ? $berkasItems : [];
     $error = session()->getFlashdata('error');
     $success = session()->getFlashdata('success');
-    $berkasColors = ['#b9d7f5', '#9fd6ea', '#8eddd4', '#8fe0c4', '#b4e6a6', '#c8e89a', '#d7e88c', '#e4e89a'];
     $activeNode = null;
     foreach ($progressNodes as $node) {
         if (!empty($node['is_current'])) {
@@ -382,147 +473,278 @@
         </div>
     <?php endif; ?>
 <?php else: ?>
-    <?php $gambar = $rumah['gambar'] ?? ''; ?>
+    <?php
+        $gambar = trim((string) ($rumah['gambar'] ?? ''));
+        $gambarUrl = $gambar !== ''
+            ? '/' . ltrim($gambar, '/')
+            : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85';
+        $dokumen = trim((string) ($rumah['dokumen'] ?? ''));
+        $statusPembelian = (string) ($rumah['status_pembelian'] ?? '-');
+        $statusPembelianKey = strtolower($statusPembelian);
+        $statusPembelianClass = 'status-secondary';
+        if (in_array($statusPembelianKey, ['lunas', 'selesai', 'disetujui'], true)) $statusPembelianClass = 'status-success';
+        elseif (in_array($statusPembelianKey, ['booking', 'booked', 'dp', 'cicilan', 'pending', 'menunggu'], true)) $statusPembelianClass = 'status-warning';
+        elseif (in_array($statusPembelianKey, ['batal', 'ditolak'], true)) $statusPembelianClass = 'status-secondary';
+        $hargaTampil = (float) ($rumah['harga_beli'] ?? $rumah['harga'] ?? 0);
+        $hargaLabel = 'Rp ' . number_format($hargaTampil, 0, ',', '.');
+        $metode = trim((string) ($rumah['metode_pembayaran'] ?? ''));
+    ?>
     <div class="rumah-panel">
-        <h2>Detail Rumah Pesanan Anda (Rumah <?= esc($rumah['kode_rumah'] ?? '-') ?>)</h2>
-        <div class="rumah-split">
-            <div>
-                <strong>Galeri</strong>
-                <div class="galeri-stack">
-                    <?php for ($i = 0; $i < 2; $i++): ?>
-                        <div class="polaroid">
-                            <?php if ($gambar): ?>
-                                <img src="/<?= esc($gambar) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
-                            <?php else: ?>
-                                <div class="no-image"><span class="material-icons">photo</span></div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endfor; ?>
-                </div>
+        <div class="rumah-panel-head">
+            <div class="rumah-panel-title">
+                <span class="material-icons">home_work</span>
+                <h2>Detail Rumah Pesanan Anda</h2>
             </div>
-            <div>
-                <strong>Spesifikasi</strong>
-                <div class="spec-list">
-                    <label class="spec-item"><input type="checkbox" checked disabled> Tipe <?= esc($rumah['tipe'] ?? '-') ?></label>
-                    <label class="spec-item"><input type="checkbox" checked disabled> LT <?= esc($rumah['luas_tanah'] ?? '-') ?> m² · LB <?= esc($rumah['luas_bangunan'] ?? '-') ?> m²</label>
-                    <label class="spec-item"><input type="checkbox" checked disabled> <?= esc($rumah['lokasi'] ?? '-') ?></label>
-                </div>
+            <div class="rumah-panel-pills">
+                <span class="code-pill"><?= esc($rumah['kode_rumah'] ?? '-') ?></span>
+                <span class="status-pill <?= $statusPembelianClass ?>"><?= esc($statusPembelian) ?></span>
             </div>
         </div>
-    </div>
-
-    <div class="berkas-head">
-        Pemberkasan!
-        (Mohon dilengkapi sebelum
-        <span class="deadline"><?= esc($infoBerkas['deadline_long'] ?? '-') ?></span>
-        <?php if (empty($infoBerkas['kedaluwarsa'])): ?>
-            (<span class="sisa"><?= esc($infoBerkas['sisa_display'] ?? '-') ?></span>)
-        <?php endif; ?>
-        )
-    </div>
-    <p class="berkas-note">Silahkan unggah dokumen yang diperlukan berikut:</p>
-    <div class="berkas-grid">
-        <?php foreach ($berkasItems as $index => $item): ?>
-            <?php
-                $status = (string) ($item['status'] ?? '');
-                $bisaUnggah = empty($item['file']) || $status === 'ditolak';
-                if (!empty($infoBerkas['kedaluwarsa']) && $status !== 'ditolak' && empty($item['file'])) {
-                    $bisaUnggah = false;
-                }
-            ?>
-            <div class="berkas-card" style="background: <?= esc($berkasColors[$index % count($berkasColors)]) ?>;">
-                <div>
-                    <?php if ($status === 'disetujui'): ?>
-                        <span class="status-icon ok material-icons">check</span>
-                    <?php elseif ($status === 'ditolak'): ?>
-                        <span class="status-icon no material-icons">close</span>
-                    <?php elseif ($status === 'pending'): ?>
-                        <span class="status-icon wait material-icons">schedule</span>
-                    <?php endif; ?>
-                    <div><?= esc($item['short']) ?></div>
+        <div class="rumah-split">
+            <div class="galeri-main">
+                <img src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+            </div>
+            <div class="spec-grid">
+                <div class="spec-box">
+                    <span>Kode Rumah</span>
+                    <strong><?= esc($rumah['kode_rumah'] ?? '-') ?></strong>
                 </div>
-                <?php if ($bisaUnggah): ?>
-                    <form method="post" action="/perumahan/rumah-booking/<?= (int) $pembelian['id'] ?>/berkas" enctype="multipart/form-data">
-                        <?= csrf_field() ?>
-                        <input type="file" name="<?= esc($item['key']) ?>" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="this.form.submit()">
-                        <button type="button" class="upload-btn" onclick="this.previousElementSibling.click()">
-                            <?= $status === 'ditolak' ? 'Perbarui' : 'Upload' ?>
-                        </button>
-                    </form>
+                <div class="spec-box">
+                    <span>Tipe</span>
+                    <strong><?= esc($rumah['tipe'] ?? '-') ?></strong>
+                </div>
+                <div class="spec-box">
+                    <span>Luas Tanah</span>
+                    <strong><?= esc($rumah['luas_tanah'] ?? '-') ?> m²</strong>
+                </div>
+                <div class="spec-box">
+                    <span>Luas Bangunan</span>
+                    <strong><?= esc($rumah['luas_bangunan'] ?? '-') ?> m²</strong>
+                </div>
+                <div class="spec-box">
+                    <span>Harga</span>
+                    <strong class="spec-price"><?= esc($hargaLabel) ?></strong>
+                </div>
+                <div class="spec-box">
+                    <span>Metode Pembayaran</span>
+                    <strong><?= esc($metode !== '' ? $metode : '-') ?></strong>
+                </div>
+                <div class="spec-box full">
+                    <span>Lokasi</span>
+                    <strong><?= esc($rumah['lokasi'] ?? '-') ?></strong>
+                </div>
+                <div class="spec-box full">
+                    <span>Deskripsi</span>
+                    <p><?= !empty($rumah['deskripsi']) ? esc($rumah['deskripsi']) : '-' ?></p>
+                </div>
+                <?php if ($dokumen !== ''): ?>
+                    <div class="spec-box full">
+                        <span>Dokumen Rumah</span>
+                        <strong><a class="spec-link" href="/<?= esc($dokumen) ?>" target="_blank" rel="noopener">Lihat dokumen</a></strong>
+                    </div>
                 <?php endif; ?>
             </div>
-        <?php endforeach; ?>
+        </div>
     </div>
 
-    <h2 class="dash-title" style="margin-top:28px;">Progress Cicilan</h2>
-    <div class="cicilan-card">
-        Rumah <?= esc($rumah['kode_rumah'] ?? '-') ?><br>
-        Total: Rp <?= number_format((float) ($ringkasan['harga_beli'] ?? 0), 0, ',', '.') ?><br>
-        Durasi : <?= esc($ringkasan['durasi_text'] ?? '-') ?>
-        (<?= esc($ringkasan['tanggal_mulai_display'] ?? '-') ?> - <?= esc($ringkasan['tanggal_selesai_display'] ?? '-') ?>)<br>
-        Cicilan: Rp <?= number_format((float) ($ringkasan['jumlah_cicilan'] ?? 0), 0, ',', '.') ?> / bulan.
-    </div>
-
-    <?php if (!empty($progressNodes)): ?>
-        <div class="timeline-wrap">
-            <div class="timeline">
-                <?php foreach ($progressNodes as $node): ?>
-                    <?php
-                        $status = (string) ($node['status'] ?? '');
-                        $iconClass = 'q';
-                        $icon = 'help';
-                        if ($status === 'disetujui') { $iconClass = 'ok'; $icon = 'check'; }
-                        elseif ($status === 'pending') { $iconClass = 'wait'; $icon = 'schedule'; }
-                        $payment = is_array($node['payment'] ?? null) ? $node['payment'] : [];
-                        $uploadAt = $payment['created_at'] ?? $payment['tanggal_bayar'] ?? null;
-                        $uploadLabel = $uploadAt ? date('j M Y', strtotime((string) $uploadAt)) : '';
-                        if (!empty($node['is_dp'])) {
-                            if ($status === 'disetujui') $tip = 'DP: di upload ' . $uploadLabel . ' (terverifikasi)';
-                            elseif ($status === 'pending') $tip = 'DP: diupload ' . $uploadLabel . ' (Menunggu)';
-                            else $tip = 'DP: belum upload bukti';
-                        } else {
-                            $ke = (int) $node['cicilan_ke'];
-                            if ($status === 'disetujui') $tip = 'Cicilan ke-' . $ke . ': di upload ' . $uploadLabel . ' (terverifikasi)';
-                            elseif ($status === 'pending') $tip = 'Cicilan ke-' . $ke . ': diupload ' . $uploadLabel . ' (Menunggu)';
-                            else $tip = 'Cicilan ke-' . $ke . ': belum upload bukti';
-                        }
-                        $tip .= "\nBulan " . ($node['bulan_label'] ?? '-');
-                    ?>
-                    <div class="tl-node<?= !empty($node['is_current']) ? ' current' : '' ?>"
-                         data-status="<?= esc($status) ?>"
-                         data-payment-id="<?= (int) ($payment['id'] ?? 0) ?>"
-                         onclick="pilihNode(this)">
-                        <span class="tl-icon <?= $iconClass ?> material-icons"><?= $icon ?></span>
-                        <span class="tl-pill<?= !empty($node['is_dp']) ? ' dp' : '' ?>"><?= esc($node['label']) ?></span>
-                        <div class="tl-tip"><?= nl2br(esc($tip)) ?></div>
-                    </div>
-                <?php endforeach; ?>
+    <div class="dash-panel">
+        <div class="dash-head">
+            <div class="dash-head-title">
+                <span class="material-icons">folder_open</span>
+                <h2>Pemberkasan</h2>
+            </div>
+            <div class="rumah-panel-pills">
+                <span class="status-pill status-warning">
+                    Sebelum <?= esc($infoBerkas['deadline_long'] ?? '-') ?>
+                    <?php if (empty($infoBerkas['kedaluwarsa'])): ?>
+                        · <?= esc($infoBerkas['sisa_display'] ?? '-') ?>
+                    <?php endif; ?>
+                </span>
             </div>
         </div>
-    <?php endif; ?>
+        <p class="berkas-note">Silakan unggah dokumen yang diperlukan berikut.</p>
+        <div class="berkas-grid">
+            <?php foreach ($berkasItems as $item): ?>
+                <?php
+                    $status = (string) ($item['status'] ?? '');
+                    $bisaUnggah = empty($item['file']) || $status === 'ditolak';
+                    if (!empty($infoBerkas['kedaluwarsa']) && $status !== 'ditolak' && empty($item['file'])) {
+                        $bisaUnggah = false;
+                    }
+                    $statusClass = 'status-secondary';
+                    $statusLabel = 'Belum diunggah';
+                    if ($status === 'disetujui') { $statusClass = 'status-success'; $statusLabel = 'Disetujui'; }
+                    elseif ($status === 'ditolak') { $statusClass = 'status-danger'; $statusLabel = 'Ditolak'; }
+                    elseif ($status === 'pending') { $statusClass = 'status-warning'; $statusLabel = 'Menunggu'; }
+                    $namaBerkas = match ((string) ($item['key'] ?? '')) {
+                        'ktp' => 'KTP',
+                        'kk' => 'KK',
+                        'npwp' => 'NPWP',
+                        default => ucwords((string) ($item['short'] ?? $item['key'] ?? '-')),
+                    };
+                ?>
+                <div class="berkas-card">
+                    <div>
+                        <?php if ($status === 'disetujui'): ?>
+                            <span class="status-icon ok material-icons">check</span>
+                        <?php elseif ($status === 'ditolak'): ?>
+                            <span class="status-icon no material-icons">close</span>
+                        <?php elseif ($status === 'pending'): ?>
+                            <span class="status-icon wait material-icons">schedule</span>
+                        <?php else: ?>
+                            <span class="status-icon material-icons" style="background:#94a3b8;">upload_file</span>
+                        <?php endif; ?>
+                        <div class="berkas-name"><?= esc($namaBerkas) ?></div>
+                        <span class="status-pill <?= $statusClass ?>" style="margin-top:8px;"><?= esc($statusLabel) ?></span>
+                    </div>
+                    <?php if (!empty($item['file']) || $bisaUnggah): ?>
+                        <div class="berkas-actions">
+                            <?php if (!empty($item['file'])): ?>
+                                <button
+                                    type="button"
+                                    class="lihat-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalLihatBerkas"
+                                    data-title="<?= esc($namaBerkas) ?>"
+                                    data-label="<?= esc($item['label'] ?? $namaBerkas) ?>"
+                                    data-status="<?= esc($statusLabel) ?>"
+                                    data-file="/<?= esc(ltrim((string) $item['file'], '/')) ?>"
+                                >Lihat</button>
+                            <?php endif; ?>
+                            <?php if ($bisaUnggah): ?>
+                                <form method="post" action="/perumahan/rumah-booking/<?= (int) $pembelian['id'] ?>/berkas" enctype="multipart/form-data">
+                                    <?= csrf_field() ?>
+                                    <input type="file" name="<?= esc($item['key']) ?>" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="this.form.submit()">
+                                    <button type="button" class="upload-btn" onclick="this.previousElementSibling.click()">
+                                        <?= $status === 'ditolak' ? 'Perbarui' : 'Upload' ?>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
 
-    <div class="cicilan-actions">
-        <?php
-            $activeStatus = (string) ($activeNode['status'] ?? '');
-            $activePaymentId = (int) (($activeNode['payment']['id'] ?? 0));
-            $bisaUploadBaru = !empty($ringkasan['bisa_upload']);
-            $bisaPerbarui = in_array($activeStatus, ['pending', 'ditolak'], true) && $activePaymentId > 0;
-        ?>
-        <?php if ((int) ($ringkasan['sisa_bayar'] ?? 0) <= 0): ?>
-            <button type="button" class="cicilan-btn primary" disabled>Pembayaran sudah lunas</button>
-        <?php elseif ($bisaPerbarui): ?>
-            <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="update" data-payment-id="<?= $activePaymentId ?>">Perbarui Bukti</button>
-        <?php elseif ($bisaUploadBaru): ?>
-            <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="create" data-payment-id="0">Upload Bukti</button>
-        <?php else: ?>
-            <button type="button" class="cicilan-btn primary" disabled>Bukti bulan ini sudah diunggah</button>
+    <div class="dash-panel">
+        <div class="dash-head">
+            <div class="dash-head-title">
+                <span class="material-icons">payments</span>
+                <h2>Progress Cicilan</h2>
+            </div>
+        </div>
+        <div class="spec-grid cicilan-summary">
+            <div class="spec-box">
+                <span>Rumah</span>
+                <strong><?= esc($rumah['kode_rumah'] ?? '-') ?></strong>
+            </div>
+            <div class="spec-box">
+                <span>Total</span>
+                <strong class="spec-price">Rp <?= number_format((float) ($ringkasan['harga_beli'] ?? 0), 0, ',', '.') ?></strong>
+            </div>
+            <div class="spec-box">
+                <span>Durasi</span>
+                <strong><?= esc($ringkasan['durasi_text'] ?? '-') ?></strong>
+            </div>
+            <div class="spec-box">
+                <span>Cicilan / bulan</span>
+                <strong>Rp <?= number_format((float) ($ringkasan['jumlah_cicilan'] ?? 0), 0, ',', '.') ?></strong>
+            </div>
+            <div class="spec-box full">
+                <span>Periode</span>
+                <strong><?= esc($ringkasan['tanggal_mulai_display'] ?? '-') ?> - <?= esc($ringkasan['tanggal_selesai_display'] ?? '-') ?></strong>
+            </div>
+        </div>
+
+        <?php if (!empty($progressNodes)): ?>
+            <div class="timeline-wrap">
+                <div class="timeline">
+                    <?php foreach ($progressNodes as $node): ?>
+                        <?php
+                            $status = (string) ($node['status'] ?? '');
+                            $iconClass = 'q';
+                            $icon = 'help';
+                            if ($status === 'disetujui') { $iconClass = 'ok'; $icon = 'check'; }
+                            elseif ($status === 'pending') { $iconClass = 'wait'; $icon = 'schedule'; }
+                            $payment = is_array($node['payment'] ?? null) ? $node['payment'] : [];
+                            $uploadAt = $payment['created_at'] ?? $payment['tanggal_bayar'] ?? null;
+                            $uploadLabel = $uploadAt ? date('j M Y', strtotime((string) $uploadAt)) : '';
+                            if (!empty($node['is_dp'])) {
+                                if ($status === 'disetujui') $tip = 'DP: di upload ' . $uploadLabel . ' (terverifikasi)';
+                                elseif ($status === 'pending') $tip = 'DP: diupload ' . $uploadLabel . ' (Menunggu)';
+                                else $tip = 'DP: belum upload bukti';
+                            } else {
+                                $ke = (int) $node['cicilan_ke'];
+                                if ($status === 'disetujui') $tip = 'Cicilan ke-' . $ke . ': di upload ' . $uploadLabel . ' (terverifikasi)';
+                                elseif ($status === 'pending') $tip = 'Cicilan ke-' . $ke . ': diupload ' . $uploadLabel . ' (Menunggu)';
+                                else $tip = 'Cicilan ke-' . $ke . ': belum upload bukti';
+                            }
+                            $tip .= "\nBulan " . ($node['bulan_label'] ?? '-');
+                        ?>
+                        <div class="tl-node<?= !empty($node['is_current']) ? ' current' : '' ?>"
+                             data-status="<?= esc($status) ?>"
+                             data-payment-id="<?= (int) ($payment['id'] ?? 0) ?>"
+                             onclick="pilihNode(this)">
+                            <span class="tl-icon <?= $iconClass ?> material-icons"><?= $icon ?></span>
+                            <span class="tl-pill<?= !empty($node['is_dp']) ? ' dp' : '' ?>"><?= esc($node['label']) ?></span>
+                            <div class="tl-tip"><?= nl2br(esc($tip)) ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         <?php endif; ?>
+
+        <div class="cicilan-actions">
+            <?php
+                $activeStatus = (string) ($activeNode['status'] ?? '');
+                $activePaymentId = (int) (($activeNode['payment']['id'] ?? 0));
+                $bisaUploadBaru = !empty($ringkasan['bisa_upload']);
+                $bisaPerbarui = in_array($activeStatus, ['pending', 'ditolak'], true) && $activePaymentId > 0;
+            ?>
+            <?php if ((int) ($ringkasan['sisa_bayar'] ?? 0) <= 0): ?>
+                <button type="button" class="cicilan-btn primary" disabled>Pembayaran sudah lunas</button>
+            <?php elseif ($bisaPerbarui): ?>
+                <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="update" data-payment-id="<?= $activePaymentId ?>">Perbarui Bukti</button>
+            <?php elseif ($bisaUploadBaru): ?>
+                <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="create" data-payment-id="0">Upload Bukti</button>
+            <?php else: ?>
+                <button type="button" class="cicilan-btn primary" disabled>Bukti bulan ini sudah diunggah</button>
+            <?php endif; ?>
+        </div>
     </div>
 <?php endif; ?>
 <?= $this->endSection() ?>
 
 <?php if ($pembelian): ?>
 <?= $this->section('modals') ?>
+<div class="modal fade" id="modalLihatBerkas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lihatBerkasTitle">Detail berkas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="spec-grid" style="margin-bottom:14px;">
+                    <div class="spec-box">
+                        <span>Dokumen</span>
+                        <strong id="lihatBerkasLabel">-</strong>
+                    </div>
+                    <div class="spec-box">
+                        <span>Status</span>
+                        <strong id="lihatBerkasStatus">-</strong>
+                    </div>
+                </div>
+                <div id="lihatBerkasPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <a id="lihatBerkasLink" href="#" target="_blank" rel="noopener" class="btn btn-primary">Buka file</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="modalUploadCicilan" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -576,6 +798,38 @@
             btn.dataset.mode = 'create';
             btn.dataset.paymentId = '0';
         }
+    }
+
+    const modalBerkas = document.getElementById('modalLihatBerkas');
+    if (modalBerkas) {
+        modalBerkas.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            const title = trigger?.dataset?.title || 'Detail berkas';
+            const label = trigger?.dataset?.label || '-';
+            const status = trigger?.dataset?.status || '-';
+            const file = trigger?.dataset?.file || '#';
+            document.getElementById('lihatBerkasTitle').textContent = title;
+            document.getElementById('lihatBerkasLabel').textContent = label;
+            document.getElementById('lihatBerkasStatus').textContent = status;
+            document.getElementById('lihatBerkasLink').href = file;
+            const preview = document.getElementById('lihatBerkasPreview');
+            preview.innerHTML = '';
+            const ext = (file.split('.').pop() || '').toLowerCase().split('?')[0];
+            if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+                const img = document.createElement('img');
+                img.src = file;
+                img.alt = title;
+                img.style.cssText = 'width:100%;max-height:420px;object-fit:contain;border:1px solid #e4e8ef;border-radius:8px;background:#f8fafc;';
+                preview.appendChild(img);
+            } else if (ext === 'pdf') {
+                const frame = document.createElement('iframe');
+                frame.src = file;
+                frame.style.cssText = 'width:100%;height:420px;border:1px solid #e4e8ef;border-radius:8px;';
+                preview.appendChild(frame);
+            } else {
+                preview.textContent = 'Pratinjau tidak tersedia. Gunakan tombol Buka file.';
+            }
+        });
     }
 
     const modal = document.getElementById('modalUploadCicilan');
