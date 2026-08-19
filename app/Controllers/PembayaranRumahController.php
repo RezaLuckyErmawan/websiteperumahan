@@ -377,7 +377,10 @@ class PembayaranRumahController extends BaseController
 
         $pembelianId = (int) $this->request->getPost('pembelian_rumah_id');
         $jumlahBayar = (int) $this->request->getPost('jumlah_bayar');
-        $tanggalBayar = $this->isCustomer() ? null : $this->request->getPost('tanggal_bayar');
+        $tanggalBayar = $this->isCustomer() ? null : trim((string) $this->request->getPost('tanggal_bayar'));
+        if (!$this->isCustomer() && $tanggalBayar === '') {
+            $tanggalBayar = date('Y-m-d');
+        }
 
         if ($pembelianId <= 0 || $jumlahBayar <= 0 || (!$this->isCustomer() && empty($tanggalBayar))) {
             return $this->response->setStatusCode(400)
@@ -419,6 +422,8 @@ class PembayaranRumahController extends BaseController
                 ->setJSON(['status' => 'error', 'message' => 'Pembelian yang sudah batal tidak bisa menerima pembayaran']);
         }
 
+        $approvalStatus = $this->resolveApprovalStatus($id, $old);
+
         if (strtolower((string) $jenis) === 'cicilan') {
             $bulanRef = $tanggalBayar ?: date('Y-m-d');
             if ($this->sudahAdaCicilanBulanIni($pembelianId, $bulanRef, $id)) {
@@ -442,9 +447,9 @@ class PembayaranRumahController extends BaseController
             'jenis_pembayaran' => $jenis,
             'metode_bayar' => $metode,
             'keterangan' => $this->request->getPost('keterangan'),
-            'status_pengajuan' => $this->resolveApprovalStatus($id, $old),
-            'approved_at' => $this->resolveApprovalStatus($id, $old) === 'disetujui' ? date('Y-m-d H:i:s') : null,
-            'approved_by' => $this->resolveApprovalStatus($id, $old) === 'disetujui' ? session()->get('user_id') : null,
+            'status_pengajuan' => $approvalStatus,
+            'approved_at' => $approvalStatus === 'disetujui' ? date('Y-m-d H:i:s') : null,
+            'approved_by' => $approvalStatus === 'disetujui' ? session()->get('user_id') : null,
         ];
 
         $uploadedBukti = $this->uploadBuktiBayar();

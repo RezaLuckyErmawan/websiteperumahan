@@ -1,9 +1,11 @@
-<?= $this->extend('layouts/main') ?>
-
 <?php
 $pageTitle = 'Data Customer';
 $useDataTables = true;
+/** @var list<array<string, mixed>> $customers */
+$customers = is_array($customers ?? null) ? $customers : [];
 ?>
+
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('styles') ?>
 <style>
@@ -17,7 +19,7 @@ $useDataTables = true;
 
 <?= $this->section('content') ?>
 <div class="table-responsive">
-    <table id="customerTable" class="display">
+    <table id="customerTable" class="display table table-striped table-bordered w-100">
         <thead>
             <tr>
                 <th>Nama</th>
@@ -29,6 +31,25 @@ $useDataTables = true;
             </tr>
         </thead>
         <tbody>
+            <?php if (empty($customers)): ?>
+                <tr>
+                    <td colspan="6" class="text-center text-muted">Belum ada data customer.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($customers as $item): ?>
+                    <tr>
+                        <td><?= esc($item['nama'] ?? '-') ?></td>
+                        <td><?= esc($item['email'] ?? '-') ?></td>
+                        <td><?= esc($item['telepon'] ?? '-') ?></td>
+                        <td><?= esc($item['alamat'] ?? '-') ?></td>
+                        <td><?= !empty($item['tanggal_pembelian']) ? esc(date('d-m-Y', strtotime($item['tanggal_pembelian']))) : '-' ?></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary" onclick="editData(<?= (int) ($item['id'] ?? 0) ?>)"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="hapusData(<?= (int) ($item['id'] ?? 0) ?>)"><i class="fas fa-trash"></i> Hapus</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>

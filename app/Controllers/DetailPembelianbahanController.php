@@ -11,77 +11,73 @@ use App\Models\PembelianBahanModel;
 
 class DetailPembelianbahanController extends BaseController
 {
-    public function detailpembelian()
-{
-    $model = new DetailPembelianModel();
-    $bahanModel = new BahanBangunanModel();
-    $pembelianModel = new PembelianBahanModel();
-
-    $data['detailpembelian'] = $model
-        ->select('detail_pembelian_bahan.*, bahan_bangunan.nama_bahan, pembelian_bahan.nomor_nota')
-        ->join('bahan_bangunan', 'bahan_bangunan.id = detail_pembelian_bahan.bahan_bangunan_id')
-        ->join('pembelian_bahan', 'pembelian_bahan.id = detail_pembelian_bahan.pembelian_id')
-        ->findAll();
-
-    // Kirimkan data pembelian dan bahan ke view
-    $data['pembelian'] = $pembelianModel->findAll();
-    $data['bahan'] = $bahanModel->findAll();
-
-    return view('page/detailpembelianbahan/detail_pembelian_bahan', $data);
-}
-
-    public function json() {
-    $request = service('request');
-    $model = new DetailPembelianModel();
-
-    $searchValue = $request->getGet('search')['value'] ?? '';
-    $start       = $request->getGet('start') ?? 0;
-    $length      = $request->getGet('length') ?? 10;
-
-    // Builder pakai join
-    $builder = $model
-        ->select('detail_pembelian_bahan.*, bahan_bangunan.nama_bahan, pembelian_bahan.nomor_nota')
-        ->join('bahan_bangunan', 'bahan_bangunan.id = detail_pembelian_bahan.bahan_bangunan_id', 'left')
-        ->join('pembelian_bahan', 'pembelian_bahan.id = detail_pembelian_bahan.pembelian_id', 'left');
-
-    // Hitung total data SEBELUM filter pencarian
-    $totalRecords = $builder->countAllResults(false);  // false agar tidak reset query builder
-
-    // Filter pencarian
-    if (!empty($searchValue)) {
-        $builder->groupStart()
-            ->like('nomor_nota', $searchValue)
-            ->orLike('nama_bahan', $searchValue)
-            ->orLike('jumlah', $searchValue)
-            ->groupEnd();
+    private function detailPembelianQuery()
+    {
+        return (new DetailPembelianModel())
+            ->select('
+                detail_pembelian_bahan.*,
+                bahan_bangunan.nama_bahan,
+                pembelian_bahan.nomor_nota
+            ')
+            ->join('bahan_bangunan', 'bahan_bangunan.id = detail_pembelian_bahan.bahan_bangunan_id', 'left')
+            ->join('pembelian_bahan', 'pembelian_bahan.id = detail_pembelian_bahan.pembelian_id', 'left');
     }
 
-    $filteredRecords = $builder->countAllResults(false);  // false biar gak reset lagi
+    public function detailpembelian()
+    {
+        $bahanModel = new BahanBangunanModel();
+        $pembelianModel = new PembelianBahanModel();
 
-    // Ambil data
-    $data = $builder->orderBy('detail_pembelian_bahan.created_at', 'DESC')
-                    ->findAll($length, $start);
+        $data['detailpembelian'] = $this->detailPembelianQuery()
+            ->orderBy('detail_pembelian_bahan.created_at', 'DESC')
+            ->findAll();
 
-    return $this->response->setJSON([
-        'draw' => (int) $request->getGet('draw'),
-        'recordsTotal' => $totalRecords,
-        'recordsFiltered' => $filteredRecords,
-        'data' => $data
-    ]);
-}
+        $data['pembelian'] = $pembelianModel->orderBy('created_at', 'DESC')->findAll();
+        $data['bahan'] = $bahanModel->orderBy('created_at', 'DESC')->findAll();
+
+        return view('page/detailpembelianbahan/detail_pembelian_bahan', $data);
+    }
+
+    public function json() {
+        $request = service('request');
+        $builder = $this->detailPembelianQuery();
+
+        $search = $request->getGet('search');
+        $searchValue = is_array($search) ? trim((string) ($search['value'] ?? '')) : '';
+        $start = max(0, (int) ($request->getGet('start') ?? 0));
+        $length = max(1, (int) ($request->getGet('length') ?? 10));
+
+        $totalRecords = (clone $builder)->countAllResults();
+
+        if ($searchValue !== '') {
+            $builder->groupStart()
+                ->like('pembelian_bahan.nomor_nota', $searchValue)
+                ->orLike('bahan_bangunan.nama_bahan', $searchValue)
+                ->orLike('detail_pembelian_bahan.jumlah', $searchValue)
+                ->orLike('detail_pembelian_bahan.harga_satuan', $searchValue)
+                ->orLike('detail_pembelian_bahan.subtotal', $searchValue)
+                ->groupEnd();
+        }
+
+        $filteredRecords = (clone $builder)->countAllResults();
+
+        $data = $builder
+            ->orderBy('detail_pembelian_bahan.created_at', 'DESC')
+            ->findAll($length, $start);
+
+        return $this->response->setJSON([
+            'draw' => (int) $request->getGet('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data,
+        ]);
+    }
 
 
 
     public function create()
     {
-        $pembelianModel = new PembelianBahanModel();
-        $bahanModel     = new BahanBangunanModel();
-
-        $data = [
-            'pembelian' => $pembelianModel->findAll(),
-            'bahan'     => $bahanModel->findAll()
-        ];
-        return view('page/detailpembelianbahan/create', $data);
+        return redirect()->to('/detail-pembelian-bahan');
     }
 
     public function store()
@@ -137,14 +133,7 @@ class DetailPembelianbahanController extends BaseController
         return $this->response->setJSON(['detail' => $detail]);
     }
 
-    // fallback untuk non-AJAX
-    $bahanModel = new BahanBangunanModel();
-    $pembelianModel = new PembelianBahanModel();
-    return view('page/detailpembelianbahan/edit', [
-        'detail' => $detail,
-        'bahan' => $bahanModel->findAll(),
-        'pembelian' => $pembelianModel->findAll()
-    ]);
+    return redirect()->to('/detail-pembelian-bahan');
 }
 
 

@@ -13,44 +13,53 @@ class CustomerController extends BaseController
     {
         $model = new CustomerModel();
         $perumahan = new PerumahanModel();
-       $data['customers'] = $model->orderBy('created_at', 'DESC')->findAll();
-        $data['perumahan'] = $perumahan->where('status !=', 'Terjual')->findAll();
-        return view ('page/datacustomer/data-customer', $data);
+
+        return view('page/datacustomer/data-customer', [
+            'pageTitle' => 'Data Customer',
+            'useDataTables' => true,
+            'customers' => $model->orderBy('created_at', 'DESC')->findAll(),
+            'perumahan' => $perumahan->where('status !=', 'Terjual')->findAll(),
+        ]);
     }
     
     public function json()
-{
-    $request = service('request');
-        $model = new CustomerModel();
+    {
+        $request = service('request');
+        $db = db_connect();
 
-        $searchValue = $request->getGet('search')['value'] ?? '';
-        $start       = $request->getGet('start') ?? 0;
-        $length      = $request->getGet('length') ?? 10;
+        $search = $request->getGet('search');
+        $searchValue = is_array($search) ? trim((string) ($search['value'] ?? '')) : '';
+        $start = max(0, (int) ($request->getGet('start') ?? 0));
+        $length = (int) ($request->getGet('length') ?? 10);
+        $length = $length > 0 ? $length : 10;
 
-        $builder = $model;
+        $baseBuilder = $db->table('customer');
+        $totalRecords = (clone $baseBuilder)->countAllResults();
 
-        $totalRecords = $builder->countAllResults(false);
-
-        if (!empty($searchValue)) {
+        $builder = $db->table('customer');
+        if ($searchValue !== '') {
             $builder->groupStart()
                 ->like('nama', $searchValue)
                 ->orLike('email', $searchValue)
+                ->orLike('telepon', $searchValue)
                 ->orLike('alamat', $searchValue)
                 ->groupEnd();
         }
 
-        $filteredRecords = $builder->countAllResults(false);
-
-        $data = $builder->orderBy('created_at', 'DESC')
-                        ->findAll($length, $start);
+        $filteredRecords = (clone $builder)->countAllResults();
+        $data = $builder
+            ->orderBy('created_at', 'DESC')
+            ->limit($length, $start)
+            ->get()
+            ->getResultArray();
 
         return $this->response->setJSON([
             'draw' => (int) $request->getGet('draw'),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $data
+            'data' => $data,
         ]);
-}
+    }
 
     public function create() {
         $perumahan = new PerumahanModel();

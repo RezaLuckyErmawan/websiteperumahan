@@ -11,6 +11,10 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?php
+    /** @var list<array<string, mixed>> $pembelianbahan */
+    $pembelianbahan = is_array($pembelianbahan ?? null) ? $pembelianbahan : [];
+?>
 <table id="pembelianTable" class="table table-bordered">
     <thead>
         <tr>
@@ -22,6 +26,28 @@
         </tr>
     </thead>
     <tbody>
+        <?php if (empty($pembelianbahan)): ?>
+            <tr>
+                <td colspan="5" class="text-center text-muted">Belum ada data pembelian bahan.</td>
+            </tr>
+        <?php else: ?>
+            <?php foreach ($pembelianbahan as $row): ?>
+                <tr>
+                    <td><?= esc($row['nomor_nota'] ?? '-') ?></td>
+                    <td><?= !empty($row['tanggal']) ? esc(date('d-m-Y', strtotime($row['tanggal']))) : '-' ?></td>
+                    <td><?= esc($row['supplier'] ?? '-') ?></td>
+                    <td>Rp <?= number_format((float) ($row['total_harga'] ?? 0), 0, ',', '.') ?></td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="editData(<?= (int) ($row['id'] ?? 0) ?>)">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(<?= (int) ($row['id'] ?? 0) ?>)">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </tbody>
 </table>
 <?= $this->endSection() ?>

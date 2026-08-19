@@ -4,273 +4,143 @@ $useDataTables = true;
 ?>
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+  #detailPembelianTable thead th {
+    background-color: #eef6f8;
+    color: #203246;
+    text-align: center;
+  }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
-  <div class="container1">
-    <!-- Sidebar -->
-    <div class="sidebar1" id="sidebar">
-      <div>
-        <h4>
-          Sistem Manajemen Perumahan
-        </h4>
-        <div class="nav1">
-          <a class=" menu-link" href="/dashboard"><span class="material-icons rotate-icon">dashboard</span> Dashboard</a>
-          <!-- Manajemen Marketing -->
-           <div class="menu-dropdown">
-            <button class="dropdown-btn">
-               <span class="material-icons rotate-icon">analytics</span> Marketing
-              <span class="material-icons arrow">expand_more</span>
-            </button>
-            <div class="dropdown-container">
-            <a class="menu-link"href="/data-customer"><span class="material-icons rotate-icon">groups</span> Data Customer</a>
-             <a class="menu-link"href="/pembatalan-transaksi"><span class="material-icons rotate-icon">remove_shopping_cart</span> Pembatalan Transaksi</a>
-            </div>
-           </div>
+<?php
+  /** @var list<array<string, mixed>> $pembelian */
+  /** @var list<array<string, mixed>> $bahan */
+  /** @var list<array<string, mixed>> $detailpembelian */
+  $pembelian = is_array($pembelian ?? null) ? $pembelian : [];
+  $bahan = is_array($bahan ?? null) ? $bahan : [];
+  $detailpembelian = is_array($detailpembelian ?? null) ? $detailpembelian : [];
+?>
 
-          <!-- Manejemen Proyek -->
-          <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">business_center</span> Manajemen Proyek
-              <span class="material-icons arrow">expand_more</span>
+<table id="detailPembelianTable" class="display table table-bordered w-100">
+  <thead>
+    <tr>
+      <th>Nomor Nota</th>
+      <th>Nama Bahan</th>
+      <th>Jumlah</th>
+      <th>Harga Satuan</th>
+      <th>Subtotal</th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php if (empty($detailpembelian)): ?>
+      <tr>
+        <td colspan="6" class="text-center text-muted">Belum ada data detail pembelian bahan.</td>
+      </tr>
+    <?php else: ?>
+      <?php foreach ($detailpembelian as $row): ?>
+        <tr>
+          <td><?= esc($row['nomor_nota'] ?? '-') ?></td>
+          <td><?= esc($row['nama_bahan'] ?? '-') ?></td>
+          <td><?= esc($row['jumlah'] ?? '-') ?></td>
+          <td>Rp <?= number_format((float) ($row['harga_satuan'] ?? 0), 0, ',', '.') ?></td>
+          <td>Rp <?= number_format((float) ($row['subtotal'] ?? 0), 0, ',', '.') ?></td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-primary" onclick="editData(<?= (int) ($row['id'] ?? 0) ?>)">
+              <i class="fas fa-edit"></i> Edit
             </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="/data-bahan" style="margin-top: 10px;">
-                <span class="material-icons rotate-icon">construction</span> Bahan Bangunan
-              </a>
-              <a class="menu-link" href="/data-rumah">
-                <span class="material-icons rotate-icon">home_work</span> Data Rumah
-              </a>
-              </a>
-               <a class="menu-link" href="/rab-rumah">
-                <span class="material-icons rotate-icon">description</span> RAB Rumah
-              </a>
-               <a class="menu-link" href="/rab-bahan">
-                <span class="material-icons rotate-icon">description</span> RAB Bahan
-              </a>
-              <a class="menu-link" href="/rab-pekerja">
-                <span class="material-icons rotate-icon">description</span> RAB Pekerja
-              </a>
-               <a class="menu-link" href="/realisasi-rumah">
-                <span class="material-icons rotate-icon">description</span> Realisasi Rumah
-              </a>
-               <a class="menu-link" href="/realisasi-bahan">
-                <span class="material-icons rotate-icon">description</span> Realisasi Bahan
-              </a>
-              <a class="menu-link" href="/realisasi-pekerja">
-                <span class="material-icons rotate-icon">description</span> Realisasi Pekerja
-              </a>
-              <a class="menu-link" href="/data-bahan-pembangunan">
-                <span class="material-icons rotate-icon">business</span> Data Bahan Pembangunan
-              </a>
-               <a class="menu-link" href="/pekerjaan-insidentil">
-                <span class="material-icons rotate-icon">architecture</span> Data Pekerjaan Insidentil
-              </a>
-            </div>
-        </div>
-        <!-- Manajemen LOgistik -->
-        <div class="menu-dropdown">
-            <button class="dropdown-btn">
-              <span class="material-icons rotate-icon">fact_check</span> Manajemen Logistik
-              <span class="material-icons arrow">expand_more</span>
+            <button type="button" class="btn btn-sm btn-danger" onclick="hapusData(<?= (int) ($row['id'] ?? 0) ?>)">
+              <i class="fas fa-trash"></i> Hapus
             </button>
-            <div class="dropdown-container">
-              <a class="menu-link" href="data-pembelian-bahan"><span class="material-icons rotate-icon">shopping_cart</span> Data Pembelian Bahan</a>
-              <a class="menu-link active" href="/detail-pembelian-bahan"><span class="material-icons rotate-icon">receipt_long</span> Detail Pembelian  Bahan</a> 
-            </div>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </tbody>
+</table>
+<?= $this->endSection() ?>
+
+<?= $this->section('modals') ?>
+<div class="modal fade" id="modalDetailForm" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formDetailPembelian">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalDetailLabel">Tambah Detail Pembelian</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <!-- Manajemen Keuangan -->
-        <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">monetization_on </span> Keuangan
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link" href="/pembelian-rumah"><span class="material-icons rotate-icon">real_estate_agent</span> Data Pembelian Rumah</a>
-            <a class="menu-link" href="/detail-pembelian-list"><span class="material-icons rotate-icon">person</span> Detail Pembelian Rumah</a>
-            <a class="menu-link" href="/pembayaran-rumah"><span class="material-icons rotate-icon">payments</span> Pembayaran Cicilan Rumah</a>
-            <a class="menu-link" href="/progres-pembayaran-rumah"><span class="material-icons rotate-icon">timeline</span> Data Progres Pembayaran Rumah</a>
-            <?php if ((session()->get('role') ?? '') === 'admin'): ?>
-            <a class="menu-link" href="/laporan"><span class="material-icons rotate-icon">picture_as_pdf</span> Laporan</a>
-            <?php endif; ?>
-           </div>
-        </div> 
-        <!-- Menu Master -->
-         <div class="menu-dropdown">
-           <button class="dropdown-btn">
-            <span class="material-icons rotate-icon">folder_open</span> Menu Master
-            <span class="material-icons arrow">expand_more</span>
-           </button>
-           <div class="dropdown-container">
-            <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">groups</span> Data User</a>
-            <a class="menu-link"href="/data-mandor"><span class="material-icons rotate-icon">engineering</span> Data Mandor</a>
-            <!-- <a class="menu-link"href="/data-user"><span class="material-icons rotate-icon">supervisor_account</span> Data SPV</a> -->
-           </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="id">
+          <div class="mb-2">
+            <label for="pembelian_id">Nomor Nota</label>
+            <select class="form-control" name="pembelian_id" id="pembelian_id">
+              <?php foreach ($pembelian as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= esc($p['nomor_nota']) ?></option>
+              <?php endforeach ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label for="bahan_bangunan_id">Nama Bahan</label>
+            <select class="form-control" name="bahan_bangunan_id" id="bahan_bangunan_id">
+              <?php foreach ($bahan as $b): ?>
+                <option value="<?= $b['id'] ?>"><?= esc($b['nama_bahan']) ?></option>
+              <?php endforeach ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label for="jumlah">Jumlah</label>
+            <input type="number" class="form-control" name="jumlah" id="jumlah" required>
+          </div>
+          <div class="mb-2">
+            <label for="harga_satuan">Harga Satuan</label>
+            <input type="number" class="form-control" name="harga_satuan" id="harga_satuan" required>
+          </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="confirmDeleteLabel">Konfirmasi Hapus</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button>
       </div>
-      <div class="logout">
-        <a href="/logout"><span class="material-icons">logout</span> Logout</a>
+      <div class="modal-body">
+        Apakah Kamu Yakin Ingin Menghapus Data Ini?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn">Hapus</button>
       </div>
     </div>
-    <!-- Main -->
-    <div class="main">
-      <!-- Navbar -->
-      <div class="navbar1">
-        <span class="material-icons toggle-btn" onclick="toggleSidebar()">menu</span>
-        <div class="page-title">
-          Detail Pembelian Bahan
-        </div>
-        <div class="actions">
-          <div class="notifications">
-            <span class="material-icons">notifications</span>
-            <span class="badge">3</span>
-          </div>
-          <div class="profile">
-            <img src="https://i.pravatar.cc/40" alt="Profile">
-          </div>
-        </div>
+  </div>
+</div>
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content bg-success text-black">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button>
       </div>
-
-      <!-- Content -->
-      <div class="content1">
-        <?php
-          /** @var list<array<string, mixed>> $pembelian */
-          /** @var list<array<string, mixed>> $bahan */
-          $pembelian = is_array($pembelian ?? null) ? $pembelian : [];
-          $bahan = is_array($bahan ?? null) ? $bahan : [];
-        ?>
-<div class="table-responsive">
-        <table id="detailPembelianTable" class="display table table-bordered">
-            <thead>
-                <tr>
-                
-                    <th>Nomor Nota</th>
-                    <th>Nama Bahan</th>
-                    <th>Jumlah</th>
-                    <th>Harga Satuan</th>
-                    <th>Subtotal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-               
-            </tbody>
-        </table>
-         <style>
-          #detailPembelianTable thead th {
-              background-color: #eef6f8;
-              color: #203246;
-              text-align: center;
-          }
-          </style>
-        <!-- Modal Form Tambah/Edit -->
-        <div class="modal fade" id="modalDetailForm" tabindex="-1">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <form id="formDetailPembelian">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modalDetailLabel">Tambah Detail Pembelian</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  <input type="hidden" name="id" id="id">
-                  <div class="mb-2">
-                    <label for="pembelian_id">Nomor Nota</label>
-                    <select class="form-control" name="pembelian_id" id="pembelian_id">
-                      <?php foreach ($pembelian as $p): ?>
-                        <option value="<?= $p['id'] ?>"><?= $p['nomor_nota'] ?></option>
-                      <?php endforeach ?>
-                    </select>
-                  </div>
-                  <div class="mb-2">
-                    <label for="bahan_bangunan_id">Nama Bahan</label>
-                    <select class="form-control" name="bahan_bangunan_id" id="bahan_bangunan_id">
-                      <?php foreach ($bahan as $b): ?>
-                        <option value="<?= $b['id'] ?>"><?= $b['nama_bahan'] ?></option>
-                      <?php endforeach ?>
-                    </select>
-                  </div>
-                  <div class="mb-2">
-                    <label for="jumlah">Jumlah</label>
-                    <input type="number" class="form-control" name="jumlah" id="jumlah" required>
-                  </div>
-                  <div class="mb-2">
-                    <label for="harga_satuan">Harga Satuan</label>
-                    <input type="number" class="form-control" name="harga_satuan" id="harga_satuan" required>
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                  <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal Konfirmasi Delete -->
-        <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-labelledby="modalConfirmDelete" aria-hidden="true">
-          <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Konfirmasi Hapus</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p>Yakin ingin menghapus data ini?</p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="btnDeleteConfirm">Hapus</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MODAL UNTUK PESAN SUKSES -->
-        <!-- Modal Pesan Sukses -->
-        <div class="modal fade" id="successmodal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content bg-success text-black">
-              <div class="modal-header border-0">
-                <h5 class="modal-title" id="successModalLabel">✔️ Berhasil</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body text-center">
-                <p id="successMessage">Data berhasil diproses.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        </div>
+      <div class="modal-body text-center">
+        <p id="successMessage">Data Berhasil dihapus</p>
       </div>
-        <footer class="footer1">
-            <p>&copy; <?= date('Y') ?> Sistem Manajemen Informasi Perumahan. All rights reserved.</p>
-        </footer>
     </div>
-    
   </div>
-  <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("active");
-    }
-    function showSuccess(message = 'Berhasil!') {
-  $('#successMessage').text(message);
-  const modal = new bootstrap.Modal(document.getElementById('successmodal'));
-  modal.show();
+</div>
+<?= $this->endSection() ?>
 
-  setTimeout(() => {
-    modal.hide();
-  }, 2000);
-}
-
- document.querySelectorAll('.dropdown-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-    this.parentElement.classList.toggle('aktif');
-    });
-  });
-  </script>
-  <script src="<?= base_url('assets/js/detailpembelianbahan.js')?>"></script>
-  </div>
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('assets/js/detailpembelianbahan.js') ?>"></script>
 <?= $this->endSection() ?>

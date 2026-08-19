@@ -21,23 +21,36 @@ $menuItems = $menuConfig->getMenuForRole($userRole);
             <?php foreach ($menuItems as $menuKey => $menuItem): ?>
                 <?php if ($menuItem['type'] === 'link'): ?>
                     <!-- Single Link -->
-                    <a class="menu-link <?= $menuConfig->isMenuItemActive($menuItem['link'], $currentUrl) ? 'active' : '' ?>"
+                    <?php $isActiveLink = $menuConfig->isMenuItemActive($menuItem['link'], $currentUrl); ?>
+                    <a class="menu-link <?= $isActiveLink ? 'active current-page' : '' ?>"
+                       <?= $isActiveLink ? 'aria-current="page"' : '' ?>
                        href="<?= esc($menuItem['link'], 'attr') ?>">
                         <span class="material-icons rotate-icon"><?= esc($menuItem['icon']) ?></span>
                         <?= esc($menuItem['label']) ?>
                     </a>
 
                 <?php elseif ($menuItem['type'] === 'dropdown'): ?>
+                    <?php
+                        $hasActiveChild = false;
+                        foreach ($menuItem['items'] as $item) {
+                            if ($menuConfig->isMenuItemActive($item['link'], $currentUrl)) {
+                                $hasActiveChild = true;
+                                break;
+                            }
+                        }
+                    ?>
                     <!-- Dropdown Menu -->
-                    <div class="menu-dropdown">
-                        <button class="dropdown-btn" aria-expanded="false">
+                    <div class="menu-dropdown <?= $hasActiveChild ? 'aktif' : '' ?>" data-dropdown-key="<?= esc($menuKey, 'attr') ?>">
+                        <button class="dropdown-btn <?= $hasActiveChild ? 'active-parent current-parent' : '' ?>" aria-expanded="<?= $hasActiveChild ? 'true' : 'false' ?>" data-dropdown-key="<?= esc($menuKey, 'attr') ?>">
                             <span class="material-icons rotate-icon"><?= esc($menuItem['icon']) ?></span>
                             <?= esc($menuItem['label']) ?>
                             <span class="material-icons arrow">expand_more</span>
                         </button>
                         <div class="dropdown-container">
                             <?php foreach ($menuItem['items'] as $itemKey => $item): ?>
+                                <?php $isActiveChild = $menuConfig->isMenuItemActive($item['link'], $currentUrl); ?>
                                 <a class="menu-link <?= $menuConfig->isMenuItemActive($item['link'], $currentUrl) ? 'active' : '' ?>"
+                                   <?= $isActiveChild ? 'aria-current="page"' : '' ?>
                                    href="<?= esc($item['link'], 'attr') ?>"
                                    style="margin-top: 10px;">
                                     <span class="material-icons rotate-icon"><?= esc($item['icon']) ?></span>

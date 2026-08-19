@@ -124,7 +124,7 @@ $useDataTables = true;
             <span class="badge">3</span>
           </div>
           <div class="profile">
-            <img src="https://i.pravatar.cc/40" alt="Profile">
+            <img src="<?= base_url('assets/images/default-avatar.svg') ?>" alt="Profile">
           </div>
         </div>
       </div>

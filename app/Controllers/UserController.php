@@ -62,6 +62,7 @@ class UserController extends BaseController
         $userModel = new UserModel();
         $allowedRoles = ['admin', 'mandor', 'owner', 'spv', 'customer'];
         $role = $this->request->getPost('role');
+        $status = trim((string) $this->request->getPost('status')) ?: 'aktif';
 
         if (!in_array($role, $allowedRoles, true)) {
             return $this->response->setStatusCode(400)
@@ -79,7 +80,7 @@ class UserController extends BaseController
             'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
             'customer_id' => $role === 'customer' ? $this->request->getPost('customer_id') : null,
             'role' => $role,
-            'status' => $this->request->getPost('status')
+            'status' => $status
         ];
         $userModel->insert($data);
 
@@ -96,6 +97,8 @@ class UserController extends BaseController
         $userModel = new UserModel();
         $allowedRoles = ['admin', 'mandor', 'owner', 'spv', 'customer'];
         $role = $this->request->getPost('role');
+        $existingUser = $userModel->find($id);
+        $status = trim((string) $this->request->getPost('status'));
 
         if (!in_array($role, $allowedRoles, true)) {
             return $this->response->setStatusCode(400)
@@ -112,7 +115,7 @@ class UserController extends BaseController
             'username' => $this->request->getPost('username'),
             'customer_id' => $role === 'customer' ? $this->request->getPost('customer_id') : null,
             'role' => $role,
-            'status' => $this->request->getPost('status')
+            'status' => $status !== '' ? $status : ($existingUser['status'] ?? 'aktif')
         ];
 
         $password = $this->request->getPost('password');

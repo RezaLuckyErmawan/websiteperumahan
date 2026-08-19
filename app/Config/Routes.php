@@ -68,7 +68,6 @@ $routes->post('/customer/store', 'CustomerController::store');
 $routes->get('/customer/edit/(:num)', 'CustomerController::edit/$1');
 $routes->post('/customer/update/(:num)', 'CustomerController::update/$1');
 $routes->get('/customer/delete/(:num)', 'CustomerController::delete/$1');
-// $routes->get('/data-customer', 'DashboardController::datacustomer');
 
 $routes->get('/pembelian-rumah', 'PembelianRumahController::pembelianrumah');
 $routes->get('/pembelian-rumah/json', 'PembelianRumahController::json');
@@ -107,10 +106,16 @@ $routes->get('/laporan/pdf-cicilan', 'LaporanController::pdfCicilan');
 
 $routes->get('/login', 'LoginController::loginform');
 $routes->post('/login/auth', 'LoginController::login');
+$routes->get('/register', 'LoginController::registerForm');
+$routes->post('/register', 'LoginController::register');
 $routes->get('/logout', 'LoginController::logout');
 
 $routes->get('/data-user', 'UserController::user');
 $routes->get('/data-user/json', 'UserController::json');
+$routes->post('/data-user/store', 'UserController::store');
+$routes->get('/data-user/edit/(:num)', 'UserController::edit/$1');
+$routes->post('/data-user/update/(:num)', 'UserController::update/$1');
+$routes->delete('/data-user/delete/(:num)', 'UserController::delete/$1');
 $routes->post('/user/store', 'UserController::store');
 $routes->get('/user/edit/(:num)', 'UserController::edit/$1');
 $routes->post('/user/update/(:num)', 'UserController::update/$1');
@@ -200,6 +205,7 @@ $routes->post('/chat/upload', 'ChatController::upload');
 $routes->get('/chat/history/(:any)', 'ChatController::history/$1');
 $routes->post('/chat/read', 'ChatController::markAsRead');
 $routes->get('/chat/unread', 'ChatController::unread');
+$routes->get('/chat/notifications', 'ChatController::notifications');
 $routes->post('/chat/join', 'ChatController::join');
 $routes->post('/chat/leave', 'ChatController::leave');
 $routes->post('/chat/typing', 'ChatController::typing');

@@ -1,0 +1,20 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Default user avatar</title>
+  <desc id="desc">A professional default user avatar with a clean gradient background and user silhouette.</desc>
+  <defs>
+    <linearGradient id="bg" x1="12" y1="10" x2="70" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1F3A5F" />
+      <stop offset="1" stop-color="#2D6A8A" />
+    </linearGradient>
+    <linearGradient id="accent" x1="24" y1="18" x2="58" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8F1FA" />
+      <stop offset="1" stop-color="#BFD5E8" />
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="url(#bg)" />
+  <circle cx="40" cy="31" r="13" fill="url(#accent)" />
+  <path d="M18 64c3.9-10.8 13.6-18 22-18s18.1 7.2 22 18" fill="url(#accent)" />
+  <circle cx="26" cy="24" r="3" fill="#5FA8D3" fill-opacity="0.45" />
+  <circle cx="56" cy="22" r="2.5" fill="#FFFFFF" fill-opacity="0.3" />
+  <circle cx="61" cy="40" r="1.8" fill="#FFFFFF" fill-opacity="0.28" />
+</svg>

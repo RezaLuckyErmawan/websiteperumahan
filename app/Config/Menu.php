@@ -293,11 +293,44 @@ class Menu extends BaseConfig
      */
     public function isMenuItemActive(string $link, string $currentUrl): bool
     {
-        // Remove leading slashes and compare
-        $link = ltrim($link, '/');
-        $currentUrl = ltrim($currentUrl, '/');
+        $linkPath = $this->normalizePath($link);
+        $currentPath = $this->normalizePath($currentUrl);
 
-        // Exact match or starts with (for dropdown items)
-        return $link === $currentUrl || strpos($currentUrl, $link) === 0;
+        if ($linkPath === '' || $currentPath === '') {
+            return false;
+        }
+
+        if ($linkPath === $currentPath) {
+            return true;
+        }
+
+        return str_starts_with($currentPath, $linkPath . '/');
+    }
+
+    /**
+     * Normalize a URL or path into a comparable path fragment.
+     */
+    protected function normalizePath(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (str_contains($value, '://')) {
+            $parsedPath = parse_url($value, PHP_URL_PATH);
+            $value = is_string($parsedPath) ? $parsedPath : '';
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = '/' . ltrim($value, '/');
+        $value = rtrim($value, '/');
+
+        return $value === '' ? '/' : $value;
     }
 }

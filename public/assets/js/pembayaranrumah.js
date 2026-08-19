@@ -10,6 +10,64 @@ const jenisPembayaranLabels = {
   pelunasan: 'Pelunasan'
 };
 
+function getTodayInputValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function hideModal(modalId) {
+  const modalEl = document.getElementById(modalId);
+  if (!modalEl || !window.bootstrap?.Modal) return;
+
+  const instance = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+  instance.hide();
+}
+
+function validatePembayaranForm(form, isEdit = false) {
+  const pembelianId = form.find('select[name=pembelian_rumah_id]').val();
+  const jumlahBayar = parseInt(form.find('input[name=jumlah_bayar]').val() || 0, 10);
+  const tanggalBayar = form.find('input[name=tanggal_bayar]').val();
+  const buktiInput = form.find('input[name=bukti_bayar]')[0];
+  const hasFile = !!(buktiInput && buktiInput.files && buktiInput.files.length > 0);
+
+  if (!pembelianId) {
+    alert('Transaksi rumah wajib dipilih');
+    return null;
+  }
+
+  if (!jumlahBayar || jumlahBayar <= 0) {
+    alert('Jumlah bayar wajib diisi');
+    return null;
+  }
+
+  if (canModifyPayments && !tanggalBayar) {
+    form.find('input[name=tanggal_bayar]').val(getTodayInputValue());
+  }
+
+  if (!canModifyPayments && !hasFile && !isEdit) {
+    alert('Bukti pembayaran wajib diunggah');
+    return null;
+  }
+
+  if (hasFile) {
+    const file = buktiInput.files[0];
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
+      alert('Bukti pembayaran harus berupa JPG, PNG, atau PDF');
+      return null;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran bukti pembayaran maksimal 2 MB. Kompres foto terlebih dahulu.');
+      return null;
+    }
+  }
+
+  return {
+    pembelianId,
+    jumlahBayar,
+    hasFile
+  };
+}
+
 $(document).ready(function () {
   pembayaranTable = $('#pembayaranRumahTable').DataTable({
     processing: true,
@@ -141,6 +199,10 @@ function openCreateForm(pembelianId = '') {
   $('.admin-payment-field').toggle(canModifyPayments);
   $('#buktiSaatIni').html('');
   $('#modalFormLabel').text(canModifyPayments ? 'Tambah Pembayaran Rumah' : 'Tambah Pengajuan Cicilan');
+
+  if (canModifyPayments) {
+    form.find('input[name=tanggal_bayar]').val(getTodayInputValue());
+  }
 
   if (pembelianId) {
     form.find('select[name=pembelian_rumah_id]').val(pembelianId);
@@ -280,30 +342,15 @@ function approveData(id) {
 
 function simpanForm() {
   const form = $('#modalForm form');
-  const buktiInput = form.find('input[name=bukti_bayar]')[0];
-  const hasFile = !!(buktiInput && buktiInput.files && buktiInput.files.length > 0);
-
-  if (!canModifyPayments && !hasFile) {
-    alert('Bukti pembayaran wajib diunggah');
+  const validation = validatePembayaranForm(form, false);
+  if (!validation) {
     return;
-  }
-
-  if (hasFile) {
-    const file = buktiInput.files[0];
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
-      alert('Bukti pembayaran harus berupa JPG, PNG, atau PDF');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Ukuran bukti pembayaran maksimal 2 MB. Kompres foto terlebih dahulu.');
-      return;
-    }
   }
 
   const id = form.find('input[name=id]').val();
   const url = id ? `/pembayaran-rumah/update/${id}` : '/pembayaran-rumah/store';
-  const disabled = form.find(':disabled').prop('disabled', false);
+  const disabled = form.find(':disabled');
+  disabled.prop('disabled', false);
   const formData = new FormData(form[0]);
 
   $.ajax({
@@ -315,7 +362,7 @@ function simpanForm() {
     success: function (res) {
       disabled.prop('disabled', true);
       if (res.status === 'success') {
-        $('#modalForm').modal('hide');
+        hideModal('modalForm');
         $('#pembayaranRumahTable').DataTable().ajax.reload(null, false);
         showSuccess(id ? 'Pembayaran berhasil diperbarui!' : (canModifyPayments ? 'Pembayaran berhasil ditambahkan!' : 'Pengajuan cicilan berhasil dikirim dan menunggu approval admin!'));
       } else {
@@ -326,6 +373,46 @@ function simpanForm() {
       disabled.prop('disabled', true);
       const message = xhr.responseJSON?.message || 'Terjadi kesalahan pada server';
       alert(message);
+    }
+  });
+}
+
+function updateForm() {
+  const form = $('#modalEdit form');
+  const validation = validatePembayaranForm(form, true);
+  if (!validation) {
+    return;
+  }
+
+  const id = form.find('input[name=id]').val();
+  if (!id) {
+    alert('ID data tidak ditemukan');
+    return;
+  }
+
+  const disabled = form.find(':disabled');
+  disabled.prop('disabled', false);
+  const formData = new FormData(form[0]);
+
+  $.ajax({
+    url: `/pembayaran-rumah/update/${id}`,
+    method: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (res) {
+      disabled.prop('disabled', true);
+      if (res.status === 'success') {
+        hideModal('modalEdit');
+        $('#pembayaranRumahTable').DataTable().ajax.reload(null, false);
+        showSuccess('Pembayaran berhasil diperbarui!');
+      } else {
+        alert(res.message || 'Gagal menyimpan data');
+      }
+    },
+    error: function (xhr) {
+      disabled.prop('disabled', true);
+      alert(xhr.responseJSON?.message || 'Terjadi kesalahan pada server');
     }
   });
 }

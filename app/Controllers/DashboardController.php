@@ -50,7 +50,7 @@ class DashboardController extends BaseController
         'totalpembelian'  => $totalpembelian,
         'stoktotal'       => $stoktotal,
     ]);
-}
+    }
 
     public function landing() {
         $model = new PerumahanModel();

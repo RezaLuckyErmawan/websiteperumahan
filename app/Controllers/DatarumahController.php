@@ -16,36 +16,45 @@ class DatarumahController extends BaseController
         return view('page/datarumah/datarumah', $data);
     }
 
-    public function json() {
-    $request = service('request');
-    $model = new PerumahanModel();
+    public function json()
+    {
+        $request = service('request');
+        $db = db_connect();
 
-    $searchValue = $request->getGet('search')['value'];
-    $start = $request->getGet('start');
-    $length = $request->getGet('length');
+        $search = $request->getGet('search');
+        $searchValue = is_array($search) ? trim((string) ($search['value'] ?? '')) : '';
+        $start = max(0, (int) ($request->getGet('start') ?? 0));
+        $length = (int) ($request->getGet('length') ?? 10);
+        $length = $length > 0 ? $length : 10;
 
-    $query = $model; 
-    if ($searchValue) {
-        $query = $query
-            ->like('kode_rumah', $searchValue)
-            ->orLike('lokasi', $searchValue)
-            ->orLike('tipe', $searchValue)
-            ->orLIke('status', $searchValue);
+        $baseBuilder = $db->table('perumahan');
+        $totalRecords = (clone $baseBuilder)->countAllResults();
+
+        $filteredBuilder = $db->table('perumahan');
+        if ($searchValue !== '') {
+            $filteredBuilder->groupStart()
+                ->like('kode_rumah', $searchValue)
+                ->orLike('lokasi', $searchValue)
+                ->orLike('tipe', $searchValue)
+                ->orLike('status', $searchValue)
+                ->groupEnd();
+        }
+
+        $filteredRecords = (clone $filteredBuilder)->countAllResults();
+
+        $data = $filteredBuilder
+            ->orderBy('created_at', 'DESC')
+            ->limit($length, $start)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'draw' => (int) $request->getGet('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data,
+        ]);
     }
-
-    $data = $query->orderBy('created_at', 'DESC')
-                  ->findAll($length, $start);
-                  
-    $total = $model->countAll();
-    $filtered = $searchValue ? count($data) : $total;
-
-    return $this->response->setJSON([
-        'draw' => (int) $request->getGet('draw'),
-        'recordsTotal' => $total,
-        'recordsFiltered' => $filtered,
-        'data' => $data,
-    ]);
-}
 
 
     public function create() {
