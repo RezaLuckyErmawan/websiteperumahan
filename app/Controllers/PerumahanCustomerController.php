@@ -108,6 +108,7 @@ class PerumahanCustomerController extends BaseController
                 'tanggal_pembelian' => date('Y-m-d'),
                 'harga_beli' => $rumah['harga'] ?? 0,
                 'status_pembelian' => 'Booking',
+                'metode_pembayaran' => 'Transfer Bank',
                 'status_dokumen' => 'Pending',
                 'sumber' => 'customer',
                 'user_id' => session()->get('user_id'),
@@ -127,7 +128,7 @@ class PerumahanCustomerController extends BaseController
                 ->with('error', 'Checkout gagal. Rumah mungkin sudah di-booking user lain.');
         }
 
-        return redirect()->to('/perumahan/rumah-booking')->with('success', 'Checkout berhasil. Rumah berstatus Booked.');
+        return redirect()->to('/dashboard')->with('success', 'Checkout berhasil. Rumah berstatus Booked.');
     }
 
     public function rumahBooking()
@@ -180,36 +181,50 @@ class PerumahanCustomerController extends BaseController
         }
 
         $info = TransaksiRumahModel::infoBerkas($transaksi);
-        if ($info['kedaluwarsa'] && !$info['wajib_terisi']) {
-            return redirect()->to('/perumahan/rumah-booking/' . $id . '/berkas')
-                ->with('error', 'Batas waktu 7 hari untuk melengkapi berkas sudah habis.');
+        $split = TransaksiRumahModel::splitBerkas($transaksi['berkas'] ?? null);
+        $files = $split['files'];
+        $verifikasi = $split['verifikasi'];
+
+        if ($info['kedaluwarsa']) {
+            $bolehPerbarui = false;
+            foreach (array_keys(TransaksiRumahModel::JENIS_BERKAS) as $key) {
+                $file = $this->request->getFile($key);
+                if ($file && $file->getError() !== UPLOAD_ERR_NO_FILE && (($verifikasi[$key] ?? '') === 'ditolak')) {
+                    $bolehPerbarui = true;
+                    break;
+                }
+            }
+            if (!$bolehPerbarui && !$info['wajib_terisi']) {
+                return redirect()->to('/dashboard')
+                    ->with('error', 'Batas waktu 7 hari untuk melengkapi berkas sudah habis.');
+            }
         }
 
-        $uploaded = $info['uploaded'];
         $adaFile = false;
 
         foreach (array_keys(TransaksiRumahModel::JENIS_BERKAS) as $key) {
             $path = $this->uploadBerkasFile($key);
             if (is_array($path) && ($path['status'] ?? '') === 'error') {
-                return redirect()->to('/perumahan/rumah-booking/' . $id . '/berkas')
+                return redirect()->to('/dashboard')
                     ->with('error', $path['message'])
                     ->withInput();
             }
             if (is_string($path) && $path !== '') {
                 $adaFile = true;
-                $uploaded[$key] = $path;
+                $files[$key] = $path;
+                $verifikasi[$key] = 'pending';
             }
         }
 
         if (!$adaFile) {
-            return redirect()->to('/perumahan/rumah-booking/' . $id . '/berkas')
+            return redirect()->to('/dashboard')
                 ->with('error', 'Pilih minimal satu berkas untuk diunggah.');
         }
 
         $statusBerkas = 'pending';
         $wajibTerisi = true;
         foreach (TransaksiRumahModel::JENIS_BERKAS as $key => $meta) {
-            if ($meta['wajib'] && empty($uploaded[$key])) {
+            if ($meta['wajib'] && empty($files[$key])) {
                 $wajibTerisi = false;
                 break;
             }
@@ -220,7 +235,7 @@ class PerumahanCustomerController extends BaseController
 
         $model = new PembelianRumahModel();
         $model->update($id, [
-            'berkas' => json_encode($uploaded),
+            'berkas' => TransaksiRumahModel::encodeBerkas($files, $verifikasi),
             'status_berkas' => $statusBerkas,
         ]);
 
@@ -228,7 +243,7 @@ class PerumahanCustomerController extends BaseController
             ? 'Semua berkas wajib berhasil dilengkapi.'
             : 'Berkas berhasil diunggah. Lengkapi sisa dokumen sebelum batas 7 hari.';
 
-        return redirect()->to('/perumahan/rumah-booking/' . $id . '/berkas')->with('success', $pesan);
+        return redirect()->to('/dashboard')->with('success', $pesan);
     }
 
     private function bookingMilikUser($id): ?array
@@ -238,8 +253,10 @@ class PerumahanCustomerController extends BaseController
             ->select('pembelian_rumah.*, perumahan.kode_rumah, perumahan.tipe, perumahan.lokasi')
             ->join('perumahan', 'perumahan.id = pembelian_rumah.perumahan_id')
             ->where('pembelian_rumah.id', $id)
-            ->where('pembelian_rumah.user_id', session()->get('user_id'))
-            ->where('pembelian_rumah.sumber', 'customer')
+            ->groupStart()
+                ->where('pembelian_rumah.user_id', session()->get('user_id'))
+                ->orWhere('pembelian_rumah.customer_id', session()->get('customer_id') ?: 0)
+            ->groupEnd()
             ->first();
 
         return $transaksi ?: null;

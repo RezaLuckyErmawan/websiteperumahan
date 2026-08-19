@@ -483,10 +483,25 @@
           <small><?= esc($item['keterangan']) ?></small>
         </div>
         <div>
+          <?php
+            $berkasStatus = strtolower((string) ($item['status'] ?? 'pending'));
+            $berkasStatusClass = 'status-warning';
+            if ($berkasStatus === 'disetujui') $berkasStatusClass = 'status-success';
+            elseif ($berkasStatus === 'ditolak') $berkasStatusClass = 'status-danger';
+          ?>
           <?php if (!empty($item['file'])): ?>
             <a href="/<?= esc($item['file']) ?>" target="_blank" class="btn btn-sm btn-primary">
               <i class="fas fa-eye"></i> Lihat
             </a>
+            <?php if (empty($isCustomer) && $berkasStatus === 'pending'): ?>
+              <button type="button" class="btn btn-sm btn-success" title="Setujui" onclick="verifikasiBerkas(<?= (int) ($pembelian['id'] ?? 0) ?>, '<?= esc($item['key']) ?>', 'setujui')">
+                <i class="fas fa-check"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-danger" title="Tolak" onclick="verifikasiBerkas(<?= (int) ($pembelian['id'] ?? 0) ?>, '<?= esc($item['key']) ?>', 'tolak')">
+                <i class="fas fa-times"></i>
+              </button>
+            <?php endif; ?>
+            <span class="status-pill <?= $berkasStatusClass ?>"><?= esc(ucfirst($berkasStatus)) ?></span>
           <?php else: ?>
             <span class="status-pill status-danger">Belum diunggah</span>
           <?php endif; ?>
@@ -517,6 +532,8 @@
           <th>Jumlah Bayar</th>
           <th>Metode</th>
           <th>Status</th>
+          <th>Bukti</th>
+          <th>Aksi</th>
           <th>Keterangan</th>
         </tr>
       </thead>
@@ -541,6 +558,25 @@
             <td class="amount-paid">Rp <?= number_format((float) ($bayar['jumlah_bayar'] ?? 0), 0, ',', '.') ?></td>
             <td><?= esc(ucfirst((string) ($bayar['metode_bayar'] ?? '-'))) ?></td>
             <td><span class="status-pill <?= $statusBayarClass ?>"><?= esc(ucfirst((string) ($bayar['status_pengajuan'] ?? '-'))) ?></span></td>
+            <td>
+              <?php if (!empty($bayar['bukti_bayar'])): ?>
+                <a href="/<?= esc($bayar['bukti_bayar']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary">Lihat</a>
+              <?php else: ?>
+                <span class="text-muted">-</span>
+              <?php endif; ?>
+            </td>
+            <td>
+              <?php if (empty($isCustomer) && $statusBayar === 'pending'): ?>
+                <button type="button" class="btn btn-sm btn-success" title="Setujui" onclick="verifikasiCicilan(<?= (int) ($bayar['id'] ?? 0) ?>, 'approve')">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" title="Tolak" onclick="verifikasiCicilan(<?= (int) ($bayar['id'] ?? 0) ?>, 'reject')">
+                  <i class="fas fa-times"></i>
+                </button>
+              <?php else: ?>
+                -
+              <?php endif; ?>
+            </td>
             <td><?= esc($bayar['keterangan'] ?: '-') ?></td>
           </tr>
         <?php endforeach; ?>
@@ -551,5 +587,30 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- Page-specific scripts can be added here if needed -->
+<script>
+  function verifikasiBerkas(id, jenis, aksi) {
+    $.post(`/pembelian-rumah/${id}/berkas/${jenis}/verifikasi`, { aksi }, function (res) {
+      if (res.status === 'success') {
+        window.location.reload();
+        return;
+      }
+      alert(res.message || 'Gagal memverifikasi berkas');
+    }).fail(function (xhr) {
+      alert((xhr.responseJSON && xhr.responseJSON.message) || 'Gagal memverifikasi berkas');
+    });
+  }
+
+  function verifikasiCicilan(id, aksi) {
+    const url = aksi === 'reject' ? `/pembayaran-rumah/reject/${id}` : `/pembayaran-rumah/approve/${id}`;
+    $.post(url, function (res) {
+      if (res.status === 'success') {
+        window.location.reload();
+        return;
+      }
+      alert(res.message || 'Gagal memverifikasi bukti cicilan');
+    }).fail(function (xhr) {
+      alert((xhr.responseJSON && xhr.responseJSON.message) || 'Gagal memverifikasi bukti cicilan');
+    });
+  }
+</script>
 <?= $this->endSection() ?>

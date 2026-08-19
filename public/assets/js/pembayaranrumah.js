@@ -244,7 +244,24 @@ function rowApproveButton(id, row) {
     return '';
   }
 
-  return `<button class="btn btn-sm btn-success" title="Approve" onclick="approveData(${id})"><i class="fas fa-check"></i></button>`;
+  return `
+    <button class="btn btn-sm btn-success" title="Setujui" onclick="approveData(${id})"><i class="fas fa-check"></i></button>
+    <button class="btn btn-sm btn-danger" title="Tolak" onclick="rejectData(${id})"><i class="fas fa-times"></i></button>
+  `;
+}
+
+function rejectData(id) {
+  $.post(`/pembayaran-rumah/reject/${id}`, function (response) {
+    if (response.status === 'success') {
+      $('#pembayaranRumahTable').DataTable().ajax.reload(null, false);
+      showSuccess('Bukti cicilan ditolak.');
+      return;
+    }
+
+    alert(response.message || 'Gagal menolak pembayaran');
+  }).fail(function (xhr) {
+    alert(xhr.responseJSON?.message || 'Gagal menolak pembayaran');
+  });
 }
 
 function approveData(id) {

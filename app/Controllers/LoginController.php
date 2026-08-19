@@ -57,7 +57,7 @@ class LoginController extends BaseController
         ]);
 
         if ($user['role'] === 'customer') {
-            return redirect()->to('/pembayaran-rumah');
+            return redirect()->to('/dashboard');
         }
 
         return redirect()->to('/dashboard');

@@ -204,6 +204,83 @@ class PembayaranRumahController extends BaseController
         return $this->response->setJSON(['status' => 'success', 'message' => 'Pembayaran berhasil disetujui']);
     }
 
+    public function reject($id)
+    {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Customer tidak dapat menolak pembayaran.']);
+        }
+
+        $model = new PembayaranRumahModel();
+        $data = $model->find($id);
+
+        if (!$data) {
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
+        }
+
+        if (strtolower((string) ($data['status_pengajuan'] ?? '')) !== 'pending') {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Hanya pengajuan pending yang dapat ditolak.']);
+        }
+
+        $model->update($id, [
+            'status_pengajuan' => 'ditolak',
+            'approved_at' => date('Y-m-d H:i:s'),
+            'approved_by' => session()->get('user_id'),
+        ]);
+        $this->updateStatusPembelian((int) $data['pembelian_rumah_id']);
+
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Bukti cicilan ditolak']);
+    }
+
+    public function unggahUlangBukti($id)
+    {
+        if (!$this->isCustomer()) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Hanya customer yang dapat memperbarui bukti cicilan.']);
+        }
+
+        $model = new PembayaranRumahModel();
+        $data = $model->find($id);
+        if (!$data) {
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Data pembayaran tidak ditemukan']);
+        }
+
+        $summary = $this->getRingkasanPembayaran((int) $data['pembelian_rumah_id']);
+        if (!$summary) {
+            return $this->response->setStatusCode(403)
+                ->setJSON(['status' => 'error', 'message' => 'Pembayaran ini bukan milik Anda.']);
+        }
+
+        $status = strtolower((string) ($data['status_pengajuan'] ?? ''));
+        if (!in_array($status, ['pending', 'ditolak'], true)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Bukti yang sudah disetujui tidak dapat diubah.']);
+        }
+
+        $uploadedBukti = $this->uploadBuktiBayar();
+        if (is_array($uploadedBukti) && ($uploadedBukti['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($uploadedBukti);
+        }
+        if (!$uploadedBukti) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Bukti pembayaran wajib diunggah']);
+        }
+
+        $oldBukti = $data['bukti_bayar'] ?? null;
+        $model->update($id, [
+            'bukti_bayar' => $uploadedBukti,
+            'status_pengajuan' => 'pending',
+            'approved_at' => null,
+            'approved_by' => null,
+        ]);
+        $this->deleteBuktiBayar($oldBukti);
+
+        return $this->response->setJSON(['status' => 'success']);
+    }
+
     public function delete($id)
     {
         if ($this->isCustomer()) {
@@ -461,6 +538,7 @@ class PembayaranRumahController extends BaseController
         $hargaBeli = (int) $pembelian['harga_beli'];
         $sisaBayar = max($hargaBeli - $totalBayar, 0);
         $cicilanKe = $this->hitungCicilanKe($pembelianId, $excludePaymentId);
+        $resolved = $this->resolveJenisDanMetode($pembelian, $totalBayar);
         $cicilanInfo = $this->hitungInfoCicilan($pembelian, $sisaBayar, $cicilanKe, $pembelianId, $excludePaymentId);
 
         return [
@@ -471,8 +549,8 @@ class PembayaranRumahController extends BaseController
             'total_bayar' => $totalBayar,
             'sisa_bayar' => $sisaBayar,
             'status_pembelian' => $pembelian['status_pembelian'],
-            'metode_pembayaran' => $pembelian['metode_pembayaran'] ?? '',
-            'jenis_pembayaran' => strtolower((string) ($pembelian['metode_pembayaran'] ?? '')) === 'cicilan internal' ? 'cicilan' : 'pelunasan',
+            'metode_pembayaran' => $resolved['metode'],
+            'jenis_pembayaran' => $resolved['jenis'],
             'lama_cicilan_tahun' => (int) ($pembelian['lama_cicilan_tahun'] ?? 0),
             'cicilan_ke' => $cicilanKe,
             'total_cicilan' => $cicilanInfo['total_cicilan'],
@@ -480,6 +558,36 @@ class PembayaranRumahController extends BaseController
             'jatuh_tempo' => $cicilanInfo['jatuh_tempo'],
             'sudah_cicilan_bulan_ini' => $cicilanInfo['sudah_cicilan_bulan_ini'],
         ];
+    }
+
+    private function resolveJenisDanMetode(array $pembelian, int $totalBayar): array
+    {
+        $raw = trim((string) ($pembelian['metode_pembayaran'] ?? ''));
+        $status = strtolower(trim((string) ($pembelian['status_pembelian'] ?? '')));
+        $lama = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
+        $aliases = [
+            'cash' => 'Cash',
+            'transfer bank' => 'Transfer Bank',
+            'cicilan internal' => 'Cicilan Internal',
+        ];
+        $metode = $aliases[strtolower($raw)] ?? null;
+        $isCicilan = $metode === 'Cicilan Internal' || ($lama > 0 && $metode !== 'Cash');
+
+        if ($isCicilan) {
+            return ['jenis' => 'cicilan', 'metode' => 'Cicilan Internal'];
+        }
+
+        $metode = $metode ?: 'Transfer Bank';
+
+        if (in_array($status, ['booking', 'booked'], true) && $totalBayar <= 0) {
+            return ['jenis' => 'booking_fee', 'metode' => $metode];
+        }
+
+        if (in_array($status, ['dp', 'proses'], true) && $totalBayar <= 0) {
+            return ['jenis' => 'dp', 'metode' => $metode];
+        }
+
+        return ['jenis' => 'pelunasan', 'metode' => $metode];
     }
 
     private function hitungCicilanKe(int $pembelianId, ?int $excludePaymentId = null): int

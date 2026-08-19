@@ -10,6 +10,7 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('/dashboard', 'DashboardController::index');
 $routes->get('/', 'DashboardController::landing');
+$routes->get('/rumah/(:num)', 'DashboardController::detailRumah/$1');
 
 
 $routes->get('/data-rumah', 'DatarumahController::datarumah');
@@ -74,6 +75,7 @@ $routes->get('/pembelian-rumah/json', 'PembelianRumahController::json');
 $routes->get('/pembelian-rumah/booking/json', 'PembelianRumahController::bookingJson');
 $routes->get('/pembelian-rumah/booking/(:num)', 'PembelianRumahController::bookingDetail/$1');
 $routes->post('/pembelian-rumah/booking/(:num)/verifikasi', 'PembelianRumahController::verifikasiBooking/$1');
+$routes->post('/pembelian-rumah/(:num)/berkas/(:segment)/verifikasi', 'PembelianRumahController::verifikasiBerkas/$1/$2');
 $routes->get('/detail-pembelian-list', 'PembelianRumahController::detailPembelianList');
 $routes->get('/detail-pembelian-rumah/(:num)', 'PembelianRumahController::detailPembelian/$1');
 $routes->post('/pembelian-rumah/store', 'PembelianRumahController::store');
@@ -91,6 +93,8 @@ $routes->get('/pembayaran-rumah/edit/(:num)', 'PembayaranRumahController::edit/$
 $routes->post('/pembayaran-rumah/store', 'PembayaranRumahController::store');
 $routes->post('/pembayaran-rumah/update/(:num)', 'PembayaranRumahController::update/$1');
 $routes->post('/pembayaran-rumah/approve/(:num)', 'PembayaranRumahController::approve/$1');
+$routes->post('/pembayaran-rumah/reject/(:num)', 'PembayaranRumahController::reject/$1');
+$routes->post('/pembayaran-rumah/unggah-ulang/(:num)', 'PembayaranRumahController::unggahUlangBukti/$1');
 $routes->delete('/pembayaran-rumah/delete/(:num)', 'PembayaranRumahController::delete/$1');
 
 $routes->get('/progres-pembayaran-rumah', 'ProgresPembayaranRumahController::index');

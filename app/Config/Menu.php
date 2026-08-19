@@ -200,45 +200,6 @@ class Menu extends BaseConfig
                 'link' => '/chat',
                 'type' => 'link'
             ],
-            'perumahan' => [
-                'label' => 'Perumahan',
-                'icon' => 'home_work',
-                'type' => 'dropdown',
-                'items' => [
-                    'data_rumah' => [
-                        'label' => 'Data Rumah',
-                        'icon' => 'house',
-                        'link' => '/perumahan/data-rumah'
-                    ],
-                    'rumah_booking' => [
-                        'label' => 'Rumah yang booking',
-                        'icon' => 'bookmark',
-                        'link' => '/perumahan/rumah-booking'
-                    ]
-                ]
-            ],
-            'keuangan' => [
-                'label' => 'Keuangan',
-                'icon' => 'monetization_on',
-                'type' => 'dropdown',
-                'items' => [
-                    'detail_pembelian_rumah' => [
-                        'label' => 'Detail Pembelian Rumah',
-                        'icon' => 'person',
-                        'link' => '/detail-pembelian-list'
-                    ],
-                    'pembayaran_rumah' => [
-                        'label' => 'Pembayaran Cicilan Rumah',
-                        'icon' => 'payments',
-                        'link' => '/pembayaran-rumah'
-                    ],
-                    'progres_pembayaran_rumah' => [
-                        'label' => 'Data Progres Pembayaran Rumah',
-                        'icon' => 'timeline',
-                        'link' => '/progres-pembayaran-rumah'
-                    ]
-                ]
-            ]
         ],
         'spv' => [
             'dashboard' => [

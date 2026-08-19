@@ -74,21 +74,52 @@ class TransaksiRumahModel extends Model
     ];
     protected $useTimestamps = true;
 
-    public static function decodeBerkas(?string $json): array
+    public static function splitBerkas(?string $json): array
     {
         $data = json_decode((string) $json, true);
-        return is_array($data) ? $data : [];
+        if (!is_array($data)) {
+            return ['files' => [], 'verifikasi' => []];
+        }
+
+        $verifikasi = is_array($data['_verifikasi'] ?? null) ? $data['_verifikasi'] : [];
+        unset($data['_verifikasi']);
+
+        $files = [];
+        foreach ($data as $key => $value) {
+            if (is_string($value) && $value !== '') {
+                $files[$key] = $value;
+            }
+        }
+
+        return ['files' => $files, 'verifikasi' => $verifikasi];
+    }
+
+    public static function encodeBerkas(array $files, array $verifikasi): string
+    {
+        $payload = $files;
+        $payload['_verifikasi'] = $verifikasi;
+
+        return json_encode($payload);
+    }
+
+    public static function decodeBerkas(?string $json): array
+    {
+        return self::splitBerkas($json)['files'];
     }
 
     public static function infoBerkas(array $transaksi): array
     {
-        $uploaded = self::decodeBerkas($transaksi['berkas'] ?? null);
+        $split = self::splitBerkas($transaksi['berkas'] ?? null);
+        $uploaded = $split['files'];
+        $verifikasi = $split['verifikasi'];
         $created = $transaksi['created_at'] ?? date('Y-m-d H:i:s');
         $deadline = (new DateTime($created))->modify('+' . self::BATAS_HARI_BERKAS . ' days');
         $now = new DateTime();
         $sisaDetik = $deadline->getTimestamp() - $now->getTimestamp();
-        $sisaHari = (int) max(0, ceil($sisaDetik / 86400));
+        $sisaHari = (int) max(0, intdiv(max(0, $sisaDetik), 86400));
+        $sisaJam = (int) max(0, intdiv(max(0, $sisaDetik) % 86400, 3600));
         $kedaluwarsa = $sisaDetik <= 0;
+        $adaDitolak = in_array('ditolak', $verifikasi, true);
 
         $wajibTerisi = true;
         foreach (self::JENIS_BERKAS as $key => $meta) {
@@ -105,14 +136,22 @@ class TransaksiRumahModel extends Model
             $status = 'kedaluwarsa';
         }
 
+        $bulan = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Ags', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'];
+        $deadlineLong = (int) $deadline->format('j') . ' ' . $bulan[(int) $deadline->format('n')] . ' ' . $deadline->format('Y');
+
         return [
             'uploaded' => $uploaded,
+            'verifikasi' => $verifikasi,
             'deadline' => $deadline->format('Y-m-d H:i:s'),
             'deadline_display' => $deadline->format('d-m-Y'),
+            'deadline_long' => $deadlineLong,
             'sisa_hari' => $sisaHari,
+            'sisa_jam' => $sisaJam,
+            'sisa_display' => $sisaHari . ' Hari ' . $sisaJam . ' jam tersisa',
             'kedaluwarsa' => $kedaluwarsa,
-            'dapat_unggah' => !$kedaluwarsa && $status !== 'lengkap',
+            'dapat_unggah' => (!$kedaluwarsa && $status !== 'lengkap') || $adaDitolak,
             'wajib_terisi' => $wajibTerisi,
+            'ada_ditolak' => $adaDitolak,
             'status' => $status,
         ];
     }

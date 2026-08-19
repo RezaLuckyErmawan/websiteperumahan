@@ -146,9 +146,13 @@ class Filters extends BaseFilters
                 'data-spv*',
             ],
         ],
-        'role:admin,owner,karyawan,mandor,spv' => [
+        'role:admin,owner,karyawan,mandor,spv,customer' => [
             'before' => [
                 'dashboard',
+            ],
+        ],
+        'role:admin,owner,karyawan,mandor,spv' => [
+            'before' => [
                 'perumahan',
                 'data-rumah*',
                 'form-tambahdata-rumah',

@@ -473,6 +473,7 @@ class PembelianRumahController extends BaseController
                     'wajib' => $meta['wajib'],
                     'keterangan' => $meta['keterangan'],
                     'file' => $infoBerkas['uploaded'][$key] ?? null,
+                    'status' => $infoBerkas['verifikasi'][$key] ?? ((!empty($infoBerkas['uploaded'][$key])) ? 'pending' : null),
                 ];
             }
         }
@@ -732,6 +733,7 @@ class PembelianRumahController extends BaseController
                 'label' => $meta['label'],
                 'wajib' => $meta['wajib'],
                 'file' => $info['uploaded'][$key] ?? null,
+                'status' => $info['verifikasi'][$key] ?? ((!empty($info['uploaded'][$key])) ? 'pending' : null),
             ];
         }
 
@@ -740,6 +742,59 @@ class PembelianRumahController extends BaseController
             'data' => $row,
             'info_berkas' => $info,
             'berkas' => $berkas,
+        ]);
+    }
+
+    public function verifikasiBerkas($id, $jenis)
+    {
+        if ($this->isCustomer()) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => 'error',
+                'message' => 'Customer tidak dapat memverifikasi berkas.',
+            ]);
+        }
+
+        $jenis = strtolower((string) $jenis);
+        if (!isset(TransaksiRumahModel::JENIS_BERKAS[$jenis])) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Jenis berkas tidak valid.',
+            ]);
+        }
+
+        $aksi = strtolower((string) $this->request->getPost('aksi'));
+        if (!in_array($aksi, ['setujui', 'tolak'], true)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Aksi verifikasi tidak valid.',
+            ]);
+        }
+
+        $model = new PembelianRumahModel();
+        $pembelian = $model->find($id);
+        if (!$pembelian) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Data pembelian tidak ditemukan.',
+            ]);
+        }
+
+        $split = TransaksiRumahModel::splitBerkas($pembelian['berkas'] ?? null);
+        if (empty($split['files'][$jenis])) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Berkas belum diunggah, tidak dapat diverifikasi.',
+            ]);
+        }
+
+        $split['verifikasi'][$jenis] = $aksi === 'setujui' ? 'disetujui' : 'ditolak';
+        $model->update($id, [
+            'berkas' => TransaksiRumahModel::encodeBerkas($split['files'], $split['verifikasi']),
+        ]);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $aksi === 'setujui' ? 'Berkas disetujui.' : 'Berkas ditolak.',
         ]);
     }
 
