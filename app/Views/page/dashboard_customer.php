@@ -106,6 +106,19 @@
     }
     .img-slider-btn.prev { left: 16px; }
     .img-slider-btn.next { right: 16px; }
+
+    .img-slider-count {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.6);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        z-index: 3;
+    }
     .img-preview-overlay {
         display: none;
         position: fixed;
@@ -472,19 +485,34 @@
 
     .rumah-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
         gap: 18px;
+        width: 100%;
+        min-width: 0;
     }
 
     .rumah-card {
+        min-width: 0;
         overflow: hidden;
         background: #fff;
         border: 1px solid #e4e8ef;
-        border-radius: 12px;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
     }
 
-    .rumah-card-image { position: relative; height: 160px; background: #eef2f7; }
-    .rumah-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+    .rumah-card-image {
+        position: relative;
+        height: 190px;
+        background: #eef2f7;
+        overflow: hidden;
+    }
+    .rumah-card-image img {
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+        display: block;
+        cursor: zoom-in;
+    }
     .rumah-card-image .no-image {
         height: 100%;
         display: flex;
@@ -493,6 +521,13 @@
         color: #94a3b8;
         font-size: 40px;
     }
+    .rumah-card-image .img-slider-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+    .rumah-card-image .img-slider-btn.prev { left: 12px; }
+    .rumah-card-image .img-slider-btn.next { right: 12px; }
     .rumah-card-body { padding: 16px; }
     .rumah-card-title { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
     .rumah-card-meta { margin: 0 0 12px; color: #647084; font-size: 13px; }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GreenHome.id</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
 
@@ -242,6 +243,18 @@
       cursor: zoom-in;
     }
 
+    .card-gallery .no-image {
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+    }
+
+    .card-gallery .no-image .material-icons {
+      font-size: 48px;
+    }
+
     .img-slider-btn {
       position: absolute;
       top: 50%;
@@ -385,11 +398,6 @@
   <?php
     $rumah = is_array($rumah ?? null) ? $rumah : [];
     $q = (string) ($q ?? '');
-    $fallbackImages = [
-      'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=900&q=85',
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=900&q=85',
-      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=85',
-    ];
   ?>
   <header>
     <h2>GreenHome.id</h2>
@@ -429,7 +437,7 @@
         </div>
       <?php else: ?>
         <div class="card-container">
-          <?php foreach ($rumah as $index => $item): ?>
+          <?php foreach ($rumah as $item): ?>
             <?php
               $harga = number_format((float) ($item['harga'] ?? 0), 0, ',', '.');
               $deskripsiDb = trim((string) ($item['deskripsi'] ?? ''));
@@ -442,17 +450,18 @@
             <div class="card">
               <?php
                 $gambarList = \App\Models\PerumahanModel::gambarUrls($item['gambar'] ?? null);
-                if ($gambarList === []) {
-                    $gambarList = [$fallbackImages[$index % count($fallbackImages)]];
-                }
                 $gambarCount = count($gambarList);
               ?>
               <div class="card-gallery<?= $gambarCount > 1 ? ' has-many' : '' ?>" data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'>
-                <img data-slider-image src="<?= esc($gambarList[0]) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
-                <?php if ($gambarCount > 1): ?>
-                  <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
-                  <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
-                  <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+                <?php if ($gambarCount > 0): ?>
+                  <img data-slider-image src="<?= esc($gambarList[0]) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
+                  <?php if ($gambarCount > 1): ?>
+                    <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+                    <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+                    <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <div class="no-image"><span class="material-icons">home_work</span></div>
                 <?php endif; ?>
               </div>
               <a class="card-content" href="/rumah/<?= (int) ($item['id'] ?? 0) ?>" style="display:block;text-decoration:none;color:inherit;">

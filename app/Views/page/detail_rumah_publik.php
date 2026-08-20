@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= esc($rumah['kode_rumah'] ?? 'Detail Rumah') ?> · GreenHome.id</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
 
@@ -83,13 +84,11 @@
       justify-content: center;
     }
 
-    .detail-hero img {
-      width: auto;
-      max-width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      cursor: zoom-in;
+    .detail-hero .no-image {
+      color: #94a3b8;
+    }
+    .detail-hero .no-image .material-icons {
+      font-size: 72px;
     }
 
     .img-slider-btn {
@@ -316,11 +315,8 @@
   <?php
     $rumah = is_array($rumah ?? null) ? $rumah : [];
     $gambarList = \App\Models\PerumahanModel::gambarUrls($rumah['gambar'] ?? null);
-    if ($gambarList === []) {
-      $gambarList = ['https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85'];
-    }
     $gambarCount = count($gambarList);
-    $gambarUrl = $gambarList[0];
+    $gambarUrl = $gambarList[0] ?? '';
     $dokumen = trim((string) ($rumah['dokumen'] ?? ''));
     $status = strtolower((string) ($rumah['status'] ?? ''));
     $statusClass = 'status-secondary';
@@ -349,11 +345,15 @@
       <a class="back-link" href="/#daftar-rumah">&larr; Kembali ke daftar rumah</a>
       <article class="detail-card">
         <div class="detail-hero" data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'>
-          <img data-slider-image src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
-          <?php if ($gambarCount > 1): ?>
-            <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
-            <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
-            <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+          <?php if ($gambarUrl !== ''): ?>
+            <img data-slider-image src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+            <?php if ($gambarCount > 1): ?>
+              <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+              <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+              <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+            <?php endif; ?>
+          <?php else: ?>
+            <div class="no-image"><span class="material-icons">home_work</span></div>
           <?php endif; ?>
         </div>
         <div class="detail-body">
