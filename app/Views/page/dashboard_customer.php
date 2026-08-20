@@ -412,12 +412,14 @@
 
     .tl-node.current .tl-tip { display: block; }
 
-    .tl-node:first-child .tl-tip {
+    .tl-node:first-child .tl-tip,
+    .tl-node:last-child:first-child .tl-tip {
         left: 0;
+        right: auto;
         transform: none;
     }
 
-    .tl-node:last-child .tl-tip {
+    .tl-node:last-child:not(:first-child) .tl-tip {
         left: auto;
         right: 0;
         transform: none;
@@ -435,12 +437,14 @@
         filter: drop-shadow(0 -1px 0 #e4e8ef);
     }
 
-    .tl-node:first-child .tl-tip::before {
+    .tl-node:first-child .tl-tip::before,
+    .tl-node:last-child:first-child .tl-tip::before {
         left: 36px;
+        right: auto;
         transform: none;
     }
 
-    .tl-node:last-child .tl-tip::before {
+    .tl-node:last-child:not(:first-child) .tl-tip::before {
         left: auto;
         right: 36px;
         transform: none;
@@ -967,7 +971,7 @@
                     <input type="hidden" name="payment_id" id="cicilanPaymentId" value="0">
                     <div class="mb-3 create-only">
                         <label class="form-label">Jumlah Bayar</label>
-                        <input type="number" class="form-control" name="jumlah_bayar" value="<?= (int) ($ringkasan['jumlah_cicilan'] ?? 0) ?>" min="1">
+                        <input type="number" class="form-control" name="jumlah_bayar" value="<?= (int) ($ringkasan['jumlah_cicilan'] ?? 0) ?>" min="1" readonly>
                     </div>
                     <div class="mb-3 create-only">
                         <label class="form-label">Keterangan</label>

@@ -232,6 +232,22 @@ class DashboardController extends BaseController
         return $sessionCustomerId ? (int) $sessionCustomerId : null;
     }
 
+    private function durasiCicilanTahun(array $pembelian): int
+    {
+        $tahun = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
+        if ($tahun > 0) {
+            return $tahun;
+        }
+
+        $metode = strtolower((string) ($pembelian['metode_pembayaran'] ?? ''));
+        $status = strtolower((string) ($pembelian['status_pembelian'] ?? ''));
+        if ($metode === 'cash' || in_array($status, ['lunas', 'batal'], true)) {
+            return 0;
+        }
+
+        return 5;
+    }
+
     private function ringkasanCustomer(array $pembelian, array $pembayaran): array
     {
         $hargaBeli = (int) ($pembelian['harga_beli'] ?? 0);
@@ -259,19 +275,19 @@ class DashboardController extends BaseController
         }
 
         $sisaBayar = max($hargaBeli - $totalBayar, 0);
-        $tahun = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
+        $tahun = $this->durasiCicilanTahun($pembelian);
         $totalCicilan = $tahun > 0 ? $tahun * 12 : 0;
         $metode = strtolower((string) ($pembelian['metode_pembayaran'] ?? ''));
         $statusPembelian = strtolower((string) ($pembelian['status_pembelian'] ?? ''));
         $jumlahCicilan = $sisaBayar;
 
-        if (($metode === 'cicilan internal' || $tahun > 0) && $totalCicilan > 0 && $sisaBayar > 0 && $metode !== 'cash') {
+        if (in_array($statusPembelian, ['booking', 'booked'], true) && $totalBayar <= 0) {
+            $jumlahCicilan = min(5000000, $sisaBayar > 0 ? $sisaBayar : 5000000);
+        } elseif ($totalCicilan > 0 && $sisaBayar > 0 && $metode !== 'cash') {
             $nominalTetap = (int) ceil($hargaBeli / $totalCicilan);
             $jumlahCicilan = ($cicilanDisetujui + 1 >= $totalCicilan)
                 ? $sisaBayar
                 : min($nominalTetap, $sisaBayar);
-        } elseif (in_array($statusPembelian, ['booking', 'booked'], true)) {
-            $jumlahCicilan = min(5000000, $sisaBayar > 0 ? $sisaBayar : 5000000);
         }
 
         $persen = $hargaBeli > 0 ? (int) round(($totalBayar / $hargaBeli) * 100) : 0;
@@ -303,7 +319,7 @@ class DashboardController extends BaseController
 
     private function buildCicilanSlots(array $pembelian, array $pembayaran): array
     {
-        $tahun = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
+        $tahun = $this->durasiCicilanTahun($pembelian);
         $total = $tahun > 0 ? $tahun * 12 : 0;
         $today = date('Y-m-d');
         $currentYm = date('Y-m');

@@ -548,6 +548,15 @@ $success = session()->getFlashdata('success');
                         <label class="form-label">Alamat</label>
                         <textarea class="form-control" name="alamat" rows="3" required><?= esc(old('alamat', $customer['alamat'] ?? '')) ?></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lama Cicilan (Tahun)</label>
+                        <input type="number" class="form-control" name="lama_cicilan_tahun" min="1" max="30" value="<?= esc(old('lama_cicilan_tahun', '5')) ?>" required>
+                        <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Cicilan</label>
+                        <input type="date" class="form-control" name="tanggal_cicilan" value="<?= esc(old('tanggal_cicilan', date('Y-m-d', strtotime('+1 month')))) ?>" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

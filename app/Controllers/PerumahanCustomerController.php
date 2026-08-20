@@ -76,6 +76,15 @@ class PerumahanCustomerController extends BaseController
                 ->withInput();
         }
 
+        $lamaCicilan = (int) $this->request->getPost('lama_cicilan_tahun');
+        if ($lamaCicilan < 1 || $lamaCicilan > 30) {
+            $lamaCicilan = 5;
+        }
+        $tanggalCicilan = trim((string) $this->request->getPost('tanggal_cicilan'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalCicilan)) {
+            $tanggalCicilan = date('Y-m-d', strtotime('+1 month'));
+        }
+
         $db = \Config\Database::connect();
         $db->transStart();
 
@@ -108,7 +117,9 @@ class PerumahanCustomerController extends BaseController
                 'tanggal_pembelian' => date('Y-m-d'),
                 'harga_beli' => $rumah['harga'] ?? 0,
                 'status_pembelian' => 'Booking',
-                'metode_pembayaran' => 'Transfer Bank',
+                'metode_pembayaran' => 'Cicilan Internal',
+                'lama_cicilan_tahun' => $lamaCicilan,
+                'tanggal_cicilan' => $tanggalCicilan,
                 'status_dokumen' => 'Pending',
                 'sumber' => 'customer',
                 'user_id' => session()->get('user_id'),
