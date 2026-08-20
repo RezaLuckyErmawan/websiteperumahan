@@ -376,6 +376,16 @@ class DashboardController extends BaseController
             ];
         }
 
+        $hasApprovedDp = false;
+        foreach ($pembayaran as $row) {
+            $jenis = strtolower((string) ($row['jenis_pembayaran'] ?? ''));
+            $status = strtolower((string) ($row['status_pengajuan'] ?? ''));
+            if (in_array($jenis, ['dp', 'booking_fee'], true) && $status === 'disetujui') {
+                $hasApprovedDp = true;
+                break;
+            }
+        }
+
         $leftovers = [];
         foreach ($cicilan as $row) {
             if (empty($usedIds[(int) ($row['id'] ?? 0)])) {
@@ -383,14 +393,16 @@ class DashboardController extends BaseController
             }
         }
 
-        foreach ($slots as &$slot) {
-            if ($slot['payment'] || !$leftovers) {
-                continue;
+        if ($hasApprovedDp) {
+            foreach ($slots as &$slot) {
+                if ($slot['payment'] || !$leftovers) {
+                    continue;
+                }
+                $slot['payment'] = array_shift($leftovers);
+                $slot['status'] = strtolower((string) ($slot['payment']['status_pengajuan'] ?? ''));
             }
-            $slot['payment'] = array_shift($leftovers);
-            $slot['status'] = strtolower((string) ($slot['payment']['status_pengajuan'] ?? ''));
+            unset($slot);
         }
-        unset($slot);
 
         return $slots;
     }
@@ -429,14 +441,16 @@ class DashboardController extends BaseController
         }
 
         $nodes = [];
+        $dpStatus = $dp ? strtolower((string) ($dp['status_pengajuan'] ?? '')) : null;
+        $dpApproved = $dpStatus === 'disetujui';
         $nodes[] = [
             'key' => 'dp',
             'label' => 'DP',
             'is_dp' => true,
             'cicilan_ke' => 0,
-            'status' => $dp ? strtolower((string) ($dp['status_pengajuan'] ?? '')) : null,
+            'status' => $dpStatus,
             'payment' => $dp,
-            'is_current' => $cicilanHariIni === null && !$dp,
+            'is_current' => !$dpApproved,
             'jatuh_tempo' => $pembelian['tanggal_pembelian'] ?? null,
             'bulan_label' => $this->formatBulanId($pembelian['tanggal_pembelian'] ?? null),
         ];
@@ -450,7 +464,7 @@ class DashboardController extends BaseController
                 'cicilan_ke' => (int) $slot['cicilan_ke'],
                 'status' => $slot['status'] ?? null,
                 'payment' => $slot['payment'] ?? null,
-                'is_current' => (int) $slot['cicilan_ke'] === (int) $cicilanHariIni,
+                'is_current' => $dpApproved && (int) $slot['cicilan_ke'] === (int) $cicilanHariIni,
                 'jatuh_tempo' => $due,
                 'bulan_label' => $this->formatBulanId($due),
             ];

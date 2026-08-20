@@ -577,6 +577,14 @@ class PembayaranRumahController extends BaseController
         ];
         $metode = $aliases[strtolower($raw)] ?? null;
         $isCicilan = $metode === 'Cicilan Internal' || ($lama > 0 && $metode !== 'Cash');
+        $metodeCicilan = $isCicilan ? 'Cicilan Internal' : ($metode ?: 'Transfer Bank');
+        $sudahDp = $this->sudahAdaDpAtauBookingFee((int) ($pembelian['id'] ?? 0));
+
+        if (!$sudahDp && $totalBayar <= 0) {
+            $jenisAwal = in_array($status, ['dp', 'proses'], true) ? 'dp' : 'booking_fee';
+
+            return ['jenis' => $jenisAwal, 'metode' => $metodeCicilan];
+        }
 
         if ($isCicilan) {
             return ['jenis' => 'cicilan', 'metode' => 'Cicilan Internal'];
@@ -584,15 +592,22 @@ class PembayaranRumahController extends BaseController
 
         $metode = $metode ?: 'Transfer Bank';
 
-        if (in_array($status, ['booking', 'booked'], true) && $totalBayar <= 0) {
-            return ['jenis' => 'booking_fee', 'metode' => $metode];
-        }
-
-        if (in_array($status, ['dp', 'proses'], true) && $totalBayar <= 0) {
-            return ['jenis' => 'dp', 'metode' => $metode];
-        }
-
         return ['jenis' => 'pelunasan', 'metode' => $metode];
+    }
+
+    private function sudahAdaDpAtauBookingFee(int $pembelianId): bool
+    {
+        if ($pembelianId <= 0) {
+            return false;
+        }
+
+        $row = (new PembayaranRumahModel())
+            ->where('pembelian_rumah_id', $pembelianId)
+            ->whereIn('jenis_pembayaran', ['dp', 'booking_fee'])
+            ->whereIn('status_pengajuan', ['pending', 'disetujui'])
+            ->first();
+
+        return (bool) $row;
     }
 
     private function hitungCicilanKe(int $pembelianId, ?int $excludePaymentId = null): int
