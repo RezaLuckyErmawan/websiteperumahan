@@ -113,8 +113,8 @@ function editData(id) {
 
     // Handle existing image
     existingGambar = parseGambar(data.gambar);
+    resetGambarInputs();
     renderGambarList();
-    $('#gambar').val('');
 
     // Handle existing document
     $('#modalForm input[name=existing_dokumen]').val(data.dokumen || '');
@@ -163,7 +163,7 @@ function openCreateForm() {
     $('#modalForm input[name=existing_dokumen]').val('');
     $('#modalForm textarea[name=deskripsi]').val('');
     existingGambar = [];
-    $('#gambar').val('');
+    resetGambarInputs();
     renderGambarList();
     $('#dokumenInfo').hide();
     $('#dokumenName').text('');
@@ -216,6 +216,62 @@ function lihatBahan(id) {
 let existingGambar = [];
 let lihatGambarList = [];
 let lihatGambarIndex = 0;
+const MAX_GAMBAR = 8;
+
+function gambarInputHtml() {
+  return `<div class="gambar-input-row">
+    <input type="file" class="form-control" name="gambar[]" accept="image/jpeg,image/jpg,image/png" onchange="previewImage()">
+    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeGambarInput(this)" title="Hapus input">&times;</button>
+  </div>`;
+}
+
+function resetGambarInputs() {
+  if (existingGambar.length >= MAX_GAMBAR) {
+    $('#gambarInputs').empty();
+  } else {
+    $('#gambarInputs').html(gambarInputHtml());
+  }
+  updateGambarAddBtn();
+}
+
+function addGambarInput() {
+  if (jumlahSlotGambar() >= MAX_GAMBAR) {
+    alert('Maksimal 8 foto.');
+    return;
+  }
+  $('#gambarInputs').append(gambarInputHtml());
+  updateGambarAddBtn();
+}
+
+function removeGambarInput(btn) {
+  const rows = $('#gambarInputs .gambar-input-row');
+  if (rows.length <= 1) {
+    rows.find('input').val('');
+  } else {
+    $(btn).closest('.gambar-input-row').remove();
+  }
+  previewImage();
+  updateGambarAddBtn();
+}
+
+function jumlahSlotGambar() {
+  return existingGambar.length + $('#gambarInputs input[type=file]').length;
+}
+
+function adaInputGambarKosong() {
+  const inputs = $('#gambarInputs input[type=file]');
+  if (!inputs.length) return false;
+  let kosong = false;
+  inputs.each(function () {
+    if (!(this.files && this.files.length)) kosong = true;
+  });
+  return kosong;
+}
+
+function updateGambarAddBtn() {
+  const penuh = jumlahSlotGambar() >= MAX_GAMBAR;
+  $('#tambahGambarBtn').toggle(!penuh && !adaInputGambarKosong());
+}
 
 function parseGambar(raw) {
   if (!raw) return [];
@@ -253,12 +309,19 @@ function removeExistingGambar(index) {
   existingGambar.splice(index, 1);
   renderGambarList();
   previewSelectedFiles();
+  updateGambarAddBtn();
+}
+
+function previewImage() {
+  renderGambarList();
+  previewSelectedFiles();
+  updateGambarAddBtn();
 }
 
 function previewSelectedFiles() {
-  const input = document.getElementById('gambar');
-  const files = input && input.files ? Array.from(input.files) : [];
-  files.forEach((file) => {
+  $('#gambarInputs input[type=file]').each(function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
     const url = URL.createObjectURL(file);
     $('#gambarList').append(`
       <div class="gambar-thumb">
@@ -269,11 +332,6 @@ function previewSelectedFiles() {
   });
 }
 
-function previewImage() {
-  renderGambarList();
-  previewSelectedFiles();
-}
-
 function lihatGambar(el) {
   try {
     lihatGambarList = JSON.parse(decodeURIComponent(el.getAttribute('data-images') || '%5B%5D'));
@@ -282,8 +340,13 @@ function lihatGambar(el) {
   }
   lihatGambarIndex = 0;
   tampilkanGambarModal();
-  const modal = new bootstrap.Modal(document.getElementById('lihatGambarModal'));
-  modal.show();
+  $('#imgPreviewOverlay').addClass('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function tutupGambarPreview() {
+  $('#imgPreviewOverlay').removeClass('open');
+  document.body.style.overflow = '';
 }
 
 function tampilkanGambarModal() {
@@ -299,6 +362,17 @@ function geserGambar(step) {
   lihatGambarIndex = (lihatGambarIndex + step + lihatGambarList.length) % lihatGambarList.length;
   tampilkanGambarModal();
 }
+
+$('#gambarCloseBtn').on('click', tutupGambarPreview);
+$('#imgPreviewOverlay').on('click', function (e) {
+  if (e.target === this) tutupGambarPreview();
+});
+$(document).on('keydown', function (e) {
+  if (!$('#imgPreviewOverlay').hasClass('open')) return;
+  if (e.key === 'Escape') tutupGambarPreview();
+  if (e.key === 'ArrowLeft') geserGambar(-1);
+  if (e.key === 'ArrowRight') geserGambar(1);
+});
 
 function removeDokumen() {
   $('#modalForm input[name=dokumen]').val('');

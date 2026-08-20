@@ -239,6 +239,7 @@
       object-fit: cover;
       display: block;
       background: #eef2f7;
+      cursor: zoom-in;
     }
 
     .img-slider-btn {
@@ -276,6 +277,67 @@
       background: rgba(15, 23, 42, 0.6);
       color: #fff;
       font-size: 11px;
+      font-weight: 700;
+    }
+
+    .img-preview-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 64px;
+      background: rgba(15, 23, 42, 0.78);
+    }
+    .img-preview-overlay.open { display: flex; }
+    .img-preview-overlay img {
+      max-width: min(1100px, 92vw);
+      max-height: 86vh;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #0f172a;
+    }
+    .img-preview-close,
+    .img-preview-nav {
+      position: absolute;
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #172033;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .img-preview-close {
+      top: 18px;
+      right: 18px;
+      width: 40px;
+      height: 40px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .img-preview-nav {
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      font-size: 28px;
+    }
+    .img-preview-nav.prev { left: 16px; }
+    .img-preview-nav.next { right: 16px; }
+    .img-preview-count {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.7);
+      color: #fff;
+      font-size: 13px;
       font-weight: 700;
     }
 
@@ -428,31 +490,92 @@
       <span>0812-3456-7890</span>
     </div>
   </footer>
+  <div class="img-preview-overlay" id="imgPreviewOverlay" role="dialog" aria-modal="true" aria-label="Preview gambar">
+    <button type="button" class="img-preview-close" id="imgPreviewClose" aria-label="Tutup">&times;</button>
+    <button type="button" class="img-preview-nav prev" id="imgPreviewPrev" aria-label="Sebelumnya">&lsaquo;</button>
+    <img id="imgPreviewPhoto" src="" alt="Preview rumah">
+    <button type="button" class="img-preview-nav next" id="imgPreviewNext" aria-label="Berikutnya">&rsaquo;</button>
+    <div class="img-preview-count" id="imgPreviewCount"></div>
+  </div>
   <script>
-    document.querySelectorAll('[data-slider]').forEach((slider) => {
+    (function () {
+      const overlay = document.getElementById('imgPreviewOverlay');
+      const photo = document.getElementById('imgPreviewPhoto');
+      const countEl = document.getElementById('imgPreviewCount');
+      const prevBtn = document.getElementById('imgPreviewPrev');
+      const nextBtn = document.getElementById('imgPreviewNext');
       let images = [];
-      try { images = JSON.parse(slider.getAttribute('data-images') || '[]'); } catch (e) { images = []; }
-      if (!Array.isArray(images) || images.length <= 1) return;
-      let i = 0;
-      const img = slider.querySelector('[data-slider-image]');
-      const count = slider.querySelector('[data-slider-count]');
-      const show = () => {
-        if (img) img.src = images[i];
-        if (count) count.textContent = (i + 1) + ' / ' + images.length;
-      };
-      slider.querySelector('[data-slider-prev]')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        i = (i - 1 + images.length) % images.length;
-        show();
+      let index = 0;
+
+      function renderPreview() {
+        if (!images.length) return;
+        photo.src = images[index];
+        countEl.textContent = (index + 1) + ' / ' + images.length;
+        const many = images.length > 1;
+        prevBtn.style.display = many ? 'inline-flex' : 'none';
+        nextBtn.style.display = many ? 'inline-flex' : 'none';
+      }
+
+      function openPreview(list, start) {
+        images = list;
+        index = start || 0;
+        renderPreview();
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closePreview() {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      function step(delta) {
+        if (images.length < 2) return;
+        index = (index + delta + images.length) % images.length;
+        renderPreview();
+      }
+
+      document.querySelectorAll('[data-slider]').forEach((slider) => {
+        let list = [];
+        try { list = JSON.parse(slider.getAttribute('data-images') || '[]'); } catch (e) { list = []; }
+        const img = slider.querySelector('[data-slider-image]');
+        if (!Array.isArray(list) || !list.length) {
+          list = img && img.src ? [img.src] : [];
+        }
+        let i = 0;
+        const count = slider.querySelector('[data-slider-count]');
+        const show = () => {
+          if (img && list[i]) img.src = list[i];
+          if (count) count.textContent = (i + 1) + ' / ' + list.length;
+        };
+        slider.querySelector('[data-slider-prev]')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (list.length < 2) return;
+          i = (i - 1 + list.length) % list.length;
+          show();
+        });
+        slider.querySelector('[data-slider-next]')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (list.length < 2) return;
+          i = (i + 1) % list.length;
+          show();
+        });
+        img?.addEventListener('click', () => openPreview(list, i));
       });
-      slider.querySelector('[data-slider-next]')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        i = (i + 1) % images.length;
-        show();
+
+      prevBtn.addEventListener('click', (e) => { e.stopPropagation(); step(-1); });
+      nextBtn.addEventListener('click', (e) => { e.stopPropagation(); step(1); });
+      document.getElementById('imgPreviewClose').addEventListener('click', closePreview);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closePreview(); });
+      document.addEventListener('keydown', (e) => {
+        if (!overlay.classList.contains('open')) return;
+        if (e.key === 'Escape') closePreview();
+        if (e.key === 'ArrowLeft') step(-1);
+        if (e.key === 'ArrowRight') step(1);
       });
-    });
+    })();
   </script>
 </body>
 </html>

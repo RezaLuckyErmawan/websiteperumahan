@@ -50,6 +50,22 @@
         color: #b91c1c;
     }
 
+    .gambar-input-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .gambar-input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .gambar-input-row .form-control {
+        flex: 1;
+    }
+
     .gambar-list {
         display: flex;
         flex-wrap: wrap;
@@ -101,51 +117,73 @@
         font-weight: 700;
     }
 
-    .lihat-gambar-stage {
-        position: relative;
-        display: flex;
+    .img-preview-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
         align-items: center;
         justify-content: center;
-        min-height: 240px;
-        padding: 0 56px;
+        padding: 28px 64px;
+        background: rgba(15, 23, 42, 0.78);
     }
 
-    .lihat-gambar-stage img {
-        max-width: 100%;
-        max-height: 500px;
+    .img-preview-overlay.open { display: flex; }
+
+    .img-preview-overlay img {
+        max-width: min(1100px, 92vw);
+        max-height: 86vh;
         object-fit: contain;
         border-radius: 8px;
+        background: #0f172a;
     }
 
-    .lihat-gambar-nav {
+    .img-preview-close,
+    .img-preview-nav {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        margin: 0;
         border: 0;
         border-radius: 999px;
-        background: #2563eb;
-        color: #fff;
+        background: #ffffff;
+        color: #172033;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        z-index: 2;
-        appearance: none;
+        padding: 0;
     }
 
-    .lihat-gambar-nav.prev { left: 8px; }
-    .lihat-gambar-nav.next { right: 8px; }
-
-    .lihat-gambar-nav .material-icons {
+    .img-preview-close {
+        top: 18px;
+        right: 18px;
+        width: 40px;
+        height: 40px;
         font-size: 22px;
-        line-height: 22px;
-        width: 22px;
-        height: 22px;
-        display: block;
+        font-weight: 700;
+    }
+
+    .img-preview-nav {
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        font-size: 28px;
+        line-height: 1;
+    }
+
+    .img-preview-nav.prev { left: 16px; }
+    .img-preview-nav.next { right: 16px; }
+
+    .img-preview-count {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.7);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
     }
 
     .tabel-gambar {
@@ -257,11 +295,12 @@
                         <small class="text-muted">Deskripsi detail tentang perumahan (fasilitas, lokasi, dll).</small>
                     </div>
                     <div class="mb-3">
-                        <label for="gambar" class="form-label">Gambar Perumahan</label>
-                        <input type="file" class="form-control" name="gambar[]" id="gambar" accept="image/jpeg,image/jpg,image/png" multiple onchange="previewImage(event)">
+                        <label class="form-label">Gambar Perumahan</label>
+                        <div id="gambarInputs" class="gambar-input-list"></div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="tambahGambarBtn" onclick="addGambarInput()">+ Tambah foto</button>
                         <input type="hidden" name="existing_gambar" id="existingGambar" value="[]">
                         <div id="gambarList" class="gambar-list"></div>
-                        <small class="text-muted">Bisa pilih lebih dari 1 foto. Format: JPG, JPEG, PNG. Maksimal 2MB per file, 8 foto.</small>
+                        <small class="text-muted">Satu foto per input. Format: JPG, JPEG, PNG. Maksimal 2MB per file, 8 foto.</small>
                     </div>
                     <div class="mb-3">
                         <label for="dokumen" class="form-label">Dokumen Perumahan</label>
@@ -323,28 +362,13 @@
     </div>
 </div>
 
-<!-- Modal Lihat Gambar -->
-<div class="modal fade" id="lihatGambarModal" tabindex="-1" aria-labelledby="lihatGambarLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="lihatGambarLabel">📷 Gambar Perumahan</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="lihat-gambar-stage">
-                    <button type="button" class="lihat-gambar-nav prev" id="gambarPrevBtn" onclick="geserGambar(-1)" aria-label="Sebelumnya">
-                        <span class="material-icons">chevron_left</span>
-                    </button>
-                    <img id="gambarPreview" src="" alt="Gambar Perumahan">
-                    <button type="button" class="lihat-gambar-nav next" id="gambarNextBtn" onclick="geserGambar(1)" aria-label="Berikutnya">
-                        <span class="material-icons">chevron_right</span>
-                    </button>
-                </div>
-                <div class="mt-2 text-muted" id="gambarCounter"></div>
-            </div>
-        </div>
-    </div>
+<!-- Preview Gambar -->
+<div class="img-preview-overlay" id="imgPreviewOverlay" role="dialog" aria-modal="true" aria-label="Preview gambar">
+    <button type="button" class="img-preview-close" id="gambarCloseBtn" aria-label="Tutup">&times;</button>
+    <button type="button" class="img-preview-nav prev" id="gambarPrevBtn" onclick="geserGambar(-1)" aria-label="Sebelumnya">&lsaquo;</button>
+    <img id="gambarPreview" src="" alt="Gambar Perumahan">
+    <button type="button" class="img-preview-nav next" id="gambarNextBtn" onclick="geserGambar(1)" aria-label="Berikutnya">&rsaquo;</button>
+    <div class="img-preview-count" id="gambarCounter"></div>
 </div>
 
 <!-- Modal Lihat Bahan -->
