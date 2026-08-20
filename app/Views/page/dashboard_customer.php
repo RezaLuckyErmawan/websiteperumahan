@@ -67,7 +67,8 @@
     }
 
     .galeri-main {
-        overflow: hidden;
+        position: relative;
+        overflow: visible;
         border-radius: var(--radius, 8px);
         background: #eef2f7;
         min-height: 240px;
@@ -78,6 +79,42 @@
         height: 280px;
         object-fit: cover;
         display: block;
+        border-radius: var(--radius, 8px);
+    }
+
+    .img-slider-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.62);
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        appearance: none;
+    }
+    .img-slider-btn.prev { left: 16px; }
+    .img-slider-btn.next { right: 16px; }
+    .img-slider-count {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.6);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
     }
 
     .galeri-main .no-image {
@@ -392,7 +429,7 @@
         border-radius: 12px;
     }
 
-    .rumah-card-image { height: 160px; background: #eef2f7; }
+    .rumah-card-image { position: relative; height: 160px; background: #eef2f7; }
     .rumah-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .rumah-card-image .no-image {
         height: 100%;
@@ -471,12 +508,17 @@
                     if (in_array($status, ['dijual', 'tersedia'], true)) $statusClass = 'status-primary';
                     elseif (in_array($status, ['terjual', 'lunas'], true)) $statusClass = 'status-success';
                     elseif (in_array($status, ['proses pembangunan', 'booking', 'booked'], true)) $statusClass = 'status-warning';
-                    $gambar = $item['gambar'] ?? '';
+                    $gambarList = \App\Models\PerumahanModel::gambarUrls($item['gambar'] ?? null);
                 ?>
                 <div class="rumah-card">
-                    <div class="rumah-card-image">
-                        <?php if ($gambar): ?>
-                            <img src="/<?= esc($gambar) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
+                    <div class="rumah-card-image<?= count($gambarList) > 1 ? ' has-many' : '' ?>"<?php if (count($gambarList) > 1): ?> data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'<?php endif; ?>>
+                        <?php if ($gambarList !== []): ?>
+                            <img data-slider-image src="<?= esc($gambarList[0]) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
+                            <?php if (count($gambarList) > 1): ?>
+                                <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+                                <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+                                <span class="img-slider-count" data-slider-count>1 / <?= count($gambarList) ?></span>
+                            <?php endif; ?>
                         <?php else: ?>
                             <div class="no-image"><span class="material-icons">home_work</span></div>
                         <?php endif; ?>
@@ -497,10 +539,12 @@
     <?php endif; ?>
 <?php else: ?>
     <?php
-        $gambar = trim((string) ($rumah['gambar'] ?? ''));
-        $gambarUrl = $gambar !== ''
-            ? '/' . ltrim($gambar, '/')
-            : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85';
+        $gambarList = \App\Models\PerumahanModel::gambarUrls($rumah['gambar'] ?? null);
+        if ($gambarList === []) {
+            $gambarList = ['https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85'];
+        }
+        $gambarCount = count($gambarList);
+        $gambarUrl = $gambarList[0];
         $dokumen = trim((string) ($rumah['dokumen'] ?? ''));
         $statusPembelian = (string) ($rumah['status_pembelian'] ?? '-');
         $statusPembelianKey = strtolower($statusPembelian);
@@ -524,8 +568,13 @@
             </div>
         </div>
         <div class="rumah-split">
-            <div class="galeri-main">
-                <img src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+            <div class="galeri-main" data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'>
+                <img data-slider-image src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+                <?php if ($gambarCount > 1): ?>
+                    <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+                    <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+                    <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+                <?php endif; ?>
             </div>
             <div class="spec-grid">
                 <div class="spec-box">
@@ -737,6 +786,32 @@
         </div>
     </div>
 <?php endif; ?>
+<script>
+    document.querySelectorAll('[data-slider]').forEach((slider) => {
+        let images = [];
+        try { images = JSON.parse(slider.getAttribute('data-images') || '[]'); } catch (e) { images = []; }
+        if (!Array.isArray(images) || images.length <= 1) return;
+        let i = 0;
+        const img = slider.querySelector('[data-slider-image]');
+        const count = slider.querySelector('[data-slider-count]');
+        const show = () => {
+            if (img) img.src = images[i];
+            if (count) count.textContent = (i + 1) + ' / ' + images.length;
+        };
+        slider.querySelector('[data-slider-prev]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            i = (i - 1 + images.length) % images.length;
+            show();
+        });
+        slider.querySelector('[data-slider-next]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            i = (i + 1) % images.length;
+            show();
+        });
+    });
+</script>
 <?= $this->endSection() ?>
 
 <?php if ($pembelian): ?>

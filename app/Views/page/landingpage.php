@@ -228,6 +228,57 @@
       font-weight: 700;
     }
 
+    .card-gallery {
+      position: relative;
+      background: #eef2f7;
+    }
+
+    .card-gallery img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      display: block;
+      background: #eef2f7;
+    }
+
+    .img-slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.62);
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      z-index: 3;
+    }
+
+    .card-gallery.has-many .img-slider-btn { display: inline-flex; }
+    .img-slider-btn.prev { left: 12px; }
+    .img-slider-btn.next { right: 12px; }
+
+    .img-slider-count {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
     .empty-catalog {
       width: min(1080px, 100%);
       margin: 0 auto;
@@ -318,8 +369,6 @@
         <div class="card-container">
           <?php foreach ($rumah as $index => $item): ?>
             <?php
-              $gambar = trim((string) ($item['gambar'] ?? ''));
-              $gambarUrl = $gambar !== '' ? '/' . ltrim($gambar, '/') : $fallbackImages[$index % count($fallbackImages)];
               $harga = number_format((float) ($item['harga'] ?? 0), 0, ',', '.');
               $deskripsiDb = trim((string) ($item['deskripsi'] ?? ''));
               $status = strtolower((string) ($item['status'] ?? ''));
@@ -328,9 +377,23 @@
               elseif (in_array($status, ['terjual', 'lunas'], true)) $statusClass = 'status-success';
               elseif (in_array($status, ['proses pembangunan', 'booking', 'booked'], true)) $statusClass = 'status-warning';
             ?>
-            <a class="card" href="/rumah/<?= (int) ($item['id'] ?? 0) ?>">
-              <img src="<?= esc($gambarUrl) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
-              <div class="card-content">
+            <div class="card">
+              <?php
+                $gambarList = \App\Models\PerumahanModel::gambarUrls($item['gambar'] ?? null);
+                if ($gambarList === []) {
+                    $gambarList = [$fallbackImages[$index % count($fallbackImages)]];
+                }
+                $gambarCount = count($gambarList);
+              ?>
+              <div class="card-gallery<?= $gambarCount > 1 ? ' has-many' : '' ?>" data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'>
+                <img data-slider-image src="<?= esc($gambarList[0]) ?>" alt="<?= esc($item['kode_rumah'] ?? 'Rumah') ?>">
+                <?php if ($gambarCount > 1): ?>
+                  <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+                  <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+                  <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+                <?php endif; ?>
+              </div>
+              <a class="card-content" href="/rumah/<?= (int) ($item['id'] ?? 0) ?>" style="display:block;text-decoration:none;color:inherit;">
                 <div class="card-top">
                   <h3><?= esc($item['kode_rumah'] ?? 'Rumah') ?> · Tipe <?= esc($item['tipe'] ?? '-') ?></h3>
                   <span class="status-pill <?= $statusClass ?>"><?= esc($item['status'] ?? '-') ?></span>
@@ -348,8 +411,8 @@
                 <?php endif; ?>
                 <div class="card-price">Rp <?= $harga ?></div>
                 <span class="card-link">Lihat Detail</span>
-              </div>
-            </a>
+              </a>
+            </div>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
@@ -365,5 +428,31 @@
       <span>0812-3456-7890</span>
     </div>
   </footer>
+  <script>
+    document.querySelectorAll('[data-slider]').forEach((slider) => {
+      let images = [];
+      try { images = JSON.parse(slider.getAttribute('data-images') || '[]'); } catch (e) { images = []; }
+      if (!Array.isArray(images) || images.length <= 1) return;
+      let i = 0;
+      const img = slider.querySelector('[data-slider-image]');
+      const count = slider.querySelector('[data-slider-count]');
+      const show = () => {
+        if (img) img.src = images[i];
+        if (count) count.textContent = (i + 1) + ' / ' + images.length;
+      };
+      slider.querySelector('[data-slider-prev]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        i = (i - 1 + images.length) % images.length;
+        show();
+      });
+      slider.querySelector('[data-slider-next]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        i = (i + 1) % images.length;
+        show();
+      });
+    });
+  </script>
 </body>
 </html>

@@ -74,6 +74,7 @@
     }
 
     .detail-hero {
+      position: relative;
       width: 100%;
       height: 360px;
       background: #eef2f7;
@@ -84,6 +85,41 @@
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+
+    .img-slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.62);
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      z-index: 3;
+    }
+    .img-slider-btn.prev { left: 16px; }
+    .img-slider-btn.next { right: 16px; }
+    .img-slider-count {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.6);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .detail-body { padding: 24px; }
@@ -206,10 +242,12 @@
 <body>
   <?php
     $rumah = is_array($rumah ?? null) ? $rumah : [];
-    $gambar = trim((string) ($rumah['gambar'] ?? ''));
-    $gambarUrl = $gambar !== ''
-      ? '/' . ltrim($gambar, '/')
-      : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85';
+    $gambarList = \App\Models\PerumahanModel::gambarUrls($rumah['gambar'] ?? null);
+    if ($gambarList === []) {
+      $gambarList = ['https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=85'];
+    }
+    $gambarCount = count($gambarList);
+    $gambarUrl = $gambarList[0];
     $dokumen = trim((string) ($rumah['dokumen'] ?? ''));
     $status = strtolower((string) ($rumah['status'] ?? ''));
     $statusClass = 'status-secondary';
@@ -237,8 +275,13 @@
     <div class="detail-wrap">
       <a class="back-link" href="/#daftar-rumah">&larr; Kembali ke daftar rumah</a>
       <article class="detail-card">
-        <div class="detail-hero">
-          <img src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+        <div class="detail-hero" data-slider data-images='<?= esc(json_encode($gambarList, JSON_UNESCAPED_SLASHES | JSON_HEX_APOS | JSON_HEX_AMP), 'attr') ?>'>
+          <img data-slider-image src="<?= esc($gambarUrl) ?>" alt="<?= esc($rumah['kode_rumah'] ?? 'Rumah') ?>">
+          <?php if ($gambarCount > 1): ?>
+            <button type="button" class="img-slider-btn prev" data-slider-prev aria-label="Sebelumnya">&lsaquo;</button>
+            <button type="button" class="img-slider-btn next" data-slider-next aria-label="Berikutnya">&rsaquo;</button>
+            <span class="img-slider-count" data-slider-count>1 / <?= (int) $gambarCount ?></span>
+          <?php endif; ?>
         </div>
         <div class="detail-body">
           <div class="detail-top">
@@ -304,5 +347,31 @@
       <span>0812-3456-7890</span>
     </div>
   </footer>
+  <script>
+    document.querySelectorAll('[data-slider]').forEach((slider) => {
+      let images = [];
+      try { images = JSON.parse(slider.getAttribute('data-images') || '[]'); } catch (e) { images = []; }
+      if (!Array.isArray(images) || images.length <= 1) return;
+      let i = 0;
+      const img = slider.querySelector('[data-slider-image]');
+      const count = slider.querySelector('[data-slider-count]');
+      const show = () => {
+        if (img) img.src = images[i];
+        if (count) count.textContent = (i + 1) + ' / ' + images.length;
+      };
+      slider.querySelector('[data-slider-prev]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        i = (i - 1 + images.length) % images.length;
+        show();
+      });
+      slider.querySelector('[data-slider-next]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        i = (i + 1) % images.length;
+        show();
+      });
+    });
+  </script>
 </body>
 </html>

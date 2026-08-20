@@ -9,10 +9,15 @@ $('#dataRumahTable').DataTable({
     {
       data: 'gambar',
       render: function (data) {
-        if (data) {
-          return `<img src="/${data}" alt="Gambar" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="lihatGambar('${data}')">`;
+        const list = parseGambar(data);
+        if (!list.length) {
+          return '<span class="text-muted">-</span>';
         }
-        return '<span class="text-muted">-</span>';
+        const first = toGambarUrl(list[0]);
+        const badge = list.length > 1 ? `<span class="tabel-gambar-count">${list.length}</span>` : '';
+        return `<span class="tabel-gambar" data-images="${encodeURIComponent(JSON.stringify(list))}" onclick="lihatGambar(this)" title="Lihat gambar">
+          <img src="${first}" alt="Gambar">${badge}
+        </span>`;
       },
       orderable: false,
       searchable: false
@@ -107,13 +112,9 @@ function editData(id) {
     $('#modalForm textarea[name=deskripsi]').val(data.deskripsi || '');
 
     // Handle existing image
-    $('#modalForm input[name=existing_gambar]').val(data.gambar || '');
-    if (data.gambar) {
-      $('#previewImg').attr('src', '/' + data.gambar);
-      $('#imagePreview').show();
-    } else {
-      $('#imagePreview').hide();
-    }
+    existingGambar = parseGambar(data.gambar);
+    renderGambarList();
+    $('#gambar').val('');
 
     // Handle existing document
     $('#modalForm input[name=existing_dokumen]').val(data.dokumen || '');
@@ -158,11 +159,12 @@ function hapusData(id) {
 function openCreateForm() {
     $('#modalForm form')[0].reset(); // perbaikan di sini
     $('#modalForm input[name=id]').val('');
-    $('#modalForm input[name=existing_gambar]').val('');
+    $('#modalForm input[name=existing_gambar]').val('[]');
     $('#modalForm input[name=existing_dokumen]').val('');
     $('#modalForm textarea[name=deskripsi]').val('');
-    $('#imagePreview').hide();
-    $('#previewImg').attr('src', '');
+    existingGambar = [];
+    $('#gambar').val('');
+    renderGambarList();
     $('#dokumenInfo').hide();
     $('#dokumenName').text('');
     $('#dokumenLink').attr('href', '#');
@@ -211,25 +213,91 @@ function lihatBahan(id) {
   });
 }
 
-function previewImage(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      $('#previewImg').attr('src', e.target.result);
-      $('#imagePreview').show();
-    };
-    reader.readAsDataURL(file);
-  } else {
-    $('#imagePreview').hide();
-  }
+let existingGambar = [];
+let lihatGambarList = [];
+let lihatGambarIndex = 0;
+
+function parseGambar(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String).map((item) => item.trim()).filter(Boolean);
+  try {
+    const decoded = JSON.parse(raw);
+    if (Array.isArray(decoded)) {
+      return decoded.map(String).map((item) => item.trim()).filter(Boolean);
+    }
+  } catch (e) {}
+  return [String(raw).trim()].filter(Boolean);
 }
 
-function removeImage() {
-  $('#modalForm input[name=gambar]').val('');
-  $('#modalForm input[name=existing_gambar]').val('');
-  $('#imagePreview').hide();
-  $('#previewImg').attr('src', '');
+function toGambarUrl(path) {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return '/' + String(path).replace(/^\/+/, '');
+}
+
+function renderGambarList() {
+  const wrap = $('#gambarList');
+  wrap.empty();
+  existingGambar.forEach((path, idx) => {
+    wrap.append(`
+      <div class="gambar-thumb">
+        <img src="${toGambarUrl(path)}" alt="Gambar ${idx + 1}">
+        <button type="button" onclick="removeExistingGambar(${idx})">&times;</button>
+      </div>
+    `);
+  });
+  $('#existingGambar').val(JSON.stringify(existingGambar));
+}
+
+function removeExistingGambar(index) {
+  existingGambar.splice(index, 1);
+  renderGambarList();
+  previewSelectedFiles();
+}
+
+function previewSelectedFiles() {
+  const input = document.getElementById('gambar');
+  const files = input && input.files ? Array.from(input.files) : [];
+  files.forEach((file) => {
+    const url = URL.createObjectURL(file);
+    $('#gambarList').append(`
+      <div class="gambar-thumb">
+        <img src="${url}" alt="Gambar baru">
+        <span class="thumb-label">baru</span>
+      </div>
+    `);
+  });
+}
+
+function previewImage() {
+  renderGambarList();
+  previewSelectedFiles();
+}
+
+function lihatGambar(el) {
+  try {
+    lihatGambarList = JSON.parse(decodeURIComponent(el.getAttribute('data-images') || '%5B%5D'));
+  } catch (e) {
+    lihatGambarList = [];
+  }
+  lihatGambarIndex = 0;
+  tampilkanGambarModal();
+  const modal = new bootstrap.Modal(document.getElementById('lihatGambarModal'));
+  modal.show();
+}
+
+function tampilkanGambarModal() {
+  if (!lihatGambarList.length) return;
+  $('#gambarPreview').attr('src', toGambarUrl(lihatGambarList[lihatGambarIndex]));
+  $('#gambarCounter').text(`${lihatGambarIndex + 1} / ${lihatGambarList.length}`);
+  const banyak = lihatGambarList.length > 1;
+  $('#gambarPrevBtn, #gambarNextBtn').toggle(banyak);
+}
+
+function geserGambar(step) {
+  if (!lihatGambarList.length) return;
+  lihatGambarIndex = (lihatGambarIndex + step + lihatGambarList.length) % lihatGambarList.length;
+  tampilkanGambarModal();
 }
 
 function removeDokumen() {
@@ -238,11 +306,5 @@ function removeDokumen() {
   $('#dokumenInfo').hide();
   $('#dokumenName').text('');
   $('#dokumenLink').attr('href', '#');
-}
-
-function lihatGambar(gambarPath) {
-  $('#gambarPreview').attr('src', '/' + gambarPath);
-  const modal = new bootstrap.Modal(document.getElementById('lihatGambarModal'));
-  modal.show();
 }
 

@@ -64,9 +64,9 @@ class DatarumahController extends BaseController
     public function store() {
         $model = new PerumahanModel();
 
-        $uploadedGambar = $this->uploadGambar();
-        if (is_array($uploadedGambar) && ($uploadedGambar['status'] ?? '') === 'error') {
-            return $this->response->setStatusCode(400)->setJSON($uploadedGambar);
+        $gambar = $this->resolveGambar();
+        if (is_array($gambar) && ($gambar['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($gambar);
         }
 
         $data  = [
@@ -77,12 +77,9 @@ class DatarumahController extends BaseController
             'luas_bangunan'  => $this->request->getPost('luas_bangunan'),
             'harga'          => $this->request->getPost('harga'),
             'status'         => $this->request->getPost('status'),
-            'deskripsi'      => $this->request->getPost('deskripsi')
+            'deskripsi'      => $this->request->getPost('deskripsi'),
+            'gambar'         => is_string($gambar) || $gambar === null ? $gambar : null,
         ];
-
-        if ($uploadedGambar) {
-            $data['gambar'] = $uploadedGambar;
-        }
 
         $uploadedDokumen = $this->uploadDokumen();
         if (is_array($uploadedDokumen) && ($uploadedDokumen['status'] ?? '') === 'error') {
@@ -107,9 +104,9 @@ class DatarumahController extends BaseController
         $model = new PerumahanModel();
         $old = $model->find($id);
 
-        $uploadedGambar = $this->uploadGambar();
-        if (is_array($uploadedGambar) && ($uploadedGambar['status'] ?? '') === 'error') {
-            return $this->response->setStatusCode(400)->setJSON($uploadedGambar);
+        $gambar = $this->resolveGambar($old);
+        if (is_array($gambar) && ($gambar['status'] ?? '') === 'error') {
+            return $this->response->setStatusCode(400)->setJSON($gambar);
         }
 
         $uploadedDokumen = $this->uploadDokumen();
@@ -126,12 +123,8 @@ class DatarumahController extends BaseController
             'harga'          => $this->request->getPost('harga'),
             'status'         => $this->request->getPost('status'),
             'deskripsi'      => $this->request->getPost('deskripsi'),
+            'gambar'         => is_string($gambar) || $gambar === null ? $gambar : null,
         ];
-
-        if ($uploadedGambar) {
-            $data['gambar'] = $uploadedGambar;
-            $this->deleteGambar($old['gambar'] ?? null);
-        }
 
         if ($uploadedDokumen) {
             $data['dokumen'] = $uploadedDokumen;
@@ -146,45 +139,77 @@ class DatarumahController extends BaseController
         $model = new PerumahanModel();
         $data = $model->find($id);
         $model->delete($id);
-        $this->deleteGambar($data['gambar'] ?? null);
-        $this->deleteDokumen($data['dokumen'] ?? null);
+        if (is_array($data)) {
+            foreach (PerumahanModel::parseGambar($data['gambar'] ?? null) as $path) {
+                $this->deleteGambar($path);
+            }
+            $this->deleteDokumen($data['dokumen'] ?? null);
+        }
         return $this->response->setJSON(['success' => true]);
     }
 
-    private function uploadGambar()
+    private function resolveGambar($old = null)
     {
-        $file = $this->request->getFile('gambar');
-
-        if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
-            return null;
+        $old = is_array($old) ? $old : [];
+        $existing = PerumahanModel::parseGambar($this->request->getPost('existing_gambar'));
+        $uploaded = $this->uploadGambarList();
+        if (is_array($uploaded) && ($uploaded['status'] ?? '') === 'error') {
+            return $uploaded;
         }
 
-        if (!$file->isValid()) {
-            return ['status' => 'error', 'message' => 'Upload gambar gagal'];
+        $merged = array_values(array_unique(array_merge($existing, is_array($uploaded) ? $uploaded : [])));
+        if (count($merged) > 8) {
+            return ['status' => 'error', 'message' => 'Maksimal 8 gambar per rumah.'];
         }
 
-        $validated = $this->validate([
-            'gambar' => [
-                'uploaded[gambar]',
-                'mime_in[gambar,image/jpg,image/jpeg,image/png]',
-                'max_size[gambar,2048]',
-            ]
-        ]);
-
-        if (!$validated) {
-            return ['status' => 'error', 'message' => implode(', ', $this->validator->getErrors())];
+        $oldList = PerumahanModel::parseGambar($old['gambar'] ?? null);
+        foreach (array_diff($oldList, $merged) as $removed) {
+            $this->deleteGambar($removed);
         }
 
+        return PerumahanModel::encodeGambar($merged);
+    }
+
+    private function uploadGambarList()
+    {
+        $files = $this->request->getFileMultiple('gambar') ?: [];
+        if ($files === []) {
+            $single = $this->request->getFile('gambar');
+            $files = $single ? [$single] : [];
+        }
+
+        $paths = [];
         $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'perumahan';
+        $allowed = ['image/jpg', 'image/jpeg', 'image/png'];
 
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0775, true);
+        foreach ($files as $file) {
+            if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+
+            if (!$file->isValid()) {
+                return ['status' => 'error', 'message' => 'Upload gambar gagal'];
+            }
+
+            $mime = strtolower((string) $file->getMimeType());
+            if (!in_array($mime, $allowed, true)) {
+                return ['status' => 'error', 'message' => 'Format gambar harus JPG atau PNG'];
+            }
+
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                return ['status' => 'error', 'message' => 'Ukuran gambar maksimal 2MB'];
+            }
+
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0775, true);
+            }
+
+            $newName = $file->getRandomName();
+            $file->move($uploadPath, $newName);
+            $paths[] = 'uploads/perumahan/' . $newName;
         }
 
-        $newName = $file->getRandomName();
-        $file->move($uploadPath, $newName);
-
-        return 'uploads/perumahan/' . $newName;
+        return $paths;
     }
 
     private function deleteGambar(?string $path): void

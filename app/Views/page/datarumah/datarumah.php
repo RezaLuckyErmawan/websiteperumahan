@@ -49,6 +49,139 @@
     .user-popover-logout:hover {
         color: #b91c1c;
     }
+
+    .gambar-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .gambar-thumb {
+        position: relative;
+        width: 84px;
+        height: 84px;
+        overflow: hidden;
+        border: 1px solid #e4e8ef;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .gambar-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gambar-thumb button {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 999px;
+        background: #dc2626;
+        color: #fff;
+        font-size: 14px;
+        line-height: 22px;
+        cursor: pointer;
+    }
+
+    .gambar-thumb .thumb-label {
+        position: absolute;
+        left: 4px;
+        bottom: 4px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .lihat-gambar-stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 240px;
+        padding: 0 56px;
+    }
+
+    .lihat-gambar-stage img {
+        max-width: 100%;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 8px;
+    }
+
+    .lihat-gambar-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        border-radius: 999px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        appearance: none;
+    }
+
+    .lihat-gambar-nav.prev { left: 8px; }
+    .lihat-gambar-nav.next { right: 8px; }
+
+    .lihat-gambar-nav .material-icons {
+        font-size: 22px;
+        line-height: 22px;
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+
+    .tabel-gambar {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        vertical-align: middle;
+    }
+
+    .tabel-gambar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: block;
+    }
+
+    .tabel-gambar-count {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #334155;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -125,13 +258,10 @@
                     </div>
                     <div class="mb-3">
                         <label for="gambar" class="form-label">Gambar Perumahan</label>
-                        <input type="file" class="form-control" name="gambar" accept="image/*" onchange="previewImage(event)">
-                        <input type="hidden" name="existing_gambar" id="existingGambar">
-                        <div id="imagePreview" class="mt-2" style="display: none;">
-                            <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
-                            <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeImage()">Hapus</button>
-                        </div>
-                        <small class="text-muted">Format: JPG, JPEG, PNG. Maksimal 2MB.</small>
+                        <input type="file" class="form-control" name="gambar[]" id="gambar" accept="image/jpeg,image/jpg,image/png" multiple onchange="previewImage(event)">
+                        <input type="hidden" name="existing_gambar" id="existingGambar" value="[]">
+                        <div id="gambarList" class="gambar-list"></div>
+                        <small class="text-muted">Bisa pilih lebih dari 1 foto. Format: JPG, JPEG, PNG. Maksimal 2MB per file, 8 foto.</small>
                     </div>
                     <div class="mb-3">
                         <label for="dokumen" class="form-label">Dokumen Perumahan</label>
@@ -202,7 +332,16 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <img id="gambarPreview" src="" alt="Gambar Perumahan" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+                <div class="lihat-gambar-stage">
+                    <button type="button" class="lihat-gambar-nav prev" id="gambarPrevBtn" onclick="geserGambar(-1)" aria-label="Sebelumnya">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                    <img id="gambarPreview" src="" alt="Gambar Perumahan">
+                    <button type="button" class="lihat-gambar-nav next" id="gambarNextBtn" onclick="geserGambar(1)" aria-label="Berikutnya">
+                        <span class="material-icons">chevron_right</span>
+                    </button>
+                </div>
+                <div class="mt-2 text-muted" id="gambarCounter"></div>
             </div>
         </div>
     </div>
