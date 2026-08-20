@@ -242,7 +242,8 @@
     .timeline-wrap {
         margin-top: 8px;
         overflow-x: auto;
-        padding: 20px 8px 70px;
+        overflow-y: hidden;
+        padding: 20px 12px 120px;
     }
 
     .timeline {
@@ -251,7 +252,7 @@
         align-items: flex-start;
         min-width: max-content;
         gap: 28px;
-        padding: 8px 12px 0;
+        padding: 8px 8px 0;
     }
 
     .timeline::before {
@@ -324,6 +325,17 @@
 
     .tl-node.current .tl-tip { display: block; }
 
+    .tl-node:first-child .tl-tip {
+        left: 0;
+        transform: none;
+    }
+
+    .tl-node:last-child .tl-tip {
+        left: auto;
+        right: 0;
+        transform: none;
+    }
+
     .tl-tip::before {
         content: '';
         position: absolute;
@@ -334,6 +346,17 @@
         border-right: 8px solid transparent;
         border-bottom: 8px solid #fff;
         filter: drop-shadow(0 -1px 0 #e4e8ef);
+    }
+
+    .tl-node:first-child .tl-tip::before {
+        left: 36px;
+        transform: none;
+    }
+
+    .tl-node:last-child .tl-tip::before {
+        left: auto;
+        right: 36px;
+        transform: none;
     }
 
     .cicilan-actions {
