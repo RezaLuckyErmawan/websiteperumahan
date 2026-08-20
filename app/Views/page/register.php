@@ -266,7 +266,7 @@ $success = session()->getFlashdata('success');
 
         <div class="field">
           <label for="password">Password</label>
-          <input type="password" name="password" id="password" placeholder="Contoh: Rahasia123!" required>
+          <input type="password" name="password" id="password" placeholder="Silahkan isi password" required>
         </div>
       </div>
 
