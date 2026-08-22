@@ -221,7 +221,7 @@ if (!function_exists('page_nav_is_active')) {
     <div class="site-header-inner">
         <a class="brand" href="/">
             <span class="brand-mark"><span class="material-icons">home</span></span>
-            <span class="brand-name">GreenHome.id</span>
+            <span class="brand-name">TAMAN MAHKOTA ROGOJAMPI</span>
         </a>
         <button class="nav-toggle" type="button" aria-label="Buka menu navigasi" aria-expanded="false" data-nav-toggle>
             <span class="material-icons">menu</span>

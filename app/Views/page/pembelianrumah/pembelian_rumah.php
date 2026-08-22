@@ -127,11 +127,11 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
         <tr>
             <th>Customer</th>
             <th>Kode Rumah</th>
-            <th>Tanggal Pembelian</th>
+            <th>Tanggal Penjualan</th>
             <th>Harga Beli</th>
             <th>Total Dibayar</th>
             <th>Sisa Tagihan</th>
-            <th>Status Pembelian</th>
+            <th>Status Penjualan</th>
             <th>Sumber</th>
             <th>Verifikasi</th>
             <th>Metode Pembayaran</th>
@@ -151,7 +151,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalFormLabel">Tambah Transaksi Pembelian Rumah</h5>
+                <h5 class="modal-title" id="modalFormLabel">Tambah Transaksi Penjualan Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onsubmit="event.preventDefault(); simpanForm();">
@@ -189,7 +189,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Tanggal Pembelian <span class="text-danger">*</span></label>
+                        <label class="form-label">Tanggal Penjualan <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="tanggal_pembelian" required>
                     </div>
 
@@ -229,7 +229,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <label class="form-label">Status Penjualan <span class="text-danger">*</span></label>
                         <select class="form-control" name="status_pembelian" required>
                             <option value="DP">DP</option>
                             <option value="Cicil">Cicil</option>
@@ -262,7 +262,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalEditLabel">Edit Transaksi Pembelian Rumah</h5>
+                <h5 class="modal-title" id="modalEditLabel">Edit Transaksi Penjualan Rumah</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onsubmit="event.preventDefault(); updateForm();">
@@ -299,7 +299,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Tanggal Pembelian <span class="text-danger">*</span></label>
+                        <label class="form-label">Tanggal Penjualan <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="tanggal_pembelian" required>
                     </div>
 
@@ -339,7 +339,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <label class="form-label">Status Penjualan <span class="text-danger">*</span></label>
                         <select class="form-control" name="status_pembelian" required>
                             <option value="DP">DP</option>
                             <option value="Cicil">Cicil</option>
@@ -391,7 +391,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Apakah kamu yakin ingin menghapus data pembelian rumah ini?
+                Apakah kamu yakin ingin menghapus data penjualan rumah ini?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
@@ -441,7 +441,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status Pembelian <span class="text-danger">*</span></label>
+                        <label class="form-label">Status Penjualan <span class="text-danger">*</span></label>
                         <select class="form-control" name="status_pembelian" id="verifikasiStatusPembelian">
                             <option value="DP" selected>DP</option>
                             <option value="Cicil">Cicil</option>
