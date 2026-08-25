@@ -51,8 +51,19 @@ abstract class BaseController extends Controller
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
+        $this->syncSessionNamaFromDb();
+    }
 
-        // E.g.: $this->session = service('session');
+    protected function syncSessionNamaFromDb(): void
+    {
+        $userId = session()->get('user_id');
+        if (!$userId) {
+            return;
+        }
+
+        $user = (new \App\Models\UserModel())->select('id, nama')->find((int) $userId);
+        if ($user && !empty($user['nama']) && $user['nama'] !== session()->get('nama')) {
+            session()->set('nama', $user['nama']);
+        }
     }
 }

@@ -168,8 +168,6 @@ class DashboardController extends BaseController
 
         $customerId = $this->resolveCustomerId();
         $userId = (int) (session()->get('user_id') ?? 0);
-        $name = trim((string) session()->get('nama'));
-        $username = trim((string) session()->get('username'));
 
         $builder->groupStart();
         $hasCondition = false;
@@ -188,24 +186,6 @@ class DashboardController extends BaseController
             }
         }
 
-        if ($name !== '') {
-            if ($hasCondition) {
-                $builder->orWhere('customer.nama', $name);
-            } else {
-                $builder->where('customer.nama', $name);
-                $hasCondition = true;
-            }
-        }
-
-        if ($username !== '' && strcasecmp($username, $name) !== 0) {
-            if ($hasCondition) {
-                $builder->orWhere('customer.nama', $username);
-            } else {
-                $builder->where('customer.nama', $username);
-                $hasCondition = true;
-            }
-        }
-
         if (!$hasCondition) {
             $builder->where('pembelian_rumah.id', 0);
         }
@@ -219,33 +199,19 @@ class DashboardController extends BaseController
 
     private function resolveCustomerId(): ?int
     {
-        $userId = session()->get('user_id');
-        if ($userId) {
-            $user = (new UserModel())->find($userId);
-            if (!empty($user['customer_id'])) {
-                return (int) $user['customer_id'];
-            }
+        $user = (new UserModel())->select('id, customer_id, role')->find(session()->get('user_id'));
+        if ($user && !empty($user['customer_id'])) {
+            return (int) $user['customer_id'];
         }
 
         $sessionCustomerId = session()->get('customer_id');
-
         return $sessionCustomerId ? (int) $sessionCustomerId : null;
     }
 
     private function durasiCicilanTahun(array $pembelian): int
     {
         $tahun = (int) ($pembelian['lama_cicilan_tahun'] ?? 0);
-        if ($tahun > 0) {
-            return $tahun;
-        }
-
-        $metode = strtolower((string) ($pembelian['metode_pembayaran'] ?? ''));
-        $status = strtolower((string) ($pembelian['status_pembelian'] ?? ''));
-        if ($metode === 'cash' || in_array($status, ['lunas', 'batal'], true)) {
-            return 0;
-        }
-
-        return 5;
+        return $tahun > 0 ? $tahun : 0;
     }
 
     private function ringkasanCustomer(array $pembelian, array $pembayaran): array
@@ -283,7 +249,7 @@ class DashboardController extends BaseController
 
         if (in_array($statusPembelian, ['booking', 'booked'], true) && $totalBayar <= 0) {
             $jumlahCicilan = min(5000000, $sisaBayar > 0 ? $sisaBayar : 5000000);
-        } elseif ($totalCicilan > 0 && $sisaBayar > 0 && $metode !== 'cash') {
+        } elseif ($totalCicilan > 0 && $sisaBayar > 0 && $metode === 'cicilan internal') {
             $nominalTetap = (int) ceil($hargaBeli / $totalCicilan);
             $jumlahCicilan = ($cicilanDisetujui + 1 >= $totalCicilan)
                 ? $sisaBayar

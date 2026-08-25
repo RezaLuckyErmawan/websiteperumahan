@@ -236,44 +236,6 @@ class Menu extends BaseConfig
                     ]
                 ]
             ]
-        ],
-        'owner' => [
-            'dashboard' => [
-                'label' => 'Dashboard',
-                'icon' => 'dashboard',
-                'link' => '/dashboard',
-                'type' => 'link'
-            ],
-            'chat' => [
-                'label' => 'Chat',
-                'icon' => 'chat',
-                'link' => '/chat',
-                'type' => 'link'
-            ],
-            'marketing' => [
-                'label' => 'Marketing',
-                'icon' => 'analytics',
-                'type' => 'dropdown',
-                'items' => [
-                    'data_customer' => [
-                        'label' => 'Data Customer',
-                        'icon' => 'groups',
-                        'link' => '/data-customer'
-                    ]
-                ]
-            ],
-            'keuangan' => [
-                'label' => 'Keuangan',
-                'icon' => 'monetization_on',
-                'type' => 'dropdown',
-                'items' => [
-                    'laporan' => [
-                        'label' => 'Laporan',
-                        'icon' => 'picture_as_pdf',
-                        'link' => '/laporan'
-                    ]
-                ]
-            ]
         ]
     ];
 

@@ -132,7 +132,7 @@ class Filters extends BaseFilters
                 'perumahan/rumah-booking*',
             ],
         ],
-        'role:admin' => [
+        'role:admin,owner' => [
             'before' => [
                 'laporan*',
             ],

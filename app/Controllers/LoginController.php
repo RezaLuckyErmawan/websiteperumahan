@@ -95,7 +95,7 @@ class LoginController extends BaseController
         if (!password_verify($password, $user['password'])){
             return redirect()->back()->with('error', 'Password Anda Salah!');
         }
-        if ($user['role'] !== 'admin' && strtolower($user['status']) !== 'aktif') {
+        if (!in_array($user['role'], ['admin', 'owner'], true) && strtolower($user['status']) !== 'aktif') {
             return redirect()->back()->with('error', 'Akun belum disetujui atau ditolak.');
         }
 
@@ -108,10 +108,6 @@ class LoginController extends BaseController
                 $customer = $customerModel->find($user['customer_id']);
             }
 
-            if (!$customer && !empty($user['nama'])) {
-                $customer = $customerModel->where('nama', $user['nama'])->first();
-            }
-
             if ($customer) {
                 $customerId = (int) $customer['id'];
             }
@@ -121,7 +117,7 @@ class LoginController extends BaseController
             'user_id' => $user['id'],
             'nama' => $user['nama'],
             'username' => $user['username'],
-            'customer_id' => $customerId,  // Focus on customer_id
+            'customer_id' => $customerId,  
             'role' => $user['role'],
             'isLoggedIn' => true,
         ]);

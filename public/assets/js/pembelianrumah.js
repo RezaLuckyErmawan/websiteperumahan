@@ -12,39 +12,39 @@ $(document).ready(function () {
     autoWidth: false,
     pageLength: 5,
     lengthMenu: [5, 10, 25, 50],
-    ajax:'/pembelian-rumah/json',
+    ajax: '/pembelian-rumah/json',
     columns: [
       { data: 'customer_nama' },
       { data: 'kode_rumah' },
       {
         data: 'tanggal_pembelian',
         render: function (data) {
-            return data ? new Date(data).toLocaleDateString('id-ID') : '-';
+          return data ? new Date(data).toLocaleDateString('id-ID') : '-';
         }
       },
       {
         data: 'harga_beli',
         render: function (data) {
-            return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
+          return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
         }
       },
       {
         data: 'total_bayar',
         render: function (data) {
-            return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
+          return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
         }
       },
       {
         data: 'sisa_bayar',
         render: function (data) {
-            return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
+          return 'Rp ' + parseInt(data || 0).toLocaleString('id-ID');
         }
       },
       {
         data: 'status_pembelian',
         render: function (data) {
-          let style= '';
-          let textColor= 'text-white';
+          let style = '';
+          let textColor = 'text-white';
 
           switch (String(data).toLowerCase()) {
             case 'lunas':
@@ -90,30 +90,32 @@ $(document).ready(function () {
           return `<span class="badge text-white" style="${style} padding:8px 12px;border-radius:10px;">${label}</span>`;
         }
       },
-      { data: 'metode_pembayaran',
+      {
+        data: 'metode_pembayaran',
         render: function (data) {
-            return data || '-';
+          if (data === 'Cicilan Internal') return 'KPR';
+          return data || '-';
         }
       },
       {
         data: 'info_cicilan_tahun',
         defaultContent: '-',
         render: function (data) {
-            return data || '-';
+          return data || '-';
         }
       },
       {
         data: 'info_cicilan_ke',
         defaultContent: '-',
         render: function (data) {
-            return data || '-';
+          return data || '-';
         }
       },
       {
         data: 'info_cicilan_berikutnya',
         defaultContent: '-',
         render: function (data) {
-            return data || '-';
+          return data || '-';
         }
       },
       {
@@ -135,15 +137,15 @@ $(document).ready(function () {
         searchable: false
       }
     ],
-   initComplete: function () {
-            $('#pembelianRumahTable_length')
+    initComplete: function () {
+      $('#pembelianRumahTable_length')
         .html(`
           <button type="button" onclick="openCreateForm()" class="add-btn1">
             <i class="fas fa-plus"></i> Tambah Data
           </button>
         `);
 
-$('#pembelianRumahTable_filter input')
+      $('#pembelianRumahTable_filter input')
         .attr('placeholder', 'Cari bahan, rumah...')
         .addClass('form-control form-control-sm ms-2')
         .css({ 'width': '300px', 'margin-left': '10px' });
@@ -155,7 +157,7 @@ $('#pembelianRumahTable_filter input')
   });
 
   // Auto-fill harga when rumah is selected in create form
-  $(document).on('change', '#rumahSelect', function() {
+  $(document).on('change', '#rumahSelect', function () {
     const selectedOption = $(this).find('option:selected');
     const harga = selectedOption.data('harga');
     const status = selectedOption.data('status');
@@ -178,7 +180,7 @@ $('#pembelianRumahTable_filter input')
   });
 
   // Auto-fill harga when rumah is selected in edit form
-  $(document).on('change', '#modalEdit select[name="perumahan_id"]', function() {
+  $(document).on('change', '#modalEdit select[name="perumahan_id"]', function () {
     const selectedOption = $(this).find('option:selected');
     const harga = selectedOption.data('harga');
 
@@ -191,7 +193,7 @@ $('#pembelianRumahTable_filter input')
     toggleCicilanTahunField($('#modalEdit form'));
   });
 
-  $(document).on('change input', 'select[name="metode_pembayaran"], input[name="lama_cicilan_tahun"], input[name="tanggal_cicilan"], input[name="tanggal_pembelian"], input[name="harga_beli"], select[name="status_pembelian"]', function() {
+  $(document).on('change input', 'select[name="metode_pembayaran"], input[name="lama_cicilan_tahun"], input[name="tanggal_cicilan"], input[name="tanggal_pembelian"], input[name="harga_beli"], select[name="status_pembelian"]', function () {
     const form = $(this).closest('form');
     toggleCicilanTahunField(form);
   });
@@ -386,7 +388,7 @@ function updateForm() {
 
 function restoreSoldHouseOptions() {
   // Disable options that are already sold
-  $('#rumahSelect option, #modalEdit select[name="perumahan_id"] option').each(function() {
+  $('#rumahSelect option, #modalEdit select[name="perumahan_id"] option').each(function () {
     const status = $(this).data('status');
     if (status && status.toLowerCase() === 'terjual') {
       $(this).prop('disabled', true);
@@ -398,7 +400,7 @@ function editData(id) {
   $.ajax({
     url: `/pembelian-rumah/edit/${id}`,
     type: 'GET',
-    success: function(response) {
+    success: function (response) {
       if (response.status) {
         const data = response.data;
         const form = $('#modalEdit form'); // Changed from modalForm to modalEdit
@@ -429,7 +431,7 @@ function editData(id) {
         alert('Data tidak ditemukan.');
       }
     },
-    error: function() {
+    error: function () {
       alert('Terjadi kesalahan saat mengambil data.');
     }
   });
@@ -443,20 +445,20 @@ function hapusData(id) {
   confirmModal.show();
 }
 
-$('#confirmDeleteBtn').on('click', function() {
+$('#confirmDeleteBtn').on('click', function () {
   if (!idToDelete) return;
 
   $.ajax({
     url: `/pembelian-rumah/delete/${idToDelete}`,
     method: 'DELETE',
-    success: function() {
+    success: function () {
       $('#pembelianRumahTable').DataTable().ajax.reload();
       const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
       confirmModal.hide();
 
       showSuccess('Data Berhasil Dihapus !');
     },
-    error: function() {
+    error: function () {
       alert('Terjadi Kesalahan Saat Menghapus')
     }
   })

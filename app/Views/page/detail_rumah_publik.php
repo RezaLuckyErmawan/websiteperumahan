@@ -84,6 +84,12 @@
       justify-content: center;
     }
 
+    .detail-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .detail-hero .no-image {
       color: #94a3b8;
     }

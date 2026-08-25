@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\CustomerModel;
 use App\Models\PerumahanModel;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class CustomerController extends BaseController
@@ -107,6 +108,17 @@ class CustomerController extends BaseController
         ];
 
         $model->update($id, $data);
+
+        $userModel = new UserModel();
+        $linkedUser = $userModel->where('customer_id', (int) $id)->first();
+        if ($linkedUser) {
+            $userModel->update($linkedUser['id'], ['nama' => $data['nama']]);
+
+            if ((int) session()->get('user_id') === (int) $linkedUser['id']) {
+                session()->set('nama', $data['nama']);
+            }
+        }
+
         return redirect()->to('/data-customer')->with('success', 'Data customer berhasil diperbarui');
     }
 

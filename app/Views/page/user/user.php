@@ -99,6 +99,7 @@
                         <label class="form-label">Role <span class="text-danger">*</span></label>
                         <select class="form-control" name="role" required onchange="toggleCustomerField(this.value)">
                             <option value="admin">Admin</option>
+                            <option value="owner">Owner</option>
                             <option value="mandor">Mandor</option>
                             <option value="spv">SPV</option>
                             <option value="customer">Customer</option>
@@ -157,6 +158,7 @@
                         <label class="form-label">Role <span class="text-danger">*</span></label>
                         <select class="form-control" name="role" required>
                             <option value="admin">Admin</option>
+                            <option value="owner">Owner</option>
                             <option value="mandor">Mandor</option>
                             <option value="spv">SPV</option>
                             <option value="customer">Customer</option>

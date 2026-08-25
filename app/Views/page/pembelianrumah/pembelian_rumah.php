@@ -197,7 +197,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
                         <select class="form-control" name="metode_pembayaran" required>
                             <option value="Cash">Cash</option>
-                            <option value="Cicilan Internal">Cicilan Internal</option>
+                            <option value="Cicilan Internal" selected>KPR</option>
                         </select>
                     </div>
 
@@ -307,7 +307,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
                         <select class="form-control" name="metode_pembayaran" required>
                             <option value="Cash">Cash</option>
-                            <option value="Cicilan Internal">Cicilan Internal</option>
+                            <option value="Cicilan Internal" selected>KPR</option>
                         </select>
                     </div>
 
@@ -418,7 +418,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
                         <select class="form-control" name="metode_pembayaran" id="verifikasiMetode">
                             <option value="Cash">Cash</option>
-                            <option value="Cicilan Internal" selected>Cicilan Internal</option>
+                            <option value="Cicilan Internal" selected>KPR</option>
                         </select>
                     </div>
 
