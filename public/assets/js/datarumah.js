@@ -62,9 +62,11 @@ $('#dataRumahTable').DataTable({
             <i class="fas fa-trash"></i> Hapus
           </button>
 
-            <a href="javascript:void(0);" class="btn btn-sm btn-warning" onclick="lihatBahan(${row.id})">
-            <i class="fas fa-box-open"></i> Lihat Bahan
-            </a>
+          <!--
+          <a href="javascript:void(0);" class="btn btn-sm btn-warning" onclick="lihatBahan(${row.id})">
+              <i class="fas fa-box-open"></i> Lihat Bahan
+          </a>
+          -->
         `;
       },
       orderable: false,

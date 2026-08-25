@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GreenHome.id</title>
+  <title>PERUM TAMAN MAHKOTA ROGOJAMPI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
@@ -400,7 +400,7 @@
     $q = (string) ($q ?? '');
   ?>
   <header>
-    <h2>GreenHome.id</h2>
+    <h2>TamanMahkota.id</h2>
     <nav>
       <a href="#beranda">Beranda</a>
       <a href="#tentang">Tentang</a>
@@ -411,7 +411,7 @@
 
   <section class="hero" id="beranda">
     <div class="hero-inner">
-      <h1>GreenHome.id</h1>
+      <h1 style="white-space: nowrap; font-size: clamp(20px, 4vw, 40px);">PERUM TAMAN MAHKOTA ROGOJAMPI</h1>
       <p>Hunian modern dengan lingkungan nyaman, lokasi strategis, dan pilihan rumah yang mudah dibandingkan.</p>
       <form class="search-box" action="/" method="get">
         <input type="text" name="q" value="<?= esc($q) ?>" placeholder="Cari rumah berdasarkan lokasi, tipe, atau harga" />
@@ -491,7 +491,7 @@
   </main>
 
   <footer>
-    <p>&copy; <?= date('Y') ?> GreenHome.id. Semua hak dilindungi.</p>
+    <p>&copy; <?= date('Y') ?>  PT. Berlian Sedayu Karya. Semua hak dilindungi.</p>
     <div style="margin-top: 12px;">
       <a href="https://instagram.com/greenhomeid" target="_blank">Instagram</a>
       <a href="https://facebook.com/greenhomeid" target="_blank">Facebook</a>

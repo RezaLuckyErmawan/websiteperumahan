@@ -70,11 +70,11 @@
         <h3>Hasil Penjualan Rumah</h3>
         <p>Rp <?= number_format($totalpembelian, 0, ',', '.') ?></p>
     </div>
-    <div class="card">
+    <!-- <div class="card">
         <i class="fas fa-boxes fa-2x text-danger mb-2"></i>
         <h3>Stok Bahan Bangunan</h3>
         <p><?= number_format($stoktotal, 0, ',', '.') ?> stok</p>
-    </div>
+    </div> -->
 </div>
 
 <div class="mt-4">
