@@ -130,7 +130,7 @@ $(document).ready(function () {
           <button class="btn btn-sm btn-primary" onclick="editData(${data})"><i class="fas fa-edit"></i></button>
           <button class="btn btn-sm btn-danger" onclick="hapusData(${data})"><i class="fas fa-trash"></i></button>
           <button class="btn btn-sm btn-secondary" onclick="detailData(${data})"><i class="fas fa-eye"></i></button>
-          <button class="btn btn-sm btn-success" onclick="bukaPembayaran(${data})"><i class="fas fa-money-bill-wave"></i></button>
+          
         `;
         },
         orderable: false,

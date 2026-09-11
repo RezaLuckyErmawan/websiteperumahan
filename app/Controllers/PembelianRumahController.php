@@ -479,6 +479,7 @@ class PembelianRumahController extends BaseController
         }
 
         $data = [
+            'pageTitle' => 'Detail Pembelian Rumah',
             'pembelian' => $pembelian,
             'pembayaran' => $pembayaran,
             'total_dibayar' => $totalDibayar,
