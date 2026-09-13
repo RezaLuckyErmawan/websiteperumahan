@@ -196,6 +196,7 @@
 <?php
     /** @var list<array<string, mixed>> $pembelian */
     $pembelian = is_array($pembelian ?? null) ? $pembelian : [];
+    $isCustomer = session()->get('role') === 'customer';
 ?>
 <!-- Modal Tambah Pembayaran -->
 <div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
@@ -243,10 +244,11 @@
                         <textarea class="form-control" name="keterangan" rows="3"></textarea>
                     </div>
 
-                    <div class="mb-3 customer-only-field">
-                        <label class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" name="bukti_bayar" accept=".jpg,.jpeg,.png,.pdf" required>
-                        <small class="text-muted">Format: JPG, JPEG, PNG, PDF. Maksimal 2MB.</small>
+                    <div class="mb-3">
+                        <label class="form-label">Bukti Pembayaran<?php if ($isCustomer): ?> <span class="text-danger">*</span><?php endif; ?></label>
+                        <input type="file" class="form-control" name="bukti_bayar" accept=".jpg,.jpeg,.png,.pdf" <?php if ($isCustomer): ?>required<?php endif; ?>>
+                        <small class="text-muted">Format: JPG, JPEG, PNG, PDF. Maksimal 2MB.<?php if (!$isCustomer): ?> Kosongkan jika tidak ingin melampirkan bukti.<?php endif; ?></small>
+                        <div id="buktiSaatIni" class="mt-2"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
