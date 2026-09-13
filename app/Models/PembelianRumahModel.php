@@ -12,6 +12,7 @@ class PembelianRumahModel extends Model {
         'perumahan_id',
         'tanggal_pembelian',
         'harga_beli',
+        'nominal_dp',
         'status_pembelian',
         'metode_pembayaran',
         'lama_cicilan_tahun',

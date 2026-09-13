@@ -551,6 +551,7 @@ class PembayaranRumahController extends BaseController
             'nama_customer' => $pembelian['nama_customer'],
             'kode_rumah' => $pembelian['kode_rumah'],
             'harga_beli' => $hargaBeli,
+            'nominal_dp' => (int) ($pembelian['nominal_dp'] ?? 0),
             'total_bayar' => $totalBayar,
             'sisa_bayar' => $sisaBayar,
             'status_pembelian' => $pembelian['status_pembelian'],
@@ -633,7 +634,8 @@ class PembayaranRumahController extends BaseController
         $jatuhTempo = null;
 
         if ($metode === 'cicilan internal' && $totalCicilan > 0 && $sisaBayar > 0) {
-            $nominalTetap = (int) ceil($hargaBeli / $totalCicilan);
+            $dasarCicilan = max($hargaBeli - (int) ($pembelian['nominal_dp'] ?? 0), 0);
+            $nominalTetap = (int) ceil($dasarCicilan / $totalCicilan);
             $jumlahCicilan = ($cicilanKe + 1 >= $totalCicilan)
                 ? $sisaBayar
                 : min($nominalTetap, $sisaBayar);

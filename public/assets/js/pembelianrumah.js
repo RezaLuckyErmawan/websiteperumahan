@@ -193,7 +193,7 @@ $(document).ready(function () {
     toggleCicilanTahunField($('#modalEdit form'));
   });
 
-  $(document).on('change input', 'select[name="metode_pembayaran"], input[name="lama_cicilan_tahun"], input[name="tanggal_cicilan"], input[name="tanggal_pembelian"], input[name="harga_beli"], select[name="status_pembelian"]', function () {
+  $(document).on('change input', 'select[name="metode_pembayaran"], input[name="lama_cicilan_tahun"], input[name="tanggal_cicilan"], input[name="tanggal_pembelian"], input[name="harga_beli"], input[name="nominal_dp"], select[name="status_pembelian"]', function () {
     const form = $(this).closest('form');
     toggleCicilanTahunField(form);
   });
@@ -223,11 +223,13 @@ function toggleCicilanTahunField(form) {
 function updateCicilanInfoPreview(form) {
   const tahun = parseInt(form.find('input[name="lama_cicilan_tahun"]').val(), 10) || 0;
   const harga = parseInt(form.find('input[name="harga_beli"]').val() || 0, 10);
+  const nominalDp = parseInt(form.find('input[name="nominal_dp"]').val() || 0, 10) || 0;
   const tanggalCicilan = form.find('input[name="tanggal_cicilan"]').val();
   const totalCicilan = tahun > 0 ? tahun * 12 : 0;
 
   if (totalCicilan > 0 && harga > 0) {
-    const nominal = Math.ceil(harga / totalCicilan);
+    const dasar = Math.max(harga - nominalDp, 0);
+    const nominal = Math.ceil(dasar / totalCicilan);
     form.find('input[name="info_jumlah_cicilan"]').val('Rp ' + nominal.toLocaleString('id-ID') + ' / bulan');
   } else {
     form.find('input[name="info_jumlah_cicilan"]').val('');
@@ -414,6 +416,7 @@ function editData(id) {
         form.find('input[name="tanggal_pembelian"]').val(data.tanggal_pembelian);
         form.find('#hargaBeliEdit').val(data.harga_beli);
         form.find('select[name="metode_pembayaran"]').val(data.metode_pembayaran);
+        form.find('input[name="nominal_dp"]').val(data.nominal_dp || '');
         form.find('input[name="lama_cicilan_tahun"]').val(data.lama_cicilan_tahun || '');
         form.find('input[name="tanggal_cicilan"]').val(data.tanggal_cicilan || '');
         form.find('select[name="status_dokumen"]').val(data.status_dokumen);
@@ -498,6 +501,7 @@ function bukaVerifikasiBooking(id) {
 
     $('#verifikasiHargaBeli').val(d.harga || 0);
     $('#verifikasiMetode').val(d.metode_pembayaran || 'Cicilan Internal');
+    $('#verifikasiNominalDp').val(d.nominal_dp || '');
     $('#verifikasiLamaCicilan').val(d.lama_cicilan_tahun || 5);
     $('#verifikasiStatusPembelian').val(d.status_pembelian && d.status_pembelian !== 'Booking' ? d.status_pembelian : 'DP');
     const today = new Date().toISOString().split('T')[0];
@@ -544,6 +548,7 @@ function verifikasiBooking(aksi) {
 
     payload.metode_pembayaran = metode;
     payload.status_pembelian = statusPembelian;
+    payload.nominal_dp = $('#verifikasiNominalDp').val() || '';
     payload.lama_cicilan_tahun = lama;
     payload.tanggal_cicilan = tanggal;
   }

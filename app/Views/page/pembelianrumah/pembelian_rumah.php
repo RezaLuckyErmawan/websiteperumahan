@@ -203,6 +203,11 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
 
                     <div class="cicilan-tahun-field" style="display: none;">
                         <div class="mb-3">
+                            <label class="form-label">Nominal DP</label>
+                            <input type="number" class="form-control" name="nominal_dp" min="0" placeholder="Kosongkan jika DP belum ditentukan">
+                            <small class="text-muted">Opsional. Cicilan bulanan dihitung dari (harga beli &minus; DP).</small>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="lama_cicilan_tahun" min="1" max="30" placeholder="Contoh: 5">
                             <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
@@ -215,7 +220,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <div class="mb-3">
                             <label class="form-label">Jumlah Cicilan / Bulan</label>
                             <input type="text" class="form-control" name="info_jumlah_cicilan" readonly placeholder="Otomatis dari harga beli">
-                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                            <small class="text-muted">Jumlah otomatis dari (harga beli &minus; DP) dibagi lama cicilan.</small>
                         </div>
                     </div>
 
@@ -313,6 +318,11 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
 
                     <div class="cicilan-tahun-field" style="display: none;">
                         <div class="mb-3">
+                            <label class="form-label">Nominal DP</label>
+                            <input type="number" class="form-control" name="nominal_dp" min="0" placeholder="Kosongkan jika DP belum ditentukan">
+                            <small class="text-muted">Opsional. Cicilan bulanan dihitung dari (harga beli &minus; DP).</small>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="lama_cicilan_tahun" min="1" max="30" placeholder="Contoh: 5">
                             <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
@@ -325,7 +335,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <div class="mb-3">
                             <label class="form-label">Jumlah Cicilan / Bulan</label>
                             <input type="text" class="form-control" name="info_jumlah_cicilan" readonly placeholder="Otomatis dari harga beli">
-                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                            <small class="text-muted">Jumlah otomatis dari (harga beli &minus; DP) dibagi lama cicilan.</small>
                         </div>
                     </div>
 
@@ -424,6 +434,11 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
 
                     <div class="cicilan-tahun-field">
                         <div class="mb-3">
+                            <label class="form-label">Nominal DP</label>
+                            <input type="number" class="form-control" name="nominal_dp" id="verifikasiNominalDp" min="0" placeholder="Kosongkan jika DP belum ditentukan">
+                            <small class="text-muted">Opsional. Cicilan bulanan dihitung dari (harga beli &minus; DP).</small>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Lama Cicilan (Tahun) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="lama_cicilan_tahun" id="verifikasiLamaCicilan" min="1" max="30" value="5">
                             <small class="text-muted">Cicilan dihitung per bulan. Contoh 5 tahun = 60 kali cicilan.</small>
@@ -436,7 +451,7 @@ $terjual_ids = is_array($terjual_ids ?? null) ? $terjual_ids : [];
                         <div class="mb-3">
                             <label class="form-label">Jumlah Cicilan / Bulan</label>
                             <input type="text" class="form-control" name="info_jumlah_cicilan" id="verifikasiJumlahCicilan" readonly>
-                            <small class="text-muted">Jumlah otomatis dari harga beli dibagi lama cicilan.</small>
+                            <small class="text-muted">Jumlah otomatis dari (harga beli &minus; DP) dibagi lama cicilan.</small>
                         </div>
                     </div>
 

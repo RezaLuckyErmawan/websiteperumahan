@@ -463,6 +463,9 @@ function applyRingkasanToForm(formSelector, boxSelector, data, excludePaymentId 
   const jenisLabel = jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-';
 
   let extra = `<div>Metode: ${metodeLabel}</div><div>Jenis: ${jenisLabel}</div>`;
+  if (String(data.jenis_pembayaran || '').toLowerCase() === 'dp' && parseInt(data.nominal_dp || 0, 10) > 0) {
+    extra += `<div>Nominal DP: ${formatRupiah(data.nominal_dp)}</div>`;
+  }
   if (isCicilanInternal && totalCicilan > 0) {
     extra += `<div>Sudah cicilan: ${cicilanKe} dari ${totalCicilan}</div>`;
     extra += `<div>Pengajuan ini: cicilan ke-${Math.min(cicilanKe + 1, totalCicilan)}</div>`;

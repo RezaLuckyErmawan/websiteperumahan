@@ -804,6 +804,12 @@
                 <span>Total</span>
                 <strong class="spec-price">Rp <?= number_format((float) ($ringkasan['harga_beli'] ?? 0), 0, ',', '.') ?></strong>
             </div>
+            <?php if ((int) ($ringkasan['nominal_dp'] ?? 0) > 0): ?>
+                <div class="spec-box">
+                    <span>DP</span>
+                    <strong>Rp <?= number_format((float) $ringkasan['nominal_dp'], 0, ',', '.') ?></strong>
+                </div>
+            <?php endif; ?>
             <div class="spec-box">
                 <span>Durasi</span>
                 <strong><?= esc($ringkasan['durasi_text'] ?? '-') ?></strong>

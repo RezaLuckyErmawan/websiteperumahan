@@ -216,11 +216,18 @@ class PembelianRumahController extends BaseController
             ->setJSON(['status' => 'error', 'message' => 'Rumah ini sudah terjual']);
     }
 
+    $nominalDp = $this->resolveNominalDp($metodePembayaran, $request->getPost('nominal_dp'), $perumahan['harga']);
+    if ($nominalDp === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Nominal DP tidak valid (0 s.d. harga beli)']);
+    }
+
     $data = [
         'customer_id'       => $request->getPost('customer_id'),
         'perumahan_id'      => $request->getPost('perumahan_id'),
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
         'harga_beli'        => $perumahan['harga'], // AMAN
+        'nominal_dp'        => $nominalDp,
         'status_pembelian'  => $statusPembelian,
         'metode_pembayaran' => $metodePembayaran,
         'lama_cicilan_tahun' => $lamaCicilan,
@@ -343,12 +350,19 @@ class PembelianRumahController extends BaseController
             ->setJSON(['status' => 'error', 'message' => 'Data pembelian rumah belum lengkap atau tidak valid']);
     }
 
+    $nominalDp = $this->resolveNominalDp($metodePembayaran, $request->getPost('nominal_dp'), $request->getPost('harga_beli'));
+    if ($nominalDp === false) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['status' => 'error', 'message' => 'Nominal DP tidak valid (0 s.d. harga beli)']);
+    }
+
     // Data baru default
     $dataBaru = [
         'customer_id'       => $request->getPost('customer_id'),
         'perumahan_id'      => $perumahanId,
         'tanggal_pembelian' => $request->getPost('tanggal_pembelian'),
         'harga_beli'        => $request->getPost('harga_beli'),
+        'nominal_dp'        => $nominalDp,
         'status_pembelian'  => $statusPembelian,
         'metode_pembayaran' => $metodePembayaran,
         'lama_cicilan_tahun' => $lamaCicilan,
@@ -647,6 +661,30 @@ class PembelianRumahController extends BaseController
         return $tanggal;
     }
 
+    /**
+     * Nominal DP opsional untuk Cicilan Internal.
+     *
+     * @return int|null|false null = tidak diset, false = tidak valid
+     */
+    private function resolveNominalDp(?string $metodePembayaran, $nominalDp, $hargaBeli)
+    {
+        if (strtolower((string) $metodePembayaran) !== 'cicilan internal') {
+            return null;
+        }
+
+        $nominal = trim((string) $nominalDp);
+        if ($nominal === '') {
+            return null;
+        }
+
+        $nominal = (int) $nominal;
+        if ($nominal < 0 || $nominal > (int) $hargaBeli) {
+            return false;
+        }
+
+        return $nominal;
+    }
+
     private function appendCicilanInfo(array $row): array
     {
         $metode = strtolower((string) ($row['metode_pembayaran'] ?? ''));
@@ -692,7 +730,8 @@ class PembelianRumahController extends BaseController
 
         $nominalText = '';
         if ($totalCicilan > 0 && $sisa > 0) {
-            $nominalTetap = (int) ceil($harga / $totalCicilan);
+            $dasarCicilan = max($harga - (int) ($row['nominal_dp'] ?? 0), 0);
+            $nominalTetap = (int) ceil($dasarCicilan / $totalCicilan);
             $nominal = ($cicilanKe + 1 >= $totalCicilan)
                 ? $sisa
                 : min($nominalTetap, $sisa);
@@ -868,11 +907,20 @@ class PembelianRumahController extends BaseController
                 ]);
             }
 
+            $nominalDp = $this->resolveNominalDp($metodePembayaran, $this->request->getPost('nominal_dp'), $pembelian['harga_beli']);
+            if ($nominalDp === false) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'status' => 'error',
+                    'message' => 'Nominal DP tidak valid (0 s.d. harga beli).',
+                ]);
+            }
+
             $info = TransaksiRumahModel::infoBerkas($pembelian);
             $update['status_pembelian'] = $statusPembelian;
             $update['metode_pembayaran'] = $metodePembayaran;
             $update['lama_cicilan_tahun'] = $lamaCicilan;
             $update['tanggal_cicilan'] = $tanggalCicilan;
+            $update['nominal_dp'] = $nominalDp;
             $update['status_dokumen'] = $info['wajib_terisi'] ? 'Lengkap' : 'Verifikasi';
             $perumahanModel->update($pembelian['perumahan_id'], ['status' => 'Terjual']);
         }

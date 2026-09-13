@@ -250,7 +250,8 @@ class DashboardController extends BaseController
         if (in_array($statusPembelian, ['booking', 'booked'], true) && $totalBayar <= 0) {
             $jumlahCicilan = min(5000000, $sisaBayar > 0 ? $sisaBayar : 5000000);
         } elseif ($totalCicilan > 0 && $sisaBayar > 0 && $metode === 'cicilan internal') {
-            $nominalTetap = (int) ceil($hargaBeli / $totalCicilan);
+            $dasarCicilan = max($hargaBeli - (int) ($pembelian['nominal_dp'] ?? 0), 0);
+            $nominalTetap = (int) ceil($dasarCicilan / $totalCicilan);
             $jumlahCicilan = ($cicilanDisetujui + 1 >= $totalCicilan)
                 ? $sisaBayar
                 : min($nominalTetap, $sisaBayar);
@@ -264,6 +265,7 @@ class DashboardController extends BaseController
 
         return [
             'harga_beli' => $hargaBeli,
+            'nominal_dp' => (int) ($pembelian['nominal_dp'] ?? 0),
             'total_bayar' => $totalBayar,
             'sisa_bayar' => $sisaBayar,
             'status_pembelian' => $pembelian['status_pembelian'] ?? '-',
