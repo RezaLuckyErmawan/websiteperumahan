@@ -9,16 +9,6 @@ class AddNominalDpToPembelianRumah extends Migration
     public function up()
     {
         try {
-            $fields = $this->db->getFieldNames('pembelian_rumah');
-        } catch (\Throwable $e) {
-            $fields = [];
-        }
-
-        if (in_array('nominal_dp', $fields, true)) {
-            return;
-        }
-
-        try {
             $this->forge->addColumn('pembelian_rumah', [
                 'nominal_dp' => [
                     'type'     => 'BIGINT',
@@ -36,10 +26,12 @@ class AddNominalDpToPembelianRumah extends Migration
 
     public function down()
     {
-        if (!$this->db->fieldExists('nominal_dp', 'pembelian_rumah')) {
-            return;
+        try {
+            $this->forge->dropColumn('pembelian_rumah', 'nominal_dp');
+        } catch (\Throwable $e) {
+            if (stripos($e->getMessage(), 'check that') === false) {
+                throw $e;
+            }
         }
-
-        $this->forge->dropColumn('pembelian_rumah', 'nominal_dp');
     }
 }

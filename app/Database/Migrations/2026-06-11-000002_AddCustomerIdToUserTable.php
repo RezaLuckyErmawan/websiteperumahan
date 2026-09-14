@@ -8,28 +8,30 @@ class AddCustomerIdToUserTable extends Migration
 {
     public function up()
     {
-        if ($this->db->fieldExists('customer_id', 'user')) {
-            return;
+        try {
+            $this->forge->addColumn('user', [
+                'customer_id' => [
+                    'type'     => 'INT',
+                    'unsigned' => true,
+                    'null'     => true,
+                    'after'    => 'password',
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            if (stripos($e->getMessage(), 'Duplicate column') === false) {
+                throw $e;
+            }
         }
-
-        $fields = [
-            'customer_id' => [
-                'type'     => 'INT',
-                'unsigned' => true,
-                'null'     => true,
-                'after'    => 'password',
-            ],
-        ];
-
-        $this->forge->addColumn('user', $fields);
     }
 
     public function down()
     {
-        if (!$this->db->fieldExists('customer_id', 'user')) {
-            return;
+        try {
+            $this->forge->dropColumn('user', 'customer_id');
+        } catch (\Throwable $e) {
+            if (stripos($e->getMessage(), 'check that') === false) {
+                throw $e;
+            }
         }
-
-        $this->forge->dropColumn('user', 'customer_id');
     }
 }

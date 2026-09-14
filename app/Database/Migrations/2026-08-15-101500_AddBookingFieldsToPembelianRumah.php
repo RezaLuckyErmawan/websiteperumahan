@@ -8,54 +8,64 @@ class AddBookingFieldsToPembelianRumah extends Migration
 {
     public function up()
     {
-        if (!$this->db->fieldExists('sumber', 'pembelian_rumah')) {
-            $this->forge->addColumn('pembelian_rumah', [
-                'sumber' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 20,
-                    'default'    => 'admin',
-                    'after'      => 'request_khusus',
-                ],
-                'user_id' => [
-                    'type'     => 'INT',
-                    'unsigned' => true,
-                    'null'     => true,
-                    'after'    => 'sumber',
-                ],
-                'berkas' => [
-                    'type' => 'TEXT',
-                    'null' => true,
-                    'after' => 'user_id',
-                ],
-                'status_berkas' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 20,
-                    'default'    => 'pending',
-                    'after'      => 'berkas',
-                ],
-                'status_verifikasi' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 20,
-                    'default'    => 'tidak_perlu',
-                    'after'      => 'status_berkas',
-                ],
-                'catatan_verifikasi' => [
-                    'type' => 'TEXT',
-                    'null' => true,
-                    'after' => 'status_verifikasi',
-                ],
-                'verified_at' => [
-                    'type' => 'DATETIME',
-                    'null' => true,
-                    'after' => 'catatan_verifikasi',
-                ],
-                'verified_by' => [
-                    'type'     => 'INT',
-                    'unsigned' => true,
-                    'null'     => true,
-                    'after'    => 'verified_at',
-                ],
-            ]);
+        // Ditambahkan satu per satu dan error duplikat diabaikan: fieldExists()
+        // bisa tercemar cache metadata CI4 dalam satu proses migrate:refresh.
+        $fields = [
+            'sumber' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'default'    => 'admin',
+                'after'      => 'request_khusus',
+            ],
+            'user_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+                'null'     => true,
+                'after'    => 'sumber',
+            ],
+            'berkas' => [
+                'type' => 'TEXT',
+                'null' => true,
+                'after' => 'user_id',
+            ],
+            'status_berkas' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'default'    => 'pending',
+                'after'      => 'berkas',
+            ],
+            'status_verifikasi' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'default'    => 'tidak_perlu',
+                'after'      => 'status_berkas',
+            ],
+            'catatan_verifikasi' => [
+                'type' => 'TEXT',
+                'null' => true,
+                'after' => 'status_verifikasi',
+            ],
+            'verified_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+                'after' => 'catatan_verifikasi',
+            ],
+            'verified_by' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+                'null'     => true,
+                'after'    => 'verified_at',
+            ],
+        ];
+
+        foreach ($fields as $name => $definition) {
+            try {
+                $this->forge->addColumn('pembelian_rumah', [$name => $definition]);
+            } catch (\Throwable $e) {
+                if (stripos($e->getMessage(), 'Duplicate column') === false) {
+                    throw $e;
+                }
+            }
         }
 
         $this->db->query("UPDATE pembelian_rumah SET sumber = 'admin', status_verifikasi = 'tidak_perlu' WHERE sumber IS NULL OR sumber = ''");
@@ -64,16 +74,15 @@ class AddBookingFieldsToPembelianRumah extends Migration
 
     public function down()
     {
-        $this->forge->dropColumn('pembelian_rumah', [
-            'sumber',
-            'user_id',
-            'berkas',
-            'status_berkas',
-            'status_verifikasi',
-            'catatan_verifikasi',
-            'verified_at',
-            'verified_by',
-        ]);
+        foreach (['sumber', 'user_id', 'berkas', 'status_berkas', 'status_verifikasi', 'catatan_verifikasi', 'verified_at', 'verified_by'] as $column) {
+            try {
+                $this->forge->dropColumn('pembelian_rumah', $column);
+            } catch (\Throwable $e) {
+                if (stripos($e->getMessage(), 'check that') === false) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     private function salinDariTransaksiRumah(): void
