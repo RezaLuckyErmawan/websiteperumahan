@@ -804,19 +804,17 @@
                 <span>Total</span>
                 <strong class="spec-price">Rp <?= number_format((float) ($ringkasan['harga_beli'] ?? 0), 0, ',', '.') ?></strong>
             </div>
-            <?php if ((int) ($ringkasan['nominal_dp'] ?? 0) > 0): ?>
-                <div class="spec-box">
-                    <span>DP</span>
-                    <strong>Rp <?= number_format((float) $ringkasan['nominal_dp'], 0, ',', '.') ?></strong>
-                </div>
-            <?php endif; ?>
+            <div class="spec-box">
+                <span>DP</span>
+                <strong><?php if ((int) ($ringkasan['nominal_dp'] ?? 0) > 0): ?>Rp <?= number_format((float) $ringkasan['nominal_dp'], 0, ',', '.') ?><?php else: ?><small class="text-muted">menunggu verifikasi admin</small><?php endif; ?></strong>
+            </div>
             <div class="spec-box">
                 <span>Durasi</span>
                 <strong><?= esc($ringkasan['durasi_text'] ?? '-') ?></strong>
             </div>
             <div class="spec-box">
                 <span>Cicilan / bulan</span>
-                <strong>Rp <?= number_format((float) ($ringkasan['jumlah_cicilan'] ?? 0), 0, ',', '.') ?></strong>
+                <strong><?php if (!empty($ringkasan['fase_dp'])): ?><small class="text-muted">setelah DP disetujui</small><?php else: ?>Rp <?= number_format((float) ($ringkasan['jumlah_cicilan'] ?? 0), 0, ',', '.') ?><?php endif; ?></strong>
             </div>
             <div class="spec-box full">
                 <span>Periode</span>
@@ -875,6 +873,8 @@
                 <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="update" data-payment-id="<?= $activePaymentId ?>">Perbarui Bukti</button>
             <?php elseif ($bisaUploadBaru): ?>
                 <button type="button" class="cicilan-btn primary" data-bs-toggle="modal" data-bs-target="#modalUploadCicilan" data-mode="create" data-payment-id="0">Upload Bukti</button>
+            <?php elseif (!empty($ringkasan['fase_dp']) && (int) ($ringkasan['jumlah_dp'] ?? 0) <= 0): ?>
+                <button type="button" class="cicilan-btn primary" disabled>Menunggu admin menetapkan nominal DP</button>
             <?php else: ?>
                 <button type="button" class="cicilan-btn primary" disabled>Bukti bulan ini sudah diunggah</button>
             <?php endif; ?>
@@ -1012,7 +1012,13 @@
                     <input type="hidden" name="payment_id" id="cicilanPaymentId" value="0">
                     <div class="mb-3 create-only">
                         <label class="form-label">Jumlah Bayar</label>
-                        <input type="number" class="form-control" name="jumlah_bayar" value="<?= (int) ($ringkasan['jumlah_cicilan'] ?? 0) ?>" min="1" readonly>
+                        <?php $jumlahBayarDefault = !empty($ringkasan['fase_dp'])
+                            ? (int) ($ringkasan['jumlah_dp'] ?? 0)
+                            : (int) ($ringkasan['jumlah_cicilan'] ?? 0); ?>
+                        <input type="number" class="form-control" name="jumlah_bayar" value="<?= $jumlahBayarDefault ?>" min="1" readonly>
+                        <?php if (!empty($ringkasan['fase_dp'])): ?>
+                            <small class="text-muted">Jumlah DP mengikuti nominal yang disetujui admin.</small>
+                        <?php endif; ?>
                     </div>
                     <div class="mb-3 create-only">
                         <label class="form-label">Keterangan</label>

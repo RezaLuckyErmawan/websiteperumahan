@@ -382,7 +382,7 @@ class PembayaranRumahController extends BaseController
             $tanggalBayar = date('Y-m-d');
         }
 
-        if ($pembelianId <= 0 || $jumlahBayar <= 0 || (!$this->isCustomer() && empty($tanggalBayar))) {
+        if ($pembelianId <= 0 || (!$this->isCustomer() && empty($tanggalBayar))) {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Data pembayaran belum lengkap']);
         }
@@ -420,6 +420,31 @@ class PembayaranRumahController extends BaseController
         if (strtolower((string) $summary['status_pembelian']) === 'batal') {
             return $this->response->setStatusCode(400)
                 ->setJSON(['status' => 'error', 'message' => 'Pembelian yang sudah batal tidak bisa menerima pembayaran']);
+        }
+
+        // Fase DP: jumlah bayar mengikuti nominal DP yang disepakati admin,
+        // bukan input bebas dari client.
+        $jenisKey = strtolower($jenis);
+        if (in_array($jenisKey, ['dp', 'booking_fee'], true)) {
+            $nominalDp = (int) ($summary['nominal_dp'] ?? 0);
+
+            if ($this->isCustomer()) {
+                if ($nominalDp <= 0) {
+                    return $this->response->setStatusCode(400)
+                        ->setJSON(['status' => 'error', 'message' => 'Nominal DP belum ditetapkan admin. Booking Anda harus diverifikasi terlebih dahulu sebelum membayar DP.']);
+                }
+                $jumlahBayar = $nominalDp;
+            } elseif ($jenisKey === 'dp' && $nominalDp > 0) {
+                $jumlahBayar = $nominalDp;
+            }
+        } elseif ($this->isCustomer() && $jenisKey === 'cicilan' && !$this->sudahDpDisetujui($pembelianId)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Pembayaran DP harus disetujui admin sebelum cicilan dapat diajukan.']);
+        }
+
+        if ($jumlahBayar <= 0) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['status' => 'error', 'message' => 'Data pembayaran belum lengkap']);
         }
 
         $approvalStatus = $this->resolveApprovalStatus($id, $old);
@@ -606,6 +631,21 @@ class PembayaranRumahController extends BaseController
             ->where('pembelian_rumah_id', $pembelianId)
             ->whereIn('jenis_pembayaran', ['dp', 'booking_fee'])
             ->whereIn('status_pengajuan', ['pending', 'disetujui'])
+            ->first();
+
+        return (bool) $row;
+    }
+
+    private function sudahDpDisetujui(int $pembelianId): bool
+    {
+        if ($pembelianId <= 0) {
+            return false;
+        }
+
+        $row = (new PembayaranRumahModel())
+            ->where('pembelian_rumah_id', $pembelianId)
+            ->whereIn('jenis_pembayaran', ['dp', 'booking_fee'])
+            ->where('status_pengajuan', 'disetujui')
             ->first();
 
         return (bool) $row;

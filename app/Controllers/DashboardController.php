@@ -217,9 +217,12 @@ class DashboardController extends BaseController
     private function ringkasanCustomer(array $pembelian, array $pembayaran): array
     {
         $hargaBeli = (int) ($pembelian['harga_beli'] ?? 0);
+        $nominalDp = (int) ($pembelian['nominal_dp'] ?? 0);
         $totalBayar = 0;
         $cicilanDisetujui = 0;
         $sudahBulanIni = false;
+        $faseDp = true;
+        $dpMenunggu = false;
         $bulanIni = date('Y-m');
 
         foreach ($pembayaran as $row) {
@@ -229,6 +232,14 @@ class DashboardController extends BaseController
                 $totalBayar += (int) ($row['jumlah_bayar'] ?? 0);
                 if ($jenis === 'cicilan') {
                     $cicilanDisetujui++;
+                }
+            }
+
+            if (in_array($jenis, ['dp', 'booking_fee'], true)) {
+                if ($status === 'disetujui') {
+                    $faseDp = false;
+                } elseif ($status === 'pending') {
+                    $dpMenunggu = true;
                 }
             }
 
@@ -244,13 +255,10 @@ class DashboardController extends BaseController
         $tahun = $this->durasiCicilanTahun($pembelian);
         $totalCicilan = $tahun > 0 ? $tahun * 12 : 0;
         $metode = strtolower((string) ($pembelian['metode_pembayaran'] ?? ''));
-        $statusPembelian = strtolower((string) ($pembelian['status_pembelian'] ?? ''));
         $jumlahCicilan = $sisaBayar;
 
-        if (in_array($statusPembelian, ['booking', 'booked'], true) && $totalBayar <= 0) {
-            $jumlahCicilan = min(5000000, $sisaBayar > 0 ? $sisaBayar : 5000000);
-        } elseif ($totalCicilan > 0 && $sisaBayar > 0 && $metode === 'cicilan internal') {
-            $dasarCicilan = max($hargaBeli - (int) ($pembelian['nominal_dp'] ?? 0), 0);
+        if (!$faseDp && $totalCicilan > 0 && $sisaBayar > 0 && $metode === 'cicilan internal') {
+            $dasarCicilan = max($hargaBeli - $nominalDp, 0);
             $nominalTetap = (int) ceil($dasarCicilan / $totalCicilan);
             $jumlahCicilan = ($cicilanDisetujui + 1 >= $totalCicilan)
                 ? $sisaBayar
@@ -265,7 +273,10 @@ class DashboardController extends BaseController
 
         return [
             'harga_beli' => $hargaBeli,
-            'nominal_dp' => (int) ($pembelian['nominal_dp'] ?? 0),
+            'nominal_dp' => $nominalDp,
+            'fase_dp' => $faseDp,
+            'dp_menunggu' => $dpMenunggu,
+            'jumlah_dp' => $faseDp ? $nominalDp : 0,
             'total_bayar' => $totalBayar,
             'sisa_bayar' => $sisaBayar,
             'status_pembelian' => $pembelian['status_pembelian'] ?? '-',
@@ -275,7 +286,7 @@ class DashboardController extends BaseController
             'jumlah_cicilan' => $jumlahCicilan,
             'sudah_cicilan_bulan_ini' => $sudahBulanIni,
             'persen' => min($persen, 100),
-            'bisa_upload' => $sisaBayar > 0 && !$sudahBulanIni,
+            'bisa_upload' => $sisaBayar > 0 && !$sudahBulanIni && (!$faseDp || $nominalDp > 0),
             'durasi_tahun' => $tahun,
             'durasi_text' => $tahun > 0 ? $tahun . ' tahun' : '-',
             'tanggal_mulai' => $mulai,

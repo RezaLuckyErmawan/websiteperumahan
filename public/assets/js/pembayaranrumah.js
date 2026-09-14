@@ -461,12 +461,15 @@ function applyRingkasanToForm(formSelector, boxSelector, data, excludePaymentId 
   const isCicilanBayar = isCicilanInternal;
   const metodeLabel = data.metode_pembayaran || '-';
   const jenisLabel = jenisPembayaranLabels[data.jenis_pembayaran] || data.jenis_pembayaran || '-';
+  const jenisKey = String(data.jenis_pembayaran || '').toLowerCase();
+  const isDpBayar = jenisKey === 'dp' || jenisKey === 'booking_fee';
+  const nominalDp = parseInt(data.nominal_dp || 0, 10);
 
   let extra = `<div>Metode: ${metodeLabel}</div><div>Jenis: ${jenisLabel}</div>`;
-  if (String(data.jenis_pembayaran || '').toLowerCase() === 'dp' && parseInt(data.nominal_dp || 0, 10) > 0) {
-    extra += `<div>Nominal DP: ${formatRupiah(data.nominal_dp)}</div>`;
+  if (isDpBayar && nominalDp > 0) {
+    extra += `<div>Nominal DP: ${formatRupiah(nominalDp)}</div>`;
   }
-  if (isCicilanInternal && totalCicilan > 0) {
+  if (isCicilanInternal && totalCicilan > 0 && !isDpBayar) {
     extra += `<div>Sudah cicilan: ${cicilanKe} dari ${totalCicilan}</div>`;
     extra += `<div>Pengajuan ini: cicilan ke-${Math.min(cicilanKe + 1, totalCicilan)}</div>`;
     if (jatuhTempo) {
@@ -492,7 +495,13 @@ function applyRingkasanToForm(formSelector, boxSelector, data, excludePaymentId 
   const tanggalInput = form.find('input[name=tanggal_bayar]');
   const hint = form.find('.jumlah-bayar-hint');
 
-  if (isCicilanBayar && jumlahCicilan > 0 && !excludePaymentId) {
+  if (isDpBayar && nominalDp > 0) {
+    jumlahInput.val(nominalDp).prop('readonly', !canModifyPayments);
+    hint.text(`Jumlah DP mengikuti nominal yang disepakati: ${formatRupiah(nominalDp)}`);
+  } else if (isDpBayar) {
+    jumlahInput.val('').prop('readonly', !canModifyPayments);
+    hint.text('Nominal DP belum ditetapkan admin. Booking harus diverifikasi terlebih dahulu.');
+  } else if (isCicilanBayar && jumlahCicilan > 0 && !excludePaymentId) {
     jumlahInput.val(jumlahCicilan).prop('readonly', true);
     hint.text('Jumlah cicilan terisi otomatis. Cicilan 1 kali tiap bulan.');
     if (jatuhTempo && tanggalInput.length && canModifyPayments) {
